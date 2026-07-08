@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  ADMIN
+  SHAREHOLDER
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  username         String    @unique
+  email            String    @unique
+  passwordHash     String
+  fullName         String
+  phoneNumber      String?
+  role             Role      @default(SHAREHOLDER)
+  isActive         Boolean   @default(true)
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
