@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/lib/navigation";
-import { ArrowLeft, Building2, CheckCircle2, FileText, History, MessageSquare, Users, X, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, FileText, History, Loader2, MessageSquare, ShieldCheck, Users, X, XCircle } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -137,6 +137,9 @@ export default function AdminRequestDetail({ id }: { id: string }) {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectReasonError, setRejectReasonError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<{ verified: boolean; issues: string[]; checkedAt: string } | null>(null);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -192,6 +195,24 @@ export default function AdminRequestDetail({ id }: { id: string }) {
     }
   };
 
+  const handleVerify = async () => {
+    setVerifyError(null);
+    setVerifying(true);
+    try {
+      const res = await fetch(`/api/secured/admin/requests/${id}/verify`, { method: "POST" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: ta("verifyError") }));
+        setVerifyError(err.error ?? ta("verifyError"));
+        return;
+      }
+      setVerifyResult(await res.json());
+    } catch {
+      setVerifyError(ta("verifyError"));
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const handleConfirmReject = () => {
     if (!rejectReason.trim()) {
       setRejectReasonError(ta("reasonRequired"));
@@ -234,9 +255,18 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                 <StatusBadge status={request.status} label={t(`status.${request.status}` as Parameters<typeof t>[0])} />
               </div>
             </div>
-            {request.status === "PENDING" && (
+            {(request.status === "PENDING" || request.status === "IN_REVIEW") && (
               <div className="flex-shrink-0 text-right space-y-2">
                 <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleVerify}
+                    disabled={verifying || acting !== null}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                    {verifying ? ta("verifying") : ta("verify")}
+                  </button>
                   <button
                     type="button"
                     onClick={() => { setRejectReason(""); setRejectReasonError(null); setRejectOpen(true); }}
@@ -257,6 +287,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                   </button>
                 </div>
                 {actionError && <p className="mt-1 text-xs text-red-600 max-w-xs">{actionError}</p>}
+                {verifyError && <p className="mt-1 text-xs text-red-600 max-w-xs">{verifyError}</p>}
               </div>
             )}
           </div>
@@ -264,6 +295,33 @@ export default function AdminRequestDetail({ id }: { id: string }) {
           <h1 className="text-lg font-semibold text-slate-800">{t("detailTitle")}</h1>
         )}
       </div>
+
+      {verifyResult && (
+        <div
+          className={`flex items-start gap-3 rounded-xl border px-5 py-4 ${
+            verifyResult.verified ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"
+          }`}
+        >
+          {verifyResult.verified ? (
+            <ShieldCheck className="h-4.5 w-4.5 text-green-600 flex-shrink-0 mt-0.5" />
+          ) : (
+            <AlertTriangle className="h-4.5 w-4.5 text-amber-600 flex-shrink-0 mt-0.5" />
+          )}
+          <div className="min-w-0">
+            <p className={`text-sm font-medium ${verifyResult.verified ? "text-green-800" : "text-amber-800"}`}>
+              {verifyResult.verified ? ta("verifyPassed") : ta("verifyFailed")}
+            </p>
+            {verifyResult.issues.length > 0 && (
+              <ul className="mt-1 space-y-0.5 list-disc list-inside">
+                {verifyResult.issues.map((issue, i) => (
+                  <li key={i} className="text-sm text-amber-700">{issue}</li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-1 text-xs text-slate-400">{formatDate(verifyResult.checkedAt)}</p>
+          </div>
+        </div>
+      )}
 
       {request && request.status === "REJECTED" && request.rejectionReason && (
         <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">

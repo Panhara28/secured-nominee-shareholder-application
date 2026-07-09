@@ -210,6 +210,8 @@ export default function RequestDetail({ id }: { id: string }) {
               </p>
               {request.status === "PENDING" ? (
                 <p className="mt-2 text-sm text-blue-600">{t("pendingNotice")}</p>
+              ) : request.status === "IN_REVIEW" ? (
+                <p className="mt-2 text-sm text-purple-600">{t("inReviewNotice")}</p>
               ) : (
                 <div className="flex items-center gap-2 mt-2">
                   <StatusBadge status={request.status} label={t(`status.${request.status}` as Parameters<typeof t>[0])} />

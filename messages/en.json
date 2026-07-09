@@ -156,6 +156,7 @@
       "status": {
         "DRAFT": "Drafted",
         "PENDING": "Request",
+        "IN_REVIEW": "In Review",
         "APPROVED": "Approved",
         "REJECTED": "Rejected"
       },
@@ -164,6 +165,7 @@
       "summary": {
         "drafted": "Drafted",
         "inReview": "Request",
+        "verifying": "In Review",
         "approved": "Approved",
         "rejected": "Rejected"
       },
@@ -197,6 +199,7 @@
       "submitRequestError": "Failed to submit request. Please try again.",
       "incompleteFields": "Please complete all required fields before submitting.",
       "pendingNotice": "Your request will be reviewed by our official.",
+      "inReviewNotice": "Your request is currently being reviewed by our official.",
       "rejectionReason": "Rejection Reason",
       "requestToEdit": "Request to Edit",
       "editRequestTitle": "Edit Request",
@@ -247,6 +250,7 @@
       "totalRequests": "Total Requests",
       "drafted": "Drafted",
       "request": "Request",
+      "inReview": "In Review",
       "approved": "Approved",
       "rejected": "Rejected",
       "statusBreakdown": "Status Breakdown",
@@ -270,7 +274,12 @@
       "reasonRequired": "A rejection reason is required.",
       "rejectionReason": "Rejection Reason",
       "cancel": "Cancel",
-      "confirmReject": "Reject Request"
+      "confirmReject": "Reject Request",
+      "verify": "Verify",
+      "verifying": "Verifying…",
+      "verifyError": "Failed to verify request. Please try again.",
+      "verifyPassed": "Data Verified — no issues found.",
+      "verifyFailed": "Verification found possible issues:"
     }
   },
   "auth": {

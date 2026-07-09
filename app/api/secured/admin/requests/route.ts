@@ -5,7 +5,7 @@ import type { Prisma } from "@/lib/generated/prisma";
 const SORTABLE_FIELDS = ["requestNo", "companyNameEn", "submittedAt", "status"] as const;
 type SortKey = (typeof SORTABLE_FIELDS)[number];
 
-const STATUS_VALUES = ["DRAFT", "PENDING", "APPROVED", "REJECTED"] as const;
+const STATUS_VALUES = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED"] as const;
 type StatusValue = (typeof STATUS_VALUES)[number];
 
 export async function GET(request: Request) {
@@ -50,10 +50,11 @@ export async function GET(request: Request) {
     prisma.beneficiaryRequest.groupBy({ by: ["status"], _count: true }),
   ]);
 
-  const summary = { drafted: 0, request: 0, approved: 0, rejected: 0 };
+  const summary = { drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0 };
   for (const g of groups) {
     if (g.status === "DRAFT") summary.drafted = g._count;
     else if (g.status === "PENDING") summary.request = g._count;
+    else if (g.status === "IN_REVIEW") summary.inReview = g._count;
     else if (g.status === "APPROVED") summary.approved = g._count;
     else if (g.status === "REJECTED") summary.rejected = g._count;
   }

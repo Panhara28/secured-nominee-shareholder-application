@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/lib/navigation";
-import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Eye, FileEdit, Loader2, Plus, RefreshCw, RotateCcw, Search, TimerReset, XCircle } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Eye, FileEdit, Loader2, Plus, RefreshCw, RotateCcw, Search, ShieldCheck, TimerReset, XCircle } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import StatusBadge from "@/components/ui/StatusBadge";
 import TablePagination from "@/components/ui/TablePagination";
@@ -16,7 +16,7 @@ function formatDate(iso: string): string {
   return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
 }
 
-const STATUS_OPTIONS = ["DRAFT", "PENDING", "APPROVED", "REJECTED"];
+const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED"];
 
 type SortKey = "requestNo" | "companyNameEn" | "submittedAt" | "status";
 type SortDir = "asc" | "desc";
@@ -32,7 +32,7 @@ type RequestRow = {
   status: string;
 };
 
-type Summary = { drafted: number; inReview: number; approved: number; rejected: number };
+type Summary = { drafted: number; inReview: number; verifying: number; approved: number; rejected: number };
 
 export default function AllRequestsList() {
   const t = useTranslations("beneficiary.allRequests");
@@ -48,7 +48,7 @@ export default function AllRequestsList() {
 
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [total, setTotal] = useState(0);
-  const [summary, setSummary] = useState<Summary>({ drafted: 0, inReview: 0, approved: 0, rejected: 0 });
+  const [summary, setSummary] = useState<Summary>({ drafted: 0, inReview: 0, verifying: 0, approved: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -144,7 +144,7 @@ export default function AllRequestsList() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
             <FileEdit className="h-5 w-5 text-slate-500" />
@@ -161,6 +161,15 @@ export default function AllRequestsList() {
           <div className="min-w-0">
             <p className="text-xs text-slate-500 truncate">{t("summary.inReview")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.inReview}</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+            <ShieldCheck className="h-5 w-5 text-purple-600" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-slate-500 truncate">{t("summary.verifying")}</p>
+            <p className="text-xl font-semibold text-slate-800">{summary.verifying}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">

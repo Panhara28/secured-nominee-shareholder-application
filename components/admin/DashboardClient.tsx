@@ -1,10 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Users, FileText, FileEdit, CheckCircle2, XCircle, TimerReset } from "lucide-react";
+import { Users, FileText, FileEdit, CheckCircle2, XCircle, TimerReset, ShieldCheck } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-type Summary = { drafted: number; request: number; approved: number; rejected: number };
+type Summary = { drafted: number; request: number; inReview: number; approved: number; rejected: number };
 type RecentRow = { id: number; requestNo: string; companyNameEn: string; status: string; submittedAt: string };
 
 type Props = {
@@ -29,6 +29,7 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
     { label: t("totalRequests"), value: totalRequests, icon: FileText, color: "text-slate-600", bg: "bg-slate-100" },
     { label: t("drafted"), value: summary.drafted, icon: FileEdit, color: "text-slate-500", bg: "bg-slate-100" },
     { label: t("request"), value: summary.request, icon: TimerReset, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: t("inReview"), value: summary.inReview, icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50" },
     { label: t("approved"), value: summary.approved, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
     { label: t("rejected"), value: summary.rejected, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
   ];
@@ -37,7 +38,7 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
     <div className="space-y-4">
       <h1 className="text-xl font-semibold text-slate-800">{t("pageTitle")}</h1>
 
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-7 gap-4">
         {cards.map((c) => {
           const Icon = c.icon;
           return (

@@ -66,7 +66,7 @@ export async function PATCH(request: Request, { params }: Props) {
   if (!record) {
     return Response.json({ error: "Request not found." }, { status: 404 });
   }
-  if (record.status !== "PENDING") {
+  if (record.status !== "PENDING" && record.status !== "IN_REVIEW") {
     return Response.json({ error: "Only requests awaiting review can be approved or rejected." }, { status: 400 });
   }
 

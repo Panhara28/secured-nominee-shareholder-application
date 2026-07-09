@@ -15,6 +15,7 @@ enum Role {
 enum BeneficiaryRequestStatus {
   DRAFT
   PENDING
+  IN_REVIEW
   APPROVED
   REJECTED
 }
