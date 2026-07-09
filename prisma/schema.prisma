@@ -12,17 +12,157 @@ enum Role {
   SHAREHOLDER
 }
 
+enum BeneficiaryRequestStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Gender {
+  M
+  F
+}
+
 model User {
-  id               Int       @id @default(autoincrement())
-  username         String    @unique
-  email            String    @unique
-  passwordHash     String
-  fullName         String
-  phoneNumber      String?
-  role             Role      @default(SHAREHOLDER)
-  isActive         Boolean   @default(true)
-  resetToken       String?
-  resetTokenExpiry DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id                  Int                  @id @default(autoincrement())
+  username            String               @unique
+  email               String               @unique
+  passwordHash        String
+  fullName            String
+  phoneNumber         String?
+  role                Role                 @default(SHAREHOLDER)
+  isActive            Boolean              @default(true)
+  resetToken          String?
+  resetTokenExpiry    DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  beneficiaryRequests BeneficiaryRequest[]
+
+  staffRoleId Int?
+  staffRole   StaffRole? @relation(fields: [staffRoleId], references: [id])
+}
+
+model StaffRole {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  permissions StaffRolePermission[]
+}
+
+model PermissionModule {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  label       String
+  description String?
+
+  rolePermissions StaffRolePermission[]
+}
+
+model StaffRolePermission {
+  staffRoleId Int
+  moduleId    Int
+  create      Boolean @default(false)
+  read        Boolean @default(false)
+  update      Boolean @default(false)
+  delete      Boolean @default(false)
+
+  staffRole StaffRole        @relation(fields: [staffRoleId], references: [id], onDelete: Cascade)
+  module    PermissionModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@id([staffRoleId, moduleId])
+}
+
+model BeneficiaryRequest {
+  id        Int    @id @default(autoincrement())
+  requestNo String @unique
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  status BeneficiaryRequestStatus @default(PENDING)
+  type   String                   @default("Add Beneficiary Owner")
+
+  // Step 1 — Company
+  companyNameKh      String?
+  companyNameEn      String
+  registrationNo     String
+  registrationDate   DateTime
+  companyProvince    String
+  companyDistrict    String
+  companyCommune     String
+  companyVillage     String
+  companyStreet      String
+  companyHouse       String
+  companyPhone       String
+  companyOfficePhone String?
+  companyEmail       String
+
+  // Step 2 — Nominee Shareholder (prefix "sh" in the form)
+  shLastNameKh    String?
+  shFirstNameKh   String?
+  shLastNameEn    String
+  shFirstNameEn   String
+  shDob           DateTime
+  shNationality   String
+  shGender        Gender
+  shIdCard        String?
+  shIdIssuedDate  DateTime?
+  shIdExpiredDate DateTime?
+  shEmail         String?
+  shPhone         String?
+  shPhotoName     String?
+  shIdDocNames    String    @default("[]")
+
+  // Step 3 — Beneficial Owner (no prefix in the form)
+  ownerLastNameKh    String?
+  ownerFirstNameKh   String?
+  ownerLastNameEn    String
+  ownerFirstNameEn   String
+  ownerDob           DateTime
+  ownerNationality   String
+  ownerGender        Gender
+  ownerIdCard        String?
+  ownerIdIssuedDate  DateTime?
+  ownerIdExpiredDate DateTime?
+  ownerEmail         String?
+  ownerPhone         String?
+  ownerPhotoName     String?
+  ownerIdDocNames    String    @default("[]")
+  shareAmount        String
+
+  // Step 4 — Agreement
+  shareholderContractDocNames String  @default("[]")
+  otherDocNames                String  @default("[]")
+  consentAgreed                 Boolean @default(false)
+
+  rejectionReason String?
+
+  submittedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  logs RequestLog[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model RequestLog {
+  id          Int      @id @default(autoincrement())
+  requestId   Int
+  request     BeneficiaryRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  action      String
+  actorUserId Int
+  actorRole   Role
+  actorName   String
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@index([requestId])
 }

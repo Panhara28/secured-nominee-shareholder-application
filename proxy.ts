@@ -13,6 +13,8 @@ const PUBLIC_PORTAL_PATHS = new Set([
   "/portal/reset-password",
 ]);
 
+const PUBLIC_ADMIN_PATHS = new Set(["/secured/admin/login"]);
+
 function stripLocale(pathname: string): string {
   const match = pathname.match(/^\/(en)(\/.*)?$/);
   return match ? (match[2] ?? "/") : pathname;
@@ -30,6 +32,17 @@ export function proxy(request: NextRequest) {
     const session = verifySessionToken(token);
     if (!session || session.role !== "SHAREHOLDER") {
       return NextResponse.redirect(new URL("/en/portal/login", request.url));
+    }
+  }
+
+  if (
+    pathWithoutLocale.startsWith("/secured/admin") &&
+    !PUBLIC_ADMIN_PATHS.has(pathWithoutLocale)
+  ) {
+    const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+    const session = verifySessionToken(token);
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/en/secured/admin/login", request.url));
     }
   }
 

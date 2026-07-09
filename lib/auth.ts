@@ -91,4 +91,10 @@ export async function requireShareholder(): Promise<{ userId: number } | null> {
   return { userId: session.userId };
 }
 
+export async function requireAdmin(): Promise<{ userId: number } | null> {
+  const session = await getSession();
+  if (!session || session.role !== "ADMIN") return null;
+  return { userId: session.userId };
+}
+
 export const SESSION_COOKIE_NAME = SESSION_COOKIE;

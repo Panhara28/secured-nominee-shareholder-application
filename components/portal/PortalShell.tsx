@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/lib/navigation";
-import { LayoutDashboard, Users, Menu, X, LogOut, User, ChevronDown } from "lucide-react";
+import { LayoutDashboard, Users, Menu, X, LogOut, User, ChevronDown, ListChecks, FilePlus2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
@@ -15,6 +15,8 @@ type Props = {
 
 export default function PortalShell({ fullName, children }: Props) {
   const t = useTranslations("portal.nav");
+  const tAllRequests = useTranslations("beneficiary.allRequests");
+  const tRequest = useTranslations("beneficiary.request");
   const pathname = usePathname() ?? "";
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -66,7 +68,7 @@ export default function PortalShell({ fullName, children }: Props) {
             )}
           >
             <Users className="h-4.5 w-4.5 flex-shrink-0" />
-            <span className="flex-1 text-left">Beneficiary Owner</span>
+            <span className="flex-1 text-left">{t("beneficiaryOwner")}</span>
             <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", beneficiaryOpen && "rotate-180")} />
           </button>
           {beneficiaryOpen && (
@@ -81,7 +83,8 @@ export default function PortalShell({ fullName, children }: Props) {
                     : "text-blue-200 hover:bg-blue-800/70 hover:text-white"
                 )}
               >
-                All Requests
+                <ListChecks className="h-4 w-4 flex-shrink-0" />
+                {tAllRequests("pageTitle")}
               </Link>
               <Link
                 href="/portal/beneficiary/request"
@@ -93,7 +96,8 @@ export default function PortalShell({ fullName, children }: Props) {
                     : "text-blue-200 hover:bg-blue-800/70 hover:text-white"
                 )}
               >
-                Request Add Beneficiary Owner
+                <FilePlus2 className="h-4 w-4 flex-shrink-0" />
+                {tRequest("pageTitle")}
               </Link>
             </div>
           )}

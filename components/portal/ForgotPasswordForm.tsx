@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, ArrowLeft, Copy, Check } from "lucide-react";
+import { Mail, ArrowLeft, Copy, Check, Send } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
@@ -100,6 +100,7 @@ export function ForgotPasswordForm() {
             className="w-full bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 hover:from-blue-600 hover:via-blue-500 hover:to-blue-400 text-white"
             disabled={isLoading}
           >
+            <Send className="h-4 w-4" />
             {isLoading ? t("submitting") : t("submit")}
           </Button>
         </form>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, Lock, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Lock, ArrowLeft, KeyRound } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useRouter } from "@/lib/navigation";
@@ -103,6 +103,7 @@ export function ResetPasswordForm({ token }: Props) {
           className="w-full bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 hover:from-blue-600 hover:via-blue-500 hover:to-blue-400 text-white"
           disabled={isLoading}
         >
+          <KeyRound className="h-4 w-4" />
           {isLoading ? t("submitting") : t("submit")}
         </Button>
       </form>

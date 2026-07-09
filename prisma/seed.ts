@@ -16,53 +16,67 @@ async function main() {
   const adapter = new PrismaLibSql({ url });
   const prisma = new PrismaClient({ adapter });
 
+  console.log("Cleaning database…");
+
+  await prisma.beneficiaryRequest.deleteMany({});
+  await prisma.user.deleteMany({});
+  await prisma.staffRolePermission.deleteMany({});
+  await prisma.staffRole.deleteMany({});
+  await prisma.permissionModule.deleteMany({});
+
   console.log("Seeding database…");
 
-  // Admin user
-  await prisma.user.upsert({
-    where: { username: "admin" },
-    update: {},
-    create: {
+  await prisma.user.create({
+    data: {
+      username: "sok.dara",
+      email: "sok.dara@nominee.local",
+      passwordHash: hashPassword("password123"),
+      fullName: "Sok Dara",
+      role: "SHAREHOLDER",
+      isActive: true,
+    },
+  });
+
+  const modules = await Promise.all(
+    [
+      { name: "dashboard", label: "Dashboard" },
+      { name: "users", label: "Users" },
+      { name: "roles", label: "Role & Permission" },
+    ].map((m) => prisma.permissionModule.create({ data: m }))
+  );
+
+  const superAdminRole = await prisma.staffRole.create({
+    data: {
+      name: "Super Admin",
+      slug: "super-admin",
+      description: "Full access to all modules.",
+      permissions: {
+        create: modules.map((m) => ({
+          moduleId: m.id,
+          create: true,
+          read: true,
+          update: true,
+          delete: true,
+        })),
+      },
+    },
+  });
+
+  await prisma.user.create({
+    data: {
       username: "admin",
       email: "admin@nominee.local",
-      passwordHash: hashPassword("Admin@1234"),
+      passwordHash: hashPassword("admin123"),
       fullName: "System Administrator",
       role: "ADMIN",
       isActive: true,
+      staffRoleId: superAdminRole.id,
     },
   });
 
-  // Shareholder accounts
-  await prisma.user.upsert({
-    where: { username: "shareholder1" },
-    update: {},
-    create: {
-      username: "shareholder1",
-      email: "shareholder1@nominee.local",
-      passwordHash: hashPassword("Pass@1234"),
-      fullName: "John Doe",
-      role: "SHAREHOLDER",
-      isActive: true,
-    },
-  });
-
-  await prisma.user.upsert({
-    where: { username: "shareholder2" },
-    update: {},
-    create: {
-      username: "shareholder2",
-      email: "shareholder2@nominee.local",
-      passwordHash: hashPassword("Pass@1234"),
-      fullName: "Jane Smith",
-      role: "SHAREHOLDER",
-      isActive: true,
-    },
-  });
-
-  console.log("✓ Seeded 3 users (1 admin, 2 shareholders)");
-  console.log("  admin       / Admin@1234");
-  console.log("  shareholder1 / Pass@1234");
-  console.log("  shareholder2 / Pass@1234");
+  console.log("✓ Seeded 2 users");
+  console.log("  sok.dara / password123 (shareholder)");
+  console.log("  admin    / admin123 (admin, Super Admin role)");
 
   await prisma.$disconnect();
 }
