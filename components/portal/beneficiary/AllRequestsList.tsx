@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/lib/navigation";
 import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Eye, FileEdit, Loader2, Plus, RefreshCw, RotateCcw, Search, ShieldCheck, TimerReset, XCircle } from "lucide-react";
@@ -16,7 +17,7 @@ function formatDate(iso: string): string {
   return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
 }
 
-const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED"];
+const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
 
 type SortKey = "requestNo" | "companyNameEn" | "submittedAt" | "status";
 type SortDir = "asc" | "desc";
@@ -32,15 +33,17 @@ type RequestRow = {
   status: string;
 };
 
-type Summary = { drafted: number; inReview: number; verifying: number; approved: number; rejected: number };
+type Summary = { drafted: number; inReview: number; verifying: number; approved: number; rejected: number; returned: number };
 
 export default function AllRequestsList() {
   const t = useTranslations("beneficiary.allRequests");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialStatus = (searchParams.get("status") ?? "").toUpperCase();
 
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(STATUS_OPTIONS.includes(initialStatus) ? initialStatus : "");
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>("submittedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -48,7 +51,7 @@ export default function AllRequestsList() {
 
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [total, setTotal] = useState(0);
-  const [summary, setSummary] = useState<Summary>({ drafted: 0, inReview: 0, verifying: 0, approved: 0, rejected: 0 });
+  const [summary, setSummary] = useState<Summary>({ drafted: 0, inReview: 0, verifying: 0, approved: 0, rejected: 0, returned: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -144,7 +147,7 @@ export default function AllRequestsList() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
             <FileEdit className="h-5 w-5 text-slate-500" />
@@ -188,6 +191,15 @@ export default function AllRequestsList() {
           <div className="min-w-0">
             <p className="text-xs text-slate-500 truncate">{t("summary.rejected")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.rejected}</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+            <RotateCcw className="h-5 w-5 text-orange-600" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-slate-500 truncate">{t("summary.returned")}</p>
+            <p className="text-xl font-semibold text-slate-800">{summary.returned}</p>
           </div>
         </div>
       </div>

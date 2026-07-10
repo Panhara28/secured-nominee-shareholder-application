@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/lib/navigation";
-import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, FileText, History, Loader2, MessageSquare, ShieldCheck, Users, X, XCircle } from "lucide-react";
+import { Link, useRouter } from "@/lib/navigation";
+import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, FileText, GitCompare, History, Loader2, MessageSquare, Pencil, RotateCcw, ShieldCheck, Users, X, XCircle } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import RequestActivityLog, { type ActivityLogEntry } from "@/components/beneficiary/RequestActivityLog";
+import RequestRevisionHistory, { type RequestRevisionEntry } from "@/components/beneficiary/RequestRevisionHistory";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "-";
@@ -122,6 +123,7 @@ type RequestDetailData = {
   submittedAt: string;
   rejectionReason: string | null;
   logs: ActivityLogEntry[];
+  revisions: RequestRevisionEntry[];
   user: { fullName: string; username: string };
 };
 
@@ -129,14 +131,18 @@ export default function AdminRequestDetail({ id }: { id: string }) {
   const t = useTranslations("beneficiary.allRequests");
   const tf = useTranslations("beneficiary.request");
   const ta = useTranslations("admin.requests");
+  const trev = useTranslations("beneficiary.revisions");
   const router = useRouter();
   const [request, setRequest] = useState<RequestDetailData | null | undefined>(undefined);
   const [error, setError] = useState(false);
-  const [acting, setActing] = useState<"approve" | "reject" | null>(null);
+  const [acting, setActing] = useState<"approve" | "reject" | "return" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectReasonError, setRejectReasonError] = useState<string | null>(null);
+  const [returnOpen, setReturnOpen] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [returnReasonError, setReturnReasonError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<{ verified: boolean; issues: string[]; checkedAt: string } | null>(null);
   const [verifyError, setVerifyError] = useState<string | null>(null);
@@ -171,7 +177,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
 
   const genderLabel = (g: "M" | "F") => (g === "M" ? tf("genderMale") : tf("genderFemale"));
 
-  const handleAction = async (action: "approve" | "reject", reason?: string) => {
+  const handleAction = async (action: "approve" | "reject" | "return", reason?: string) => {
     setActionError(null);
     setActing(action);
     try {
@@ -188,6 +194,8 @@ export default function AdminRequestDetail({ id }: { id: string }) {
       setRequest(await res.json());
       setRejectOpen(false);
       setRejectReason("");
+      setReturnOpen(false);
+      setReturnReason("");
     } catch {
       setActionError(ta("actionError"));
     } finally {
@@ -205,7 +213,9 @@ export default function AdminRequestDetail({ id }: { id: string }) {
         setVerifyError(err.error ?? ta("verifyError"));
         return;
       }
-      setVerifyResult(await res.json());
+      const result = await res.json();
+      setVerifyResult(result);
+      setRequest((prev) => (prev ? { ...prev, status: result.status } : prev));
     } catch {
       setVerifyError(ta("verifyError"));
     } finally {
@@ -220,6 +230,21 @@ export default function AdminRequestDetail({ id }: { id: string }) {
     }
     setRejectReasonError(null);
     handleAction("reject", rejectReason.trim());
+  };
+
+  const openReturnDialog = () => {
+    setReturnReason(verifyResult && !verifyResult.verified ? verifyResult.issues.join("\n") : "");
+    setReturnReasonError(null);
+    setReturnOpen(true);
+  };
+
+  const handleConfirmReturn = () => {
+    if (!returnReason.trim()) {
+      setReturnReasonError(ta("reasonRequired"));
+      return;
+    }
+    setReturnReasonError(null);
+    handleAction("return", returnReason.trim());
   };
 
   const companyAddress = request
@@ -253,9 +278,18 @@ export default function AdminRequestDetail({ id }: { id: string }) {
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <StatusBadge status={request.status} label={t(`status.${request.status}` as Parameters<typeof t>[0])} />
+                {request.status === "UPDATE_REQUESTED" && (
+                  <Link
+                    href={`/secured/admin/revisions?requestId=${request.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700 transition-colors"
+                  >
+                    <GitCompare className="h-3.5 w-3.5" />
+                    {trev("diffCompare")}
+                  </Link>
+                )}
               </div>
             </div>
-            {(request.status === "PENDING" || request.status === "IN_REVIEW") && (
+            {(request.status === "PENDING" || request.status === "IN_REVIEW" || request.status === "UPDATE_REQUESTED") && (
               <div className="flex-shrink-0 text-right space-y-2">
                 <div className="flex gap-2">
                   <button
@@ -267,24 +301,17 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                     {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
                     {verifying ? ta("verifying") : ta("verify")}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => { setRejectReason(""); setRejectReasonError(null); setRejectOpen(true); }}
-                    disabled={acting !== null}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 hover:bg-red-100 px-4 py-2 text-sm font-medium text-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <XCircle className="h-4 w-4" />
-                    {acting === "reject" ? ta("rejecting") : ta("reject")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleAction("approve")}
-                    disabled={acting !== null}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-700 px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    {acting === "approve" ? ta("approving") : ta("approve")}
-                  </button>
+                  {verifyResult?.verified && (
+                    <button
+                      type="button"
+                      onClick={() => handleAction("approve")}
+                      disabled={acting !== null}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-700 px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      {acting === "approve" ? ta("approving") : ta("approve")}
+                    </button>
+                  )}
                 </div>
                 {actionError && <p className="mt-1 text-xs text-red-600 max-w-xs">{actionError}</p>}
                 {verifyError && <p className="mt-1 text-xs text-red-600 max-w-xs">{verifyError}</p>}
@@ -296,7 +323,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
         )}
       </div>
 
-      {verifyResult && (
+      {verifyResult && request && (request.status === "PENDING" || request.status === "IN_REVIEW" || request.status === "UPDATE_REQUESTED") && (
         <div
           className={`flex items-start gap-3 rounded-xl border px-5 py-4 ${
             verifyResult.verified ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"
@@ -319,15 +346,28 @@ export default function AdminRequestDetail({ id }: { id: string }) {
               </ul>
             )}
             <p className="mt-1 text-xs text-slate-400">{formatDate(verifyResult.checkedAt)}</p>
+            {!verifyResult.verified && (
+              <button
+                type="button"
+                onClick={openReturnDialog}
+                disabled={acting !== null}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-orange-100 hover:bg-orange-200 px-4 py-2 text-sm font-medium text-orange-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <RotateCcw className="h-4 w-4" />
+                {acting === "return" ? ta("returning") : ta("return")}
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      {request && request.status === "REJECTED" && request.rejectionReason && (
+      {request && (request.status === "REJECTED" || request.status === "RETURNED") && request.rejectionReason && (
         <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
           <MessageSquare className="h-4.5 w-4.5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div className="min-w-0">
-            <p className="text-sm font-medium text-amber-800">{ta("rejectionReason")}</p>
+            <p className="text-sm font-medium text-amber-800">
+              {request.status === "RETURNED" ? ta("returnReason") : ta("rejectionReason")}
+            </p>
             <p className="mt-0.5 text-sm text-amber-700">{request.rejectionReason}</p>
           </div>
         </div>
@@ -358,6 +398,36 @@ export default function AdminRequestDetail({ id }: { id: string }) {
             <Button type="button" variant="destructive" onClick={handleConfirmReject} disabled={acting !== null}>
               <XCircle className="h-4 w-4" />
               {acting === "reject" ? ta("rejecting") : ta("confirmReject")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={returnOpen} onOpenChange={setReturnOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{ta("returnDialogTitle")}</DialogTitle>
+            <DialogDescription>{ta("returnDialogDescription")}</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={returnReason}
+            onChange={(e) => { setReturnReason(e.target.value); if (returnReasonError) setReturnReasonError(null); }}
+            placeholder={ta("reasonPlaceholder")}
+            rows={4}
+          />
+          {returnReasonError && <p className="mt-1.5 text-xs text-red-600">{returnReasonError}</p>}
+          <DialogFooter>
+            <DialogClose
+              render={
+                <Button type="button" variant="outline" disabled={acting !== null}>
+                  <X className="h-4 w-4" />
+                  {ta("cancel")}
+                </Button>
+              }
+            />
+            <Button type="button" onClick={handleConfirmReturn} disabled={acting !== null} className="bg-orange-600 hover:bg-orange-700 text-white">
+              <RotateCcw className="h-4 w-4" />
+              {acting === "return" ? ta("returning") : ta("confirmReturn")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -465,10 +535,27 @@ export default function AdminRequestDetail({ id }: { id: string }) {
           </SectionCard>
         </div>
 
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4 space-y-4">
+          <SectionCard icon={<Pencil className="h-4 w-4" />} title={trev("title")}>
+            <RequestRevisionHistory revisions={request.revisions} />
+          </SectionCard>
           <SectionCard icon={<History className="h-4 w-4" />} title={t("log.title")}>
             <RequestActivityLog logs={request.logs} />
           </SectionCard>
+
+          {(request.status === "PENDING" || request.status === "IN_REVIEW" || request.status === "UPDATE_REQUESTED") && (
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => { setRejectReason(""); setRejectReasonError(null); setRejectOpen(true); }}
+                disabled={acting !== null}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 hover:bg-red-100 px-4 py-2 text-sm font-medium text-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <XCircle className="h-4 w-4" />
+                {acting === "reject" ? ta("rejecting") : ta("reject")}
+              </button>
+            </div>
+          )}
         </div>
         </div>
       )}

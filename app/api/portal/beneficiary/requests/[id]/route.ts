@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { requireShareholder } from "@/lib/auth";
 import { logRequestEvent } from "@/lib/request-log";
+import { logActivity } from "@/lib/activity-log";
+import { toRequestSnapshot } from "@/lib/request-revision";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -42,7 +44,10 @@ export async function GET(_request: Request, { params }: Props) {
 
   const record = await prisma.beneficiaryRequest.findUnique({
     where: { id },
-    include: { logs: { orderBy: { createdAt: "desc" } } },
+    include: {
+      logs: { orderBy: { createdAt: "desc" } },
+      revisions: { where: { approvedAt: { not: null } }, orderBy: { createdAt: "desc" } },
+    },
   });
   if (!record || record.userId !== session.userId) {
     return Response.json({ error: "Request not found." }, { status: 404 });
@@ -54,6 +59,11 @@ export async function GET(_request: Request, { params }: Props) {
     ownerIdDocNames: JSON.parse(record.ownerIdDocNames) as string[],
     shareholderContractDocNames: JSON.parse(record.shareholderContractDocNames) as string[],
     otherDocNames: JSON.parse(record.otherDocNames) as string[],
+    revisions: record.revisions.map((r) => ({
+      ...r,
+      previousData: JSON.parse(r.previousData),
+      newData: JSON.parse(r.newData),
+    })),
   });
 }
 
@@ -105,11 +115,17 @@ export async function PATCH(request: Request, { params }: Props) {
       where: { id },
       data: { status: "PENDING", submittedAt: new Date() },
     });
-    if (actor) await logRequestEvent(id, "SUBMITTED", actor);
+    if (actor) {
+      await logRequestEvent(id, "SUBMITTED", actor);
+      await logActivity({ action: "REQUEST_SUBMITTED", entityType: "BeneficiaryRequest", entityId: id, actor, note: record.requestNo });
+    }
 
     const updated = await prisma.beneficiaryRequest.findUnique({
       where: { id },
-      include: { logs: { orderBy: { createdAt: "desc" } } },
+      include: {
+        logs: { orderBy: { createdAt: "desc" } },
+        revisions: { where: { approvedAt: { not: null } }, orderBy: { createdAt: "desc" } },
+      },
     });
 
     return Response.json({
@@ -118,12 +134,17 @@ export async function PATCH(request: Request, { params }: Props) {
       ownerIdDocNames: JSON.parse(updated!.ownerIdDocNames) as string[],
       shareholderContractDocNames: JSON.parse(updated!.shareholderContractDocNames) as string[],
       otherDocNames: JSON.parse(updated!.otherDocNames) as string[],
+      revisions: updated!.revisions.map((r) => ({
+        ...r,
+        previousData: JSON.parse(r.previousData),
+        newData: JSON.parse(r.newData),
+      })),
     });
   }
 
   // action === "edit"
-  if (record.status !== "APPROVED") {
-    return Response.json({ error: "Only approved requests can be edited." }, { status: 400 });
+  if (record.status !== "APPROVED" && record.status !== "RETURNED") {
+    return Response.json({ error: "Only approved or returned requests can be edited." }, { status: 400 });
   }
 
   for (const field of EDIT_REQUIRED_FIELDS) {
@@ -144,7 +165,7 @@ export async function PATCH(request: Request, { params }: Props) {
   await prisma.beneficiaryRequest.update({
     where: { id },
     data: {
-      status: "PENDING",
+      status: record.status === "APPROVED" ? "UPDATE_REQUESTED" : "PENDING",
       submittedAt: new Date(),
 
       companyNameKh: body.companyNameKh || null,
@@ -197,12 +218,31 @@ export async function PATCH(request: Request, { params }: Props) {
       consentAgreed: true,
     },
   });
-  if (actor) await logRequestEvent(id, "EDITED", actor);
+  if (actor) {
+    await logRequestEvent(id, "EDITED", actor);
+    await logActivity({ action: "REQUEST_EDITED", entityType: "BeneficiaryRequest", entityId: id, actor, note: record.requestNo });
+  }
 
   const updated = await prisma.beneficiaryRequest.findUnique({
     where: { id },
-    include: { logs: { orderBy: { createdAt: "desc" } } },
+    include: {
+      logs: { orderBy: { createdAt: "desc" } },
+      revisions: { where: { approvedAt: { not: null } }, orderBy: { createdAt: "desc" } },
+    },
   });
+
+  if (actor) {
+    await prisma.requestRevision.create({
+      data: {
+        requestId: id,
+        editedByUserId: actor.id,
+        editedByRole: actor.role,
+        editedByName: actor.fullName,
+        previousData: JSON.stringify(toRequestSnapshot(record)),
+        newData: JSON.stringify(toRequestSnapshot(updated!)),
+      },
+    });
+  }
 
   return Response.json({
     ...updated!,
@@ -210,5 +250,10 @@ export async function PATCH(request: Request, { params }: Props) {
     ownerIdDocNames: JSON.parse(updated!.ownerIdDocNames) as string[],
     shareholderContractDocNames: JSON.parse(updated!.shareholderContractDocNames) as string[],
     otherDocNames: JSON.parse(updated!.otherDocNames) as string[],
+    revisions: updated!.revisions.map((r) => ({
+      ...r,
+      previousData: JSON.parse(r.previousData),
+      newData: JSON.parse(r.newData),
+    })),
   });
 }

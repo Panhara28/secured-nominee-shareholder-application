@@ -3,7 +3,7 @@
     "login": {
       "title": "Participant Login",
       "welcome": "Welcome Back",
-      "subtitle": "Sign in to your Secured Nominee Shareholder account",
+      "subtitle": "LOGON TO ONLINE FILING INFORMATION, AND NOMINEE SHAREHOLDER AGREEMENTS",
       "username": "Username",
       "usernamePlaceholder": "Enter your username",
       "password": "Password",
@@ -68,18 +68,38 @@
       "shareholdings": "My Shareholdings",
       "documents": "Documents",
       "beneficiaryOwner": "Beneficiary Owner",
+      "requestToUpdate": "Request to Update",
       "signOut": "Sign Out"
+    },
+    "comingSoon": {
+      "message": "This section is coming soon."
+    },
+    "requestUpdate": {
+      "searchLabel": "Search Approved Requests",
+      "searchPlaceholder": "Request No., or company name",
+      "search": "Search",
+      "searchHint": "Search by request number or company name to find an approved request to update.",
+      "searchPrompt": "Search for an approved request above to update it.",
+      "noResults": "No approved requests matched your search.",
+      "update": "Update"
     },
     "dashboard": {
       "welcome": "Welcome back,",
-      "shareholdingsLabel": "Total Shareholdings",
-      "shareholdingsValue": "0",
-      "pendingLabel": "Pending Registrations",
-      "pendingValue": "0",
-      "documentsLabel": "Documents",
-      "documentsValue": "0",
-      "recentActivity": "Recent Activity",
-      "noActivity": "No recent activity to display."
+      "draftedLabel": "Drafted",
+      "requestLabel": "Request",
+      "inReviewLabel": "In Review",
+      "approvedLabel": "Approved",
+      "rejectedLabel": "Rejected",
+      "returnedLabel": "Returned",
+      "allRequestsTitle": "All Requests",
+      "viewAll": "View All",
+      "returnedWarningTitle": "{count, plural, one {You have # request that was returned and needs correction.} other {You have # requests that were returned and need correction.}}",
+      "returnedWarningAction": "View Returned"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "empty": "No new notifications.",
+      "returnedNotice": "Returned — needs correction"
     }
   },
   "beneficiary": {
@@ -87,10 +107,14 @@
       "pageTitle": "Request Add Beneficiary Owner",
       "pageSubtitle": "Fill in all required fields before submitting.",
       "editRequestTitle": "Edit Request",
-      "editNotAllowed": "Only approved requests can be edited.",
+      "editNotAllowed": "Only approved or returned requests can be edited.",
       "editLoadError": "Failed to load the request. Please try again.",
       "saveChanges": "Save Changes",
       "backToList": "Back to list",
+      "returnReasonBannerTitle": "Your request was returned for correction:",
+      "returnReasonStepHint": "This likely relates to Step {step} — please review that section.",
+      "unchangedFlaggedFieldError": "You submitted the same value that was flagged for correction. Please update the highlighted field(s) before resubmitting.",
+      "unchangedFieldInline": "This value hasn't changed since it was flagged. Please correct it.",
       "step1Title": "Company Information",
       "companyNameKh": "Company Name (Khmer)",
       "companyNameEn": "Company Name (English)",
@@ -132,6 +156,8 @@
       "step3Title": "Beneficial Owner Information",
       "shareAmount": "Amount of Share",
       "step4Title": "Agreement of Nominees and Beneficial Owner",
+      "previous": "Previous",
+      "next": "Next",
       "shareholderContractLabel": "Upload Shareholder Contract",
       "otherDocsLabel": "Other Documents",
       "consentText": "I hereby declare and take responsibility for all information and documents provided above to be true and correct.",
@@ -144,7 +170,46 @@
       "cancel": "Cancel",
       "submit": "Save Drafted",
       "submitting": "Saving…",
-      "submitError": "Failed to save draft. Please try again."
+      "submitError": "Failed to save draft. Please try again.",
+      "submitRequest": "Submit Request",
+      "submittingRequest": "Submitting…",
+      "draftSaved": "Draft saved successfully.",
+      "draftUpdated": "Draft updated successfully.",
+      "requestSubmitted": "Request submitted successfully."
+    },
+    "revisions": {
+      "title": "Edit History",
+      "empty": "No edits yet.",
+      "editedBy": "Edited by {name} on {date}",
+      "field": "Field",
+      "columnPrevious": "Previous",
+      "columnNew": "New",
+      "noFieldChanges": "No field changes recorded.",
+      "yes": "Yes",
+      "no": "No",
+      "diffCompare": "Diff & Compare",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Request No. or company name",
+      "reset": "Reset",
+      "search": "Search",
+      "retry": "Retry",
+      "loadError": "Failed to load edit history.",
+      "selectPrompt": "Select an edit from the list to view its diff.",
+      "viewRequest": "View Request",
+      "fieldsChanged": "{count, plural, one {# field changed} other {# fields changed}}",
+      "sections": {
+        "company": "Company",
+        "shareholder": "Nominee Shareholder",
+        "owner": "Beneficial Owner",
+        "agreement": "Agreement"
+      },
+      "fields": {
+        "photo": "Photo",
+        "idDocuments": "ID Documents",
+        "contractDocuments": "Shareholder Contract",
+        "otherDocuments": "Other Documents",
+        "consentAgreed": "Consent"
+      }
     },
     "allRequests": {
       "pageTitle": "All Requests",
@@ -153,12 +218,15 @@
       "searchPlaceholder": "Request No., company, or owner name",
       "statusLabel": "Status",
       "statusAll": "All",
+      "statusAwaitingReview": "Request / Update Requested",
       "status": {
         "DRAFT": "Drafted",
         "PENDING": "Request",
         "IN_REVIEW": "In Review",
         "APPROVED": "Approved",
-        "REJECTED": "Rejected"
+        "REJECTED": "Rejected",
+        "RETURNED": "Returned",
+        "UPDATE_REQUESTED": "Update Requested"
       },
       "reset": "Reset",
       "search": "Search",
@@ -167,7 +235,8 @@
         "inReview": "Request",
         "verifying": "In Review",
         "approved": "Approved",
-        "rejected": "Rejected"
+        "rejected": "Rejected",
+        "returned": "Returned"
       },
       "col": {
         "requestNo": "Request No.",
@@ -200,10 +269,12 @@
       "incompleteFields": "Please complete all required fields before submitting.",
       "pendingNotice": "Your request will be reviewed by our official.",
       "inReviewNotice": "Your request is currently being reviewed by our official.",
+      "updateRequestedNotice": "Your update is pending admin review. They can compare it against the previously approved data.",
       "rejectionReason": "Rejection Reason",
+      "returnReason": "Return Reason",
       "requestToEdit": "Request to Edit",
       "editRequestTitle": "Edit Request",
-      "editNotAllowed": "Only approved requests can be edited.",
+      "editNotAllowed": "Only approved or returned requests can be edited.",
       "editLoadError": "Failed to load the request. Please try again.",
       "saveChanges": "Save Changes",
       "log": {
@@ -215,6 +286,7 @@
           "SUBMITTED": "Submitted for review",
           "APPROVED": "Approved",
           "REJECTED": "Rejected",
+          "RETURNED": "Returned for correction",
           "EDITED": "Edited and resubmitted"
         }
       }
@@ -223,7 +295,7 @@
   "admin": {
     "login": {
       "welcome": "Admin Sign In",
-      "subtitle": "Sign in to the Secured Nominee Shareholder admin panel",
+      "subtitle": "LOGON TO ONLINE FILING INFORMATION, AND NOMINEE SHAREHOLDER AGREEMENTS",
       "username": "Username",
       "usernamePlaceholder": "Enter your username",
       "password": "Password",
@@ -237,6 +309,7 @@
       "portalName": "Admin Panel",
       "dashboard": "Dashboard",
       "requests": "Requests",
+      "activitiesLogs": "Activities Log",
       "users": "Users",
       "allUsers": "All Users",
       "createUser": "Create User",
@@ -253,6 +326,7 @@
       "inReview": "In Review",
       "approved": "Approved",
       "rejected": "Rejected",
+      "returned": "Returned",
       "statusBreakdown": "Status Breakdown",
       "recentRequests": "Recent Requests"
     },
@@ -279,12 +353,58 @@
       "verifying": "Verifying…",
       "verifyError": "Failed to verify request. Please try again.",
       "verifyPassed": "Data Verified — no issues found.",
-      "verifyFailed": "Verification found possible issues:"
+      "verifyFailed": "Verification found possible issues:",
+      "return": "Return",
+      "returning": "Returning…",
+      "returnDialogTitle": "Return Request",
+      "returnDialogDescription": "Please provide a reason for returning this request for correction. The shareholder will be able to see this.",
+      "returnReason": "Return Reason",
+      "confirmReturn": "Return Request"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "empty": "No new notifications.",
+      "pendingNotice": "Awaiting review",
+      "updateRequestedNotice": "Update requested — review diff"
+    },
+    "activitiesLogs": {
+      "pageTitle": "Activities Log",
+      "pageSubtitle": "Every mutation across the platform — logins, registrations, and request lifecycle changes.",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Actor, note, or entity type",
+      "actionLabel": "Action",
+      "actionAll": "All",
+      "reset": "Reset",
+      "search": "Search",
+      "retry": "Retry",
+      "loadError": "Failed to load activity logs.",
+      "empty": "No activity recorded yet.",
+      "col": {
+        "action": "Action",
+        "actor": "Actor",
+        "entity": "Entity",
+        "note": "Note",
+        "when": "When"
+      },
+      "action": {
+        "LOGIN": "Signed in",
+        "LOGOUT": "Signed out",
+        "REGISTER": "Registered account",
+        "PASSWORD_RESET_REQUESTED": "Requested password reset",
+        "PASSWORD_RESET": "Reset password",
+        "REQUEST_CREATED": "Created request",
+        "REQUEST_SUBMITTED": "Submitted request",
+        "REQUEST_EDITED": "Edited request",
+        "REQUEST_APPROVED": "Approved request",
+        "REQUEST_REJECTED": "Rejected request",
+        "REQUEST_RETURNED": "Returned request",
+        "REQUEST_VERIFIED": "Verified request"
+      }
     }
   },
   "auth": {
     "brand": {
-      "headline": "Secure and Transparent Nominee Shareholder Management",
+      "headline": "ONLINE FILING INFORMATION, AND NOMINEE SHAREHOLDER AGREEMENTS",
       "description": "A simulation platform for managing nominee shareholding structures, business registrations, and corporate documentation.",
       "stat1Label": "Active Shareholders",
       "stat1Value": "—",

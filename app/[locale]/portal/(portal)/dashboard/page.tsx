@@ -3,8 +3,9 @@ import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
 import { requireShareholder } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "@/lib/navigation";
-import { Briefcase, Clock, FileText, ShieldCheck } from "lucide-react";
+import { redirect, Link } from "@/lib/navigation";
+import { AlertTriangle, CheckCircle2, FileEdit, RotateCcw, ShieldCheck, TimerReset, XCircle } from "lucide-react";
+import DashboardRequestsTable from "@/components/portal/DashboardRequestsTable";
 
 export const metadata: Metadata = {
   title: "Dashboard — Secured Nominee Shareholder",
@@ -27,32 +28,98 @@ export default async function DashboardPage({ params }: Props) {
 
   const t = await getTranslations("portal.dashboard");
 
+  const approvedRequests = await prisma.beneficiaryRequest.findMany({
+    where: { userId: session.userId, status: "APPROVED" },
+    orderBy: { submittedAt: "desc" },
+    select: { id: true, requestNo: true, companyNameEn: true, companyNameKh: true, status: true, submittedAt: true },
+  });
+  const approvedRequestsSerialized = approvedRequests.map((r) => ({ ...r, submittedAt: r.submittedAt.toISOString() }));
+
+  const returnedRequests = await prisma.beneficiaryRequest.findMany({
+    where: { userId: session.userId, status: "RETURNED" },
+    orderBy: { submittedAt: "desc" },
+    select: { id: true, requestNo: true, companyNameEn: true },
+  });
+
+  const statusGroups = await prisma.beneficiaryRequest.groupBy({
+    by: ["status"],
+    where: { userId: session.userId },
+    _count: true,
+  });
+
+  const summary = { drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0, returned: 0 };
+  for (const g of statusGroups) {
+    if (g.status === "DRAFT") summary.drafted = g._count;
+    else if (g.status === "PENDING") summary.request = g._count;
+    else if (g.status === "IN_REVIEW") summary.inReview = g._count;
+    else if (g.status === "APPROVED") summary.approved = g._count;
+    else if (g.status === "REJECTED") summary.rejected = g._count;
+    else if (g.status === "RETURNED") summary.returned = g._count;
+  }
+
   const stats = [
     {
-      label: t("shareholdingsLabel"),
-      value: t("shareholdingsValue"),
-      icon: Briefcase,
+      label: t("draftedLabel"),
+      value: summary.drafted,
+      icon: FileEdit,
+      color: "text-slate-500",
+      bg: "bg-slate-100",
+    },
+    {
+      label: t("requestLabel"),
+      value: summary.request,
+      icon: TimerReset,
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
     {
-      label: t("pendingLabel"),
-      value: t("pendingValue"),
-      icon: Clock,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
+      label: t("inReviewLabel"),
+      value: summary.inReview,
+      icon: ShieldCheck,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
     },
     {
-      label: t("documentsLabel"),
-      value: t("documentsValue"),
-      icon: FileText,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
+      label: t("approvedLabel"),
+      value: summary.approved,
+      icon: CheckCircle2,
+      color: "text-green-600",
+      bg: "bg-green-50",
+    },
+    {
+      label: t("rejectedLabel"),
+      value: summary.rejected,
+      icon: XCircle,
+      color: "text-red-600",
+      bg: "bg-red-50",
+    },
+    {
+      label: t("returnedLabel"),
+      value: summary.returned,
+      icon: RotateCcw,
+      color: "text-orange-600",
+      bg: "bg-orange-50",
     },
   ];
 
   return (
     <div className="space-y-6">
+      {/* Returned request warning */}
+      {returnedRequests.length > 0 && (
+        <div className="flex items-center gap-3 rounded-xl border border-orange-200 bg-orange-50 px-5 py-4">
+          <AlertTriangle className="h-4.5 w-4.5 text-orange-600 flex-shrink-0" />
+          <p className="text-sm font-medium text-orange-800 flex-1">
+            {t("returnedWarningTitle", { count: returnedRequests.length })}
+          </p>
+          <Link
+            href={{ pathname: "/portal/beneficiary/all-requests", query: { status: "RETURNED" } }}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors flex-shrink-0"
+          >
+            {t("returnedWarningAction")}
+          </Link>
+        </div>
+      )}
+
       {/* Welcome header */}
       <div className="rounded-2xl bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 p-6 text-white">
         <div className="flex items-center gap-3 mb-3">
@@ -70,7 +137,7 @@ export default async function DashboardPage({ params }: Props) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -90,15 +157,8 @@ export default async function DashboardPage({ params }: Props) {
         })}
       </div>
 
-      {/* Recent activity placeholder */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-        <div className="px-5 py-4 border-b border-slate-100">
-          <h2 className="font-semibold text-slate-800">{t("recentActivity")}</h2>
-        </div>
-        <div className="px-5 py-10 text-center text-slate-400 text-sm">
-          {t("noActivity")}
-        </div>
-      </div>
+      {/* All Requests */}
+      <DashboardRequestsTable initialRequests={approvedRequestsSerialized} />
     </div>
   );
 }

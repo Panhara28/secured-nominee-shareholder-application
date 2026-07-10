@@ -1,10 +1,10 @@
 import { useTranslations } from "next-intl";
-import { CheckCircle2, FileEdit, Pencil, TimerReset, XCircle } from "lucide-react";
+import { CheckCircle2, FileEdit, Pencil, RotateCcw, TimerReset, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type ActivityLogEntry = {
   id: number;
-  action: "CREATED" | "SUBMITTED" | "APPROVED" | "REJECTED" | "EDITED";
+  action: "CREATED" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RETURNED" | "EDITED";
   actorName: string;
   actorRole: string;
   note: string | null;
@@ -24,6 +24,7 @@ const ICONS: Record<ActivityLogEntry["action"], React.ElementType> = {
   SUBMITTED: TimerReset,
   APPROVED: CheckCircle2,
   REJECTED: XCircle,
+  RETURNED: RotateCcw,
   EDITED: Pencil,
 };
 
@@ -32,6 +33,7 @@ const ICON_STYLES: Record<ActivityLogEntry["action"], string> = {
   SUBMITTED: "bg-blue-50 text-blue-600",
   APPROVED: "bg-green-50 text-green-600",
   REJECTED: "bg-red-50 text-red-600",
+  RETURNED: "bg-orange-50 text-orange-600",
   EDITED: "bg-amber-50 text-amber-600",
 };
 

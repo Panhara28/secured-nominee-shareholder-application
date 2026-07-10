@@ -6,10 +6,11 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/lib/navigation";
 import {
   LayoutDashboard, UserCog, ShieldCheck, ChevronDown,
-  User, EditIcon, Menu, X, LogOut, FileText,
+  User, EditIcon, Menu, X, LogOut, FileText, History, GitCompare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
+import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
 
 type Props = {
   fullName: string;
@@ -21,6 +22,7 @@ type NavItem = { label: string; href?: string; icon: React.ElementType; children
 
 export default function AdminShell({ fullName, children }: Props) {
   const t = useTranslations("admin.nav");
+  const trev = useTranslations("beneficiary.revisions");
   const pathname = usePathname() ?? "";
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -35,6 +37,8 @@ export default function AdminShell({ fullName, children }: Props) {
   const navItems: NavItem[] = [
     { label: t("dashboard"), href: "/secured/admin/dashboard", icon: LayoutDashboard },
     { label: t("requests"), href: "/secured/admin/requests", icon: FileText },
+    { label: t("activitiesLogs"), href: "/secured/admin/activities-logs", icon: History },
+    { label: trev("diffCompare"), href: "/secured/admin/revisions", icon: GitCompare },
     {
       label: t("users"),
       icon: UserCog,
@@ -166,11 +170,14 @@ export default function AdminShell({ fullName, children }: Props) {
           </button>
 
           <div className="ml-auto flex items-center gap-3">
-            <LanguageSwitcher />
-            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-              <User className="h-4 w-4 text-blue-700" />
+            <AdminNotificationBell />
+            <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
+              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <User className="h-4 w-4 text-blue-700" />
+              </div>
+              <span className="hidden sm:block text-sm font-medium text-slate-700">{fullName}</span>
+              <LanguageSwitcher />
             </div>
-            <span className="hidden sm:block text-sm font-medium text-slate-700">{fullName}</span>
           </div>
         </header>
         <main className="p-4 lg:p-6">{children}</main>

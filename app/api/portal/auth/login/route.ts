@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, setSessionCookie } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-log";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as { username?: string; password?: string } | null;
@@ -17,6 +18,12 @@ export async function POST(request: Request) {
   }
 
   await setSessionCookie(user.id, user.role);
+  await logActivity({
+    action: "LOGIN",
+    entityType: "User",
+    entityId: user.id,
+    actor: { id: user.id, role: user.role, fullName: user.fullName },
+  });
 
   return Response.json({
     id: user.id,

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-log";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -29,7 +30,7 @@ export async function POST(_request: Request, { params }: Props) {
   if (!record) {
     return Response.json({ error: "Request not found." }, { status: 404 });
   }
-  if (record.status !== "PENDING" && record.status !== "IN_REVIEW") {
+  if (record.status !== "PENDING" && record.status !== "IN_REVIEW" && record.status !== "UPDATE_REQUESTED") {
     return Response.json({ error: "Only requests awaiting review can be verified." }, { status: 400 });
   }
 
@@ -46,5 +47,16 @@ export async function POST(_request: Request, { params }: Props) {
     await prisma.beneficiaryRequest.update({ where: { id }, data: { status: "IN_REVIEW" } });
   }
 
-  return Response.json({ verified, issues, checkedAt: new Date().toISOString() });
+  const actorUser = await prisma.user.findUnique({ where: { id: session.userId }, select: { fullName: true, role: true } });
+  if (actorUser) {
+    await logActivity({
+      action: "REQUEST_VERIFIED",
+      entityType: "BeneficiaryRequest",
+      entityId: id,
+      actor: { id: session.userId, role: actorUser.role, fullName: actorUser.fullName },
+      note: verified ? "Verification passed" : `Verification found issues: ${issues.join("; ")}`,
+    });
+  }
+
+  return Response.json({ verified, issues, checkedAt: new Date().toISOString(), status: "IN_REVIEW" });
 }

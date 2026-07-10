@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-log";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as {
@@ -38,6 +39,13 @@ export async function POST(request: Request) {
   const user = await prisma.user.create({
     data: { fullName, email, username, passwordHash, role: "SHAREHOLDER" },
     select: { id: true, username: true, fullName: true, email: true },
+  });
+
+  await logActivity({
+    action: "REGISTER",
+    entityType: "User",
+    entityId: user.id,
+    actor: { id: user.id, role: "SHAREHOLDER", fullName: user.fullName },
   });
 
   return Response.json(user, { status: 201 });

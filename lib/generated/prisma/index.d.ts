@@ -43,6 +43,16 @@ export type BeneficiaryRequest = $Result.DefaultSelection<Prisma.$BeneficiaryReq
  * 
  */
 export type RequestLog = $Result.DefaultSelection<Prisma.$RequestLogPayload>
+/**
+ * Model RequestRevision
+ * 
+ */
+export type RequestRevision = $Result.DefaultSelection<Prisma.$RequestRevisionPayload>
+/**
+ * Model ActivityLog
+ * 
+ */
+export type ActivityLog = $Result.DefaultSelection<Prisma.$ActivityLogPayload>
 
 /**
  * Enums
@@ -61,7 +71,9 @@ export const BeneficiaryRequestStatus: {
   PENDING: 'PENDING',
   IN_REVIEW: 'IN_REVIEW',
   APPROVED: 'APPROVED',
-  REJECTED: 'REJECTED'
+  REJECTED: 'REJECTED',
+  RETURNED: 'RETURNED',
+  UPDATE_REQUESTED: 'UPDATE_REQUESTED'
 };
 
 export type BeneficiaryRequestStatus = (typeof BeneficiaryRequestStatus)[keyof typeof BeneficiaryRequestStatus]
@@ -268,6 +280,26 @@ export class PrismaClient<
     * ```
     */
   get requestLog(): Prisma.RequestLogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.requestRevision`: Exposes CRUD operations for the **RequestRevision** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more RequestRevisions
+    * const requestRevisions = await prisma.requestRevision.findMany()
+    * ```
+    */
+  get requestRevision(): Prisma.RequestRevisionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.activityLog`: Exposes CRUD operations for the **ActivityLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ActivityLogs
+    * const activityLogs = await prisma.activityLog.findMany()
+    * ```
+    */
+  get activityLog(): Prisma.ActivityLogDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -707,7 +739,9 @@ export namespace Prisma {
     PermissionModule: 'PermissionModule',
     StaffRolePermission: 'StaffRolePermission',
     BeneficiaryRequest: 'BeneficiaryRequest',
-    RequestLog: 'RequestLog'
+    RequestLog: 'RequestLog',
+    RequestRevision: 'RequestRevision',
+    ActivityLog: 'ActivityLog'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -723,7 +757,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "staffRole" | "permissionModule" | "staffRolePermission" | "beneficiaryRequest" | "requestLog"
+      modelProps: "user" | "staffRole" | "permissionModule" | "staffRolePermission" | "beneficiaryRequest" | "requestLog" | "requestRevision" | "activityLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1171,6 +1205,154 @@ export namespace Prisma {
           }
         }
       }
+      RequestRevision: {
+        payload: Prisma.$RequestRevisionPayload<ExtArgs>
+        fields: Prisma.RequestRevisionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.RequestRevisionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestRevisionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.RequestRevisionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestRevisionPayload>
+          }
+          findFirst: {
+            args: Prisma.RequestRevisionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestRevisionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.RequestRevisionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestRevisionPayload>
+          }
+          findMany: {
+            args: Prisma.RequestRevisionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestRevisionPayload>[]
+          }
+          create: {
+            args: Prisma.RequestRevisionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestRevisionPayload>
+          }
+          createMany: {
+            args: Prisma.RequestRevisionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.RequestRevisionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestRevisionPayload>[]
+          }
+          delete: {
+            args: Prisma.RequestRevisionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestRevisionPayload>
+          }
+          update: {
+            args: Prisma.RequestRevisionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestRevisionPayload>
+          }
+          deleteMany: {
+            args: Prisma.RequestRevisionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.RequestRevisionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.RequestRevisionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestRevisionPayload>[]
+          }
+          upsert: {
+            args: Prisma.RequestRevisionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestRevisionPayload>
+          }
+          aggregate: {
+            args: Prisma.RequestRevisionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateRequestRevision>
+          }
+          groupBy: {
+            args: Prisma.RequestRevisionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<RequestRevisionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.RequestRevisionCountArgs<ExtArgs>
+            result: $Utils.Optional<RequestRevisionCountAggregateOutputType> | number
+          }
+        }
+      }
+      ActivityLog: {
+        payload: Prisma.$ActivityLogPayload<ExtArgs>
+        fields: Prisma.ActivityLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ActivityLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ActivityLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload>
+          }
+          findFirst: {
+            args: Prisma.ActivityLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ActivityLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload>
+          }
+          findMany: {
+            args: Prisma.ActivityLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload>[]
+          }
+          create: {
+            args: Prisma.ActivityLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload>
+          }
+          createMany: {
+            args: Prisma.ActivityLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ActivityLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload>[]
+          }
+          delete: {
+            args: Prisma.ActivityLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload>
+          }
+          update: {
+            args: Prisma.ActivityLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.ActivityLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ActivityLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ActivityLogUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload>[]
+          }
+          upsert: {
+            args: Prisma.ActivityLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload>
+          }
+          aggregate: {
+            args: Prisma.ActivityLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateActivityLog>
+          }
+          groupBy: {
+            args: Prisma.ActivityLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ActivityLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ActivityLogCountArgs<ExtArgs>
+            result: $Utils.Optional<ActivityLogCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1285,6 +1467,8 @@ export namespace Prisma {
     staffRolePermission?: StaffRolePermissionOmit
     beneficiaryRequest?: BeneficiaryRequestOmit
     requestLog?: RequestLogOmit
+    requestRevision?: RequestRevisionOmit
+    activityLog?: ActivityLogOmit
   }
 
   /* Types for Logging */
@@ -1468,10 +1652,12 @@ export namespace Prisma {
 
   export type BeneficiaryRequestCountOutputType = {
     logs: number
+    revisions: number
   }
 
   export type BeneficiaryRequestCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     logs?: boolean | BeneficiaryRequestCountOutputTypeCountLogsArgs
+    revisions?: boolean | BeneficiaryRequestCountOutputTypeCountRevisionsArgs
   }
 
   // Custom InputTypes
@@ -1490,6 +1676,13 @@ export namespace Prisma {
    */
   export type BeneficiaryRequestCountOutputTypeCountLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: RequestLogWhereInput
+  }
+
+  /**
+   * BeneficiaryRequestCountOutputType without action
+   */
+  export type BeneficiaryRequestCountOutputTypeCountRevisionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RequestRevisionWhereInput
   }
 
 
@@ -1530,6 +1723,7 @@ export namespace Prisma {
     isActive: boolean | null
     resetToken: string | null
     resetTokenExpiry: Date | null
+    notificationsSeenAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
     staffRoleId: number | null
@@ -1546,6 +1740,7 @@ export namespace Prisma {
     isActive: boolean | null
     resetToken: string | null
     resetTokenExpiry: Date | null
+    notificationsSeenAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
     staffRoleId: number | null
@@ -1562,6 +1757,7 @@ export namespace Prisma {
     isActive: number
     resetToken: number
     resetTokenExpiry: number
+    notificationsSeenAt: number
     createdAt: number
     updatedAt: number
     staffRoleId: number
@@ -1590,6 +1786,7 @@ export namespace Prisma {
     isActive?: true
     resetToken?: true
     resetTokenExpiry?: true
+    notificationsSeenAt?: true
     createdAt?: true
     updatedAt?: true
     staffRoleId?: true
@@ -1606,6 +1803,7 @@ export namespace Prisma {
     isActive?: true
     resetToken?: true
     resetTokenExpiry?: true
+    notificationsSeenAt?: true
     createdAt?: true
     updatedAt?: true
     staffRoleId?: true
@@ -1622,6 +1820,7 @@ export namespace Prisma {
     isActive?: true
     resetToken?: true
     resetTokenExpiry?: true
+    notificationsSeenAt?: true
     createdAt?: true
     updatedAt?: true
     staffRoleId?: true
@@ -1725,6 +1924,7 @@ export namespace Prisma {
     isActive: boolean
     resetToken: string | null
     resetTokenExpiry: Date | null
+    notificationsSeenAt: Date | null
     createdAt: Date
     updatedAt: Date
     staffRoleId: number | null
@@ -1760,6 +1960,7 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
+    notificationsSeenAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     staffRoleId?: boolean
@@ -1779,6 +1980,7 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
+    notificationsSeenAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     staffRoleId?: boolean
@@ -1796,6 +1998,7 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
+    notificationsSeenAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     staffRoleId?: boolean
@@ -1813,12 +2016,13 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
+    notificationsSeenAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     staffRoleId?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "fullName" | "phoneNumber" | "role" | "isActive" | "resetToken" | "resetTokenExpiry" | "createdAt" | "updatedAt" | "staffRoleId", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "fullName" | "phoneNumber" | "role" | "isActive" | "resetToken" | "resetTokenExpiry" | "notificationsSeenAt" | "createdAt" | "updatedAt" | "staffRoleId", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     beneficiaryRequests?: boolean | User$beneficiaryRequestsArgs<ExtArgs>
     staffRole?: boolean | User$staffRoleArgs<ExtArgs>
@@ -1848,6 +2052,7 @@ export namespace Prisma {
       isActive: boolean
       resetToken: string | null
       resetTokenExpiry: Date | null
+      notificationsSeenAt: Date | null
       createdAt: Date
       updatedAt: Date
       staffRoleId: number | null
@@ -2286,6 +2491,7 @@ export namespace Prisma {
     readonly isActive: FieldRef<"User", 'Boolean'>
     readonly resetToken: FieldRef<"User", 'String'>
     readonly resetTokenExpiry: FieldRef<"User", 'DateTime'>
+    readonly notificationsSeenAt: FieldRef<"User", 'DateTime'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
     readonly staffRoleId: FieldRef<"User", 'Int'>
@@ -6707,6 +6913,7 @@ export namespace Prisma {
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     logs?: boolean | BeneficiaryRequest$logsArgs<ExtArgs>
+    revisions?: boolean | BeneficiaryRequest$revisionsArgs<ExtArgs>
     _count?: boolean | BeneficiaryRequestCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["beneficiaryRequest"]>
 
@@ -6887,6 +7094,7 @@ export namespace Prisma {
   export type BeneficiaryRequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     logs?: boolean | BeneficiaryRequest$logsArgs<ExtArgs>
+    revisions?: boolean | BeneficiaryRequest$revisionsArgs<ExtArgs>
     _count?: boolean | BeneficiaryRequestCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type BeneficiaryRequestIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6901,6 +7109,7 @@ export namespace Prisma {
     objects: {
       user: Prisma.$UserPayload<ExtArgs>
       logs: Prisma.$RequestLogPayload<ExtArgs>[]
+      revisions: Prisma.$RequestRevisionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -7353,6 +7562,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     logs<T extends BeneficiaryRequest$logsArgs<ExtArgs> = {}>(args?: Subset<T, BeneficiaryRequest$logsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RequestLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    revisions<T extends BeneficiaryRequest$revisionsArgs<ExtArgs> = {}>(args?: Subset<T, BeneficiaryRequest$revisionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7856,6 +8066,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: RequestLogScalarFieldEnum | RequestLogScalarFieldEnum[]
+  }
+
+  /**
+   * BeneficiaryRequest.revisions
+   */
+  export type BeneficiaryRequest$revisionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionInclude<ExtArgs> | null
+    where?: RequestRevisionWhereInput
+    orderBy?: RequestRevisionOrderByWithRelationInput | RequestRevisionOrderByWithRelationInput[]
+    cursor?: RequestRevisionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: RequestRevisionScalarFieldEnum | RequestRevisionScalarFieldEnum[]
   }
 
   /**
@@ -9020,6 +9254,2253 @@ export namespace Prisma {
 
 
   /**
+   * Model RequestRevision
+   */
+
+  export type AggregateRequestRevision = {
+    _count: RequestRevisionCountAggregateOutputType | null
+    _avg: RequestRevisionAvgAggregateOutputType | null
+    _sum: RequestRevisionSumAggregateOutputType | null
+    _min: RequestRevisionMinAggregateOutputType | null
+    _max: RequestRevisionMaxAggregateOutputType | null
+  }
+
+  export type RequestRevisionAvgAggregateOutputType = {
+    id: number | null
+    requestId: number | null
+    editedByUserId: number | null
+  }
+
+  export type RequestRevisionSumAggregateOutputType = {
+    id: number | null
+    requestId: number | null
+    editedByUserId: number | null
+  }
+
+  export type RequestRevisionMinAggregateOutputType = {
+    id: number | null
+    requestId: number | null
+    editedByUserId: number | null
+    editedByRole: $Enums.Role | null
+    editedByName: string | null
+    previousData: string | null
+    newData: string | null
+    approvedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type RequestRevisionMaxAggregateOutputType = {
+    id: number | null
+    requestId: number | null
+    editedByUserId: number | null
+    editedByRole: $Enums.Role | null
+    editedByName: string | null
+    previousData: string | null
+    newData: string | null
+    approvedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type RequestRevisionCountAggregateOutputType = {
+    id: number
+    requestId: number
+    editedByUserId: number
+    editedByRole: number
+    editedByName: number
+    previousData: number
+    newData: number
+    approvedAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type RequestRevisionAvgAggregateInputType = {
+    id?: true
+    requestId?: true
+    editedByUserId?: true
+  }
+
+  export type RequestRevisionSumAggregateInputType = {
+    id?: true
+    requestId?: true
+    editedByUserId?: true
+  }
+
+  export type RequestRevisionMinAggregateInputType = {
+    id?: true
+    requestId?: true
+    editedByUserId?: true
+    editedByRole?: true
+    editedByName?: true
+    previousData?: true
+    newData?: true
+    approvedAt?: true
+    createdAt?: true
+  }
+
+  export type RequestRevisionMaxAggregateInputType = {
+    id?: true
+    requestId?: true
+    editedByUserId?: true
+    editedByRole?: true
+    editedByName?: true
+    previousData?: true
+    newData?: true
+    approvedAt?: true
+    createdAt?: true
+  }
+
+  export type RequestRevisionCountAggregateInputType = {
+    id?: true
+    requestId?: true
+    editedByUserId?: true
+    editedByRole?: true
+    editedByName?: true
+    previousData?: true
+    newData?: true
+    approvedAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type RequestRevisionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RequestRevision to aggregate.
+     */
+    where?: RequestRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RequestRevisions to fetch.
+     */
+    orderBy?: RequestRevisionOrderByWithRelationInput | RequestRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: RequestRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RequestRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RequestRevisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned RequestRevisions
+    **/
+    _count?: true | RequestRevisionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: RequestRevisionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: RequestRevisionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: RequestRevisionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: RequestRevisionMaxAggregateInputType
+  }
+
+  export type GetRequestRevisionAggregateType<T extends RequestRevisionAggregateArgs> = {
+        [P in keyof T & keyof AggregateRequestRevision]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateRequestRevision[P]>
+      : GetScalarType<T[P], AggregateRequestRevision[P]>
+  }
+
+
+
+
+  export type RequestRevisionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RequestRevisionWhereInput
+    orderBy?: RequestRevisionOrderByWithAggregationInput | RequestRevisionOrderByWithAggregationInput[]
+    by: RequestRevisionScalarFieldEnum[] | RequestRevisionScalarFieldEnum
+    having?: RequestRevisionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: RequestRevisionCountAggregateInputType | true
+    _avg?: RequestRevisionAvgAggregateInputType
+    _sum?: RequestRevisionSumAggregateInputType
+    _min?: RequestRevisionMinAggregateInputType
+    _max?: RequestRevisionMaxAggregateInputType
+  }
+
+  export type RequestRevisionGroupByOutputType = {
+    id: number
+    requestId: number
+    editedByUserId: number
+    editedByRole: $Enums.Role
+    editedByName: string
+    previousData: string
+    newData: string
+    approvedAt: Date | null
+    createdAt: Date
+    _count: RequestRevisionCountAggregateOutputType | null
+    _avg: RequestRevisionAvgAggregateOutputType | null
+    _sum: RequestRevisionSumAggregateOutputType | null
+    _min: RequestRevisionMinAggregateOutputType | null
+    _max: RequestRevisionMaxAggregateOutputType | null
+  }
+
+  type GetRequestRevisionGroupByPayload<T extends RequestRevisionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<RequestRevisionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof RequestRevisionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], RequestRevisionGroupByOutputType[P]>
+            : GetScalarType<T[P], RequestRevisionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type RequestRevisionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requestId?: boolean
+    editedByUserId?: boolean
+    editedByRole?: boolean
+    editedByName?: boolean
+    previousData?: boolean
+    newData?: boolean
+    approvedAt?: boolean
+    createdAt?: boolean
+    request?: boolean | BeneficiaryRequestDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["requestRevision"]>
+
+  export type RequestRevisionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requestId?: boolean
+    editedByUserId?: boolean
+    editedByRole?: boolean
+    editedByName?: boolean
+    previousData?: boolean
+    newData?: boolean
+    approvedAt?: boolean
+    createdAt?: boolean
+    request?: boolean | BeneficiaryRequestDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["requestRevision"]>
+
+  export type RequestRevisionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requestId?: boolean
+    editedByUserId?: boolean
+    editedByRole?: boolean
+    editedByName?: boolean
+    previousData?: boolean
+    newData?: boolean
+    approvedAt?: boolean
+    createdAt?: boolean
+    request?: boolean | BeneficiaryRequestDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["requestRevision"]>
+
+  export type RequestRevisionSelectScalar = {
+    id?: boolean
+    requestId?: boolean
+    editedByUserId?: boolean
+    editedByRole?: boolean
+    editedByName?: boolean
+    previousData?: boolean
+    newData?: boolean
+    approvedAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type RequestRevisionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "requestId" | "editedByUserId" | "editedByRole" | "editedByName" | "previousData" | "newData" | "approvedAt" | "createdAt", ExtArgs["result"]["requestRevision"]>
+  export type RequestRevisionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    request?: boolean | BeneficiaryRequestDefaultArgs<ExtArgs>
+  }
+  export type RequestRevisionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    request?: boolean | BeneficiaryRequestDefaultArgs<ExtArgs>
+  }
+  export type RequestRevisionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    request?: boolean | BeneficiaryRequestDefaultArgs<ExtArgs>
+  }
+
+  export type $RequestRevisionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "RequestRevision"
+    objects: {
+      request: Prisma.$BeneficiaryRequestPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      requestId: number
+      editedByUserId: number
+      editedByRole: $Enums.Role
+      editedByName: string
+      previousData: string
+      newData: string
+      approvedAt: Date | null
+      createdAt: Date
+    }, ExtArgs["result"]["requestRevision"]>
+    composites: {}
+  }
+
+  type RequestRevisionGetPayload<S extends boolean | null | undefined | RequestRevisionDefaultArgs> = $Result.GetResult<Prisma.$RequestRevisionPayload, S>
+
+  type RequestRevisionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<RequestRevisionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: RequestRevisionCountAggregateInputType | true
+    }
+
+  export interface RequestRevisionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['RequestRevision'], meta: { name: 'RequestRevision' } }
+    /**
+     * Find zero or one RequestRevision that matches the filter.
+     * @param {RequestRevisionFindUniqueArgs} args - Arguments to find a RequestRevision
+     * @example
+     * // Get one RequestRevision
+     * const requestRevision = await prisma.requestRevision.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends RequestRevisionFindUniqueArgs>(args: SelectSubset<T, RequestRevisionFindUniqueArgs<ExtArgs>>): Prisma__RequestRevisionClient<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one RequestRevision that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {RequestRevisionFindUniqueOrThrowArgs} args - Arguments to find a RequestRevision
+     * @example
+     * // Get one RequestRevision
+     * const requestRevision = await prisma.requestRevision.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends RequestRevisionFindUniqueOrThrowArgs>(args: SelectSubset<T, RequestRevisionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__RequestRevisionClient<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first RequestRevision that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestRevisionFindFirstArgs} args - Arguments to find a RequestRevision
+     * @example
+     * // Get one RequestRevision
+     * const requestRevision = await prisma.requestRevision.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends RequestRevisionFindFirstArgs>(args?: SelectSubset<T, RequestRevisionFindFirstArgs<ExtArgs>>): Prisma__RequestRevisionClient<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first RequestRevision that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestRevisionFindFirstOrThrowArgs} args - Arguments to find a RequestRevision
+     * @example
+     * // Get one RequestRevision
+     * const requestRevision = await prisma.requestRevision.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends RequestRevisionFindFirstOrThrowArgs>(args?: SelectSubset<T, RequestRevisionFindFirstOrThrowArgs<ExtArgs>>): Prisma__RequestRevisionClient<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more RequestRevisions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestRevisionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all RequestRevisions
+     * const requestRevisions = await prisma.requestRevision.findMany()
+     * 
+     * // Get first 10 RequestRevisions
+     * const requestRevisions = await prisma.requestRevision.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const requestRevisionWithIdOnly = await prisma.requestRevision.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends RequestRevisionFindManyArgs>(args?: SelectSubset<T, RequestRevisionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a RequestRevision.
+     * @param {RequestRevisionCreateArgs} args - Arguments to create a RequestRevision.
+     * @example
+     * // Create one RequestRevision
+     * const RequestRevision = await prisma.requestRevision.create({
+     *   data: {
+     *     // ... data to create a RequestRevision
+     *   }
+     * })
+     * 
+     */
+    create<T extends RequestRevisionCreateArgs>(args: SelectSubset<T, RequestRevisionCreateArgs<ExtArgs>>): Prisma__RequestRevisionClient<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many RequestRevisions.
+     * @param {RequestRevisionCreateManyArgs} args - Arguments to create many RequestRevisions.
+     * @example
+     * // Create many RequestRevisions
+     * const requestRevision = await prisma.requestRevision.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends RequestRevisionCreateManyArgs>(args?: SelectSubset<T, RequestRevisionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many RequestRevisions and returns the data saved in the database.
+     * @param {RequestRevisionCreateManyAndReturnArgs} args - Arguments to create many RequestRevisions.
+     * @example
+     * // Create many RequestRevisions
+     * const requestRevision = await prisma.requestRevision.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many RequestRevisions and only return the `id`
+     * const requestRevisionWithIdOnly = await prisma.requestRevision.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends RequestRevisionCreateManyAndReturnArgs>(args?: SelectSubset<T, RequestRevisionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a RequestRevision.
+     * @param {RequestRevisionDeleteArgs} args - Arguments to delete one RequestRevision.
+     * @example
+     * // Delete one RequestRevision
+     * const RequestRevision = await prisma.requestRevision.delete({
+     *   where: {
+     *     // ... filter to delete one RequestRevision
+     *   }
+     * })
+     * 
+     */
+    delete<T extends RequestRevisionDeleteArgs>(args: SelectSubset<T, RequestRevisionDeleteArgs<ExtArgs>>): Prisma__RequestRevisionClient<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one RequestRevision.
+     * @param {RequestRevisionUpdateArgs} args - Arguments to update one RequestRevision.
+     * @example
+     * // Update one RequestRevision
+     * const requestRevision = await prisma.requestRevision.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends RequestRevisionUpdateArgs>(args: SelectSubset<T, RequestRevisionUpdateArgs<ExtArgs>>): Prisma__RequestRevisionClient<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more RequestRevisions.
+     * @param {RequestRevisionDeleteManyArgs} args - Arguments to filter RequestRevisions to delete.
+     * @example
+     * // Delete a few RequestRevisions
+     * const { count } = await prisma.requestRevision.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends RequestRevisionDeleteManyArgs>(args?: SelectSubset<T, RequestRevisionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RequestRevisions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestRevisionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many RequestRevisions
+     * const requestRevision = await prisma.requestRevision.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends RequestRevisionUpdateManyArgs>(args: SelectSubset<T, RequestRevisionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RequestRevisions and returns the data updated in the database.
+     * @param {RequestRevisionUpdateManyAndReturnArgs} args - Arguments to update many RequestRevisions.
+     * @example
+     * // Update many RequestRevisions
+     * const requestRevision = await prisma.requestRevision.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more RequestRevisions and only return the `id`
+     * const requestRevisionWithIdOnly = await prisma.requestRevision.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends RequestRevisionUpdateManyAndReturnArgs>(args: SelectSubset<T, RequestRevisionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one RequestRevision.
+     * @param {RequestRevisionUpsertArgs} args - Arguments to update or create a RequestRevision.
+     * @example
+     * // Update or create a RequestRevision
+     * const requestRevision = await prisma.requestRevision.upsert({
+     *   create: {
+     *     // ... data to create a RequestRevision
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the RequestRevision we want to update
+     *   }
+     * })
+     */
+    upsert<T extends RequestRevisionUpsertArgs>(args: SelectSubset<T, RequestRevisionUpsertArgs<ExtArgs>>): Prisma__RequestRevisionClient<$Result.GetResult<Prisma.$RequestRevisionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of RequestRevisions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestRevisionCountArgs} args - Arguments to filter RequestRevisions to count.
+     * @example
+     * // Count the number of RequestRevisions
+     * const count = await prisma.requestRevision.count({
+     *   where: {
+     *     // ... the filter for the RequestRevisions we want to count
+     *   }
+     * })
+    **/
+    count<T extends RequestRevisionCountArgs>(
+      args?: Subset<T, RequestRevisionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], RequestRevisionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a RequestRevision.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestRevisionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends RequestRevisionAggregateArgs>(args: Subset<T, RequestRevisionAggregateArgs>): Prisma.PrismaPromise<GetRequestRevisionAggregateType<T>>
+
+    /**
+     * Group by RequestRevision.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestRevisionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends RequestRevisionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: RequestRevisionGroupByArgs['orderBy'] }
+        : { orderBy?: RequestRevisionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, RequestRevisionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetRequestRevisionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the RequestRevision model
+   */
+  readonly fields: RequestRevisionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for RequestRevision.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__RequestRevisionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    request<T extends BeneficiaryRequestDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BeneficiaryRequestDefaultArgs<ExtArgs>>): Prisma__BeneficiaryRequestClient<$Result.GetResult<Prisma.$BeneficiaryRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the RequestRevision model
+   */
+  interface RequestRevisionFieldRefs {
+    readonly id: FieldRef<"RequestRevision", 'Int'>
+    readonly requestId: FieldRef<"RequestRevision", 'Int'>
+    readonly editedByUserId: FieldRef<"RequestRevision", 'Int'>
+    readonly editedByRole: FieldRef<"RequestRevision", 'Role'>
+    readonly editedByName: FieldRef<"RequestRevision", 'String'>
+    readonly previousData: FieldRef<"RequestRevision", 'String'>
+    readonly newData: FieldRef<"RequestRevision", 'String'>
+    readonly approvedAt: FieldRef<"RequestRevision", 'DateTime'>
+    readonly createdAt: FieldRef<"RequestRevision", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * RequestRevision findUnique
+   */
+  export type RequestRevisionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionInclude<ExtArgs> | null
+    /**
+     * Filter, which RequestRevision to fetch.
+     */
+    where: RequestRevisionWhereUniqueInput
+  }
+
+  /**
+   * RequestRevision findUniqueOrThrow
+   */
+  export type RequestRevisionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionInclude<ExtArgs> | null
+    /**
+     * Filter, which RequestRevision to fetch.
+     */
+    where: RequestRevisionWhereUniqueInput
+  }
+
+  /**
+   * RequestRevision findFirst
+   */
+  export type RequestRevisionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionInclude<ExtArgs> | null
+    /**
+     * Filter, which RequestRevision to fetch.
+     */
+    where?: RequestRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RequestRevisions to fetch.
+     */
+    orderBy?: RequestRevisionOrderByWithRelationInput | RequestRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RequestRevisions.
+     */
+    cursor?: RequestRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RequestRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RequestRevisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RequestRevisions.
+     */
+    distinct?: RequestRevisionScalarFieldEnum | RequestRevisionScalarFieldEnum[]
+  }
+
+  /**
+   * RequestRevision findFirstOrThrow
+   */
+  export type RequestRevisionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionInclude<ExtArgs> | null
+    /**
+     * Filter, which RequestRevision to fetch.
+     */
+    where?: RequestRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RequestRevisions to fetch.
+     */
+    orderBy?: RequestRevisionOrderByWithRelationInput | RequestRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RequestRevisions.
+     */
+    cursor?: RequestRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RequestRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RequestRevisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RequestRevisions.
+     */
+    distinct?: RequestRevisionScalarFieldEnum | RequestRevisionScalarFieldEnum[]
+  }
+
+  /**
+   * RequestRevision findMany
+   */
+  export type RequestRevisionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionInclude<ExtArgs> | null
+    /**
+     * Filter, which RequestRevisions to fetch.
+     */
+    where?: RequestRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RequestRevisions to fetch.
+     */
+    orderBy?: RequestRevisionOrderByWithRelationInput | RequestRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing RequestRevisions.
+     */
+    cursor?: RequestRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RequestRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RequestRevisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RequestRevisions.
+     */
+    distinct?: RequestRevisionScalarFieldEnum | RequestRevisionScalarFieldEnum[]
+  }
+
+  /**
+   * RequestRevision create
+   */
+  export type RequestRevisionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a RequestRevision.
+     */
+    data: XOR<RequestRevisionCreateInput, RequestRevisionUncheckedCreateInput>
+  }
+
+  /**
+   * RequestRevision createMany
+   */
+  export type RequestRevisionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many RequestRevisions.
+     */
+    data: RequestRevisionCreateManyInput | RequestRevisionCreateManyInput[]
+  }
+
+  /**
+   * RequestRevision createManyAndReturn
+   */
+  export type RequestRevisionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * The data used to create many RequestRevisions.
+     */
+    data: RequestRevisionCreateManyInput | RequestRevisionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * RequestRevision update
+   */
+  export type RequestRevisionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a RequestRevision.
+     */
+    data: XOR<RequestRevisionUpdateInput, RequestRevisionUncheckedUpdateInput>
+    /**
+     * Choose, which RequestRevision to update.
+     */
+    where: RequestRevisionWhereUniqueInput
+  }
+
+  /**
+   * RequestRevision updateMany
+   */
+  export type RequestRevisionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update RequestRevisions.
+     */
+    data: XOR<RequestRevisionUpdateManyMutationInput, RequestRevisionUncheckedUpdateManyInput>
+    /**
+     * Filter which RequestRevisions to update
+     */
+    where?: RequestRevisionWhereInput
+    /**
+     * Limit how many RequestRevisions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * RequestRevision updateManyAndReturn
+   */
+  export type RequestRevisionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * The data used to update RequestRevisions.
+     */
+    data: XOR<RequestRevisionUpdateManyMutationInput, RequestRevisionUncheckedUpdateManyInput>
+    /**
+     * Filter which RequestRevisions to update
+     */
+    where?: RequestRevisionWhereInput
+    /**
+     * Limit how many RequestRevisions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * RequestRevision upsert
+   */
+  export type RequestRevisionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the RequestRevision to update in case it exists.
+     */
+    where: RequestRevisionWhereUniqueInput
+    /**
+     * In case the RequestRevision found by the `where` argument doesn't exist, create a new RequestRevision with this data.
+     */
+    create: XOR<RequestRevisionCreateInput, RequestRevisionUncheckedCreateInput>
+    /**
+     * In case the RequestRevision was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<RequestRevisionUpdateInput, RequestRevisionUncheckedUpdateInput>
+  }
+
+  /**
+   * RequestRevision delete
+   */
+  export type RequestRevisionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionInclude<ExtArgs> | null
+    /**
+     * Filter which RequestRevision to delete.
+     */
+    where: RequestRevisionWhereUniqueInput
+  }
+
+  /**
+   * RequestRevision deleteMany
+   */
+  export type RequestRevisionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RequestRevisions to delete
+     */
+    where?: RequestRevisionWhereInput
+    /**
+     * Limit how many RequestRevisions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * RequestRevision without action
+   */
+  export type RequestRevisionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RequestRevision
+     */
+    select?: RequestRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RequestRevision
+     */
+    omit?: RequestRevisionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestRevisionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ActivityLog
+   */
+
+  export type AggregateActivityLog = {
+    _count: ActivityLogCountAggregateOutputType | null
+    _avg: ActivityLogAvgAggregateOutputType | null
+    _sum: ActivityLogSumAggregateOutputType | null
+    _min: ActivityLogMinAggregateOutputType | null
+    _max: ActivityLogMaxAggregateOutputType | null
+  }
+
+  export type ActivityLogAvgAggregateOutputType = {
+    id: number | null
+    entityId: number | null
+    actorUserId: number | null
+  }
+
+  export type ActivityLogSumAggregateOutputType = {
+    id: number | null
+    entityId: number | null
+    actorUserId: number | null
+  }
+
+  export type ActivityLogMinAggregateOutputType = {
+    id: number | null
+    action: string | null
+    entityType: string | null
+    entityId: number | null
+    actorUserId: number | null
+    actorRole: $Enums.Role | null
+    actorName: string | null
+    note: string | null
+    createdAt: Date | null
+  }
+
+  export type ActivityLogMaxAggregateOutputType = {
+    id: number | null
+    action: string | null
+    entityType: string | null
+    entityId: number | null
+    actorUserId: number | null
+    actorRole: $Enums.Role | null
+    actorName: string | null
+    note: string | null
+    createdAt: Date | null
+  }
+
+  export type ActivityLogCountAggregateOutputType = {
+    id: number
+    action: number
+    entityType: number
+    entityId: number
+    actorUserId: number
+    actorRole: number
+    actorName: number
+    note: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ActivityLogAvgAggregateInputType = {
+    id?: true
+    entityId?: true
+    actorUserId?: true
+  }
+
+  export type ActivityLogSumAggregateInputType = {
+    id?: true
+    entityId?: true
+    actorUserId?: true
+  }
+
+  export type ActivityLogMinAggregateInputType = {
+    id?: true
+    action?: true
+    entityType?: true
+    entityId?: true
+    actorUserId?: true
+    actorRole?: true
+    actorName?: true
+    note?: true
+    createdAt?: true
+  }
+
+  export type ActivityLogMaxAggregateInputType = {
+    id?: true
+    action?: true
+    entityType?: true
+    entityId?: true
+    actorUserId?: true
+    actorRole?: true
+    actorName?: true
+    note?: true
+    createdAt?: true
+  }
+
+  export type ActivityLogCountAggregateInputType = {
+    id?: true
+    action?: true
+    entityType?: true
+    entityId?: true
+    actorUserId?: true
+    actorRole?: true
+    actorName?: true
+    note?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ActivityLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ActivityLog to aggregate.
+     */
+    where?: ActivityLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ActivityLogs to fetch.
+     */
+    orderBy?: ActivityLogOrderByWithRelationInput | ActivityLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ActivityLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ActivityLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ActivityLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ActivityLogs
+    **/
+    _count?: true | ActivityLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ActivityLogAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ActivityLogSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ActivityLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ActivityLogMaxAggregateInputType
+  }
+
+  export type GetActivityLogAggregateType<T extends ActivityLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateActivityLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateActivityLog[P]>
+      : GetScalarType<T[P], AggregateActivityLog[P]>
+  }
+
+
+
+
+  export type ActivityLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ActivityLogWhereInput
+    orderBy?: ActivityLogOrderByWithAggregationInput | ActivityLogOrderByWithAggregationInput[]
+    by: ActivityLogScalarFieldEnum[] | ActivityLogScalarFieldEnum
+    having?: ActivityLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ActivityLogCountAggregateInputType | true
+    _avg?: ActivityLogAvgAggregateInputType
+    _sum?: ActivityLogSumAggregateInputType
+    _min?: ActivityLogMinAggregateInputType
+    _max?: ActivityLogMaxAggregateInputType
+  }
+
+  export type ActivityLogGroupByOutputType = {
+    id: number
+    action: string
+    entityType: string | null
+    entityId: number | null
+    actorUserId: number | null
+    actorRole: $Enums.Role | null
+    actorName: string | null
+    note: string | null
+    createdAt: Date
+    _count: ActivityLogCountAggregateOutputType | null
+    _avg: ActivityLogAvgAggregateOutputType | null
+    _sum: ActivityLogSumAggregateOutputType | null
+    _min: ActivityLogMinAggregateOutputType | null
+    _max: ActivityLogMaxAggregateOutputType | null
+  }
+
+  type GetActivityLogGroupByPayload<T extends ActivityLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ActivityLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ActivityLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ActivityLogGroupByOutputType[P]>
+            : GetScalarType<T[P], ActivityLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ActivityLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    action?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    actorUserId?: boolean
+    actorRole?: boolean
+    actorName?: boolean
+    note?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["activityLog"]>
+
+  export type ActivityLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    action?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    actorUserId?: boolean
+    actorRole?: boolean
+    actorName?: boolean
+    note?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["activityLog"]>
+
+  export type ActivityLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    action?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    actorUserId?: boolean
+    actorRole?: boolean
+    actorName?: boolean
+    note?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["activityLog"]>
+
+  export type ActivityLogSelectScalar = {
+    id?: boolean
+    action?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    actorUserId?: boolean
+    actorRole?: boolean
+    actorName?: boolean
+    note?: boolean
+    createdAt?: boolean
+  }
+
+  export type ActivityLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "action" | "entityType" | "entityId" | "actorUserId" | "actorRole" | "actorName" | "note" | "createdAt", ExtArgs["result"]["activityLog"]>
+
+  export type $ActivityLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ActivityLog"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      action: string
+      entityType: string | null
+      entityId: number | null
+      actorUserId: number | null
+      actorRole: $Enums.Role | null
+      actorName: string | null
+      note: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["activityLog"]>
+    composites: {}
+  }
+
+  type ActivityLogGetPayload<S extends boolean | null | undefined | ActivityLogDefaultArgs> = $Result.GetResult<Prisma.$ActivityLogPayload, S>
+
+  type ActivityLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ActivityLogFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ActivityLogCountAggregateInputType | true
+    }
+
+  export interface ActivityLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ActivityLog'], meta: { name: 'ActivityLog' } }
+    /**
+     * Find zero or one ActivityLog that matches the filter.
+     * @param {ActivityLogFindUniqueArgs} args - Arguments to find a ActivityLog
+     * @example
+     * // Get one ActivityLog
+     * const activityLog = await prisma.activityLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ActivityLogFindUniqueArgs>(args: SelectSubset<T, ActivityLogFindUniqueArgs<ExtArgs>>): Prisma__ActivityLogClient<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ActivityLog that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ActivityLogFindUniqueOrThrowArgs} args - Arguments to find a ActivityLog
+     * @example
+     * // Get one ActivityLog
+     * const activityLog = await prisma.activityLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ActivityLogFindUniqueOrThrowArgs>(args: SelectSubset<T, ActivityLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ActivityLogClient<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ActivityLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ActivityLogFindFirstArgs} args - Arguments to find a ActivityLog
+     * @example
+     * // Get one ActivityLog
+     * const activityLog = await prisma.activityLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ActivityLogFindFirstArgs>(args?: SelectSubset<T, ActivityLogFindFirstArgs<ExtArgs>>): Prisma__ActivityLogClient<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ActivityLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ActivityLogFindFirstOrThrowArgs} args - Arguments to find a ActivityLog
+     * @example
+     * // Get one ActivityLog
+     * const activityLog = await prisma.activityLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ActivityLogFindFirstOrThrowArgs>(args?: SelectSubset<T, ActivityLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__ActivityLogClient<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ActivityLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ActivityLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ActivityLogs
+     * const activityLogs = await prisma.activityLog.findMany()
+     * 
+     * // Get first 10 ActivityLogs
+     * const activityLogs = await prisma.activityLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const activityLogWithIdOnly = await prisma.activityLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ActivityLogFindManyArgs>(args?: SelectSubset<T, ActivityLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ActivityLog.
+     * @param {ActivityLogCreateArgs} args - Arguments to create a ActivityLog.
+     * @example
+     * // Create one ActivityLog
+     * const ActivityLog = await prisma.activityLog.create({
+     *   data: {
+     *     // ... data to create a ActivityLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends ActivityLogCreateArgs>(args: SelectSubset<T, ActivityLogCreateArgs<ExtArgs>>): Prisma__ActivityLogClient<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ActivityLogs.
+     * @param {ActivityLogCreateManyArgs} args - Arguments to create many ActivityLogs.
+     * @example
+     * // Create many ActivityLogs
+     * const activityLog = await prisma.activityLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ActivityLogCreateManyArgs>(args?: SelectSubset<T, ActivityLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ActivityLogs and returns the data saved in the database.
+     * @param {ActivityLogCreateManyAndReturnArgs} args - Arguments to create many ActivityLogs.
+     * @example
+     * // Create many ActivityLogs
+     * const activityLog = await prisma.activityLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ActivityLogs and only return the `id`
+     * const activityLogWithIdOnly = await prisma.activityLog.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ActivityLogCreateManyAndReturnArgs>(args?: SelectSubset<T, ActivityLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ActivityLog.
+     * @param {ActivityLogDeleteArgs} args - Arguments to delete one ActivityLog.
+     * @example
+     * // Delete one ActivityLog
+     * const ActivityLog = await prisma.activityLog.delete({
+     *   where: {
+     *     // ... filter to delete one ActivityLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ActivityLogDeleteArgs>(args: SelectSubset<T, ActivityLogDeleteArgs<ExtArgs>>): Prisma__ActivityLogClient<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ActivityLog.
+     * @param {ActivityLogUpdateArgs} args - Arguments to update one ActivityLog.
+     * @example
+     * // Update one ActivityLog
+     * const activityLog = await prisma.activityLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ActivityLogUpdateArgs>(args: SelectSubset<T, ActivityLogUpdateArgs<ExtArgs>>): Prisma__ActivityLogClient<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ActivityLogs.
+     * @param {ActivityLogDeleteManyArgs} args - Arguments to filter ActivityLogs to delete.
+     * @example
+     * // Delete a few ActivityLogs
+     * const { count } = await prisma.activityLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ActivityLogDeleteManyArgs>(args?: SelectSubset<T, ActivityLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ActivityLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ActivityLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ActivityLogs
+     * const activityLog = await prisma.activityLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ActivityLogUpdateManyArgs>(args: SelectSubset<T, ActivityLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ActivityLogs and returns the data updated in the database.
+     * @param {ActivityLogUpdateManyAndReturnArgs} args - Arguments to update many ActivityLogs.
+     * @example
+     * // Update many ActivityLogs
+     * const activityLog = await prisma.activityLog.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ActivityLogs and only return the `id`
+     * const activityLogWithIdOnly = await prisma.activityLog.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ActivityLogUpdateManyAndReturnArgs>(args: SelectSubset<T, ActivityLogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ActivityLog.
+     * @param {ActivityLogUpsertArgs} args - Arguments to update or create a ActivityLog.
+     * @example
+     * // Update or create a ActivityLog
+     * const activityLog = await prisma.activityLog.upsert({
+     *   create: {
+     *     // ... data to create a ActivityLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ActivityLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ActivityLogUpsertArgs>(args: SelectSubset<T, ActivityLogUpsertArgs<ExtArgs>>): Prisma__ActivityLogClient<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ActivityLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ActivityLogCountArgs} args - Arguments to filter ActivityLogs to count.
+     * @example
+     * // Count the number of ActivityLogs
+     * const count = await prisma.activityLog.count({
+     *   where: {
+     *     // ... the filter for the ActivityLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends ActivityLogCountArgs>(
+      args?: Subset<T, ActivityLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ActivityLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ActivityLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ActivityLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ActivityLogAggregateArgs>(args: Subset<T, ActivityLogAggregateArgs>): Prisma.PrismaPromise<GetActivityLogAggregateType<T>>
+
+    /**
+     * Group by ActivityLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ActivityLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ActivityLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ActivityLogGroupByArgs['orderBy'] }
+        : { orderBy?: ActivityLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ActivityLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetActivityLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ActivityLog model
+   */
+  readonly fields: ActivityLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ActivityLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ActivityLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ActivityLog model
+   */
+  interface ActivityLogFieldRefs {
+    readonly id: FieldRef<"ActivityLog", 'Int'>
+    readonly action: FieldRef<"ActivityLog", 'String'>
+    readonly entityType: FieldRef<"ActivityLog", 'String'>
+    readonly entityId: FieldRef<"ActivityLog", 'Int'>
+    readonly actorUserId: FieldRef<"ActivityLog", 'Int'>
+    readonly actorRole: FieldRef<"ActivityLog", 'Role'>
+    readonly actorName: FieldRef<"ActivityLog", 'String'>
+    readonly note: FieldRef<"ActivityLog", 'String'>
+    readonly createdAt: FieldRef<"ActivityLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ActivityLog findUnique
+   */
+  export type ActivityLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+    /**
+     * Filter, which ActivityLog to fetch.
+     */
+    where: ActivityLogWhereUniqueInput
+  }
+
+  /**
+   * ActivityLog findUniqueOrThrow
+   */
+  export type ActivityLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+    /**
+     * Filter, which ActivityLog to fetch.
+     */
+    where: ActivityLogWhereUniqueInput
+  }
+
+  /**
+   * ActivityLog findFirst
+   */
+  export type ActivityLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+    /**
+     * Filter, which ActivityLog to fetch.
+     */
+    where?: ActivityLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ActivityLogs to fetch.
+     */
+    orderBy?: ActivityLogOrderByWithRelationInput | ActivityLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ActivityLogs.
+     */
+    cursor?: ActivityLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ActivityLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ActivityLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ActivityLogs.
+     */
+    distinct?: ActivityLogScalarFieldEnum | ActivityLogScalarFieldEnum[]
+  }
+
+  /**
+   * ActivityLog findFirstOrThrow
+   */
+  export type ActivityLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+    /**
+     * Filter, which ActivityLog to fetch.
+     */
+    where?: ActivityLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ActivityLogs to fetch.
+     */
+    orderBy?: ActivityLogOrderByWithRelationInput | ActivityLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ActivityLogs.
+     */
+    cursor?: ActivityLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ActivityLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ActivityLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ActivityLogs.
+     */
+    distinct?: ActivityLogScalarFieldEnum | ActivityLogScalarFieldEnum[]
+  }
+
+  /**
+   * ActivityLog findMany
+   */
+  export type ActivityLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+    /**
+     * Filter, which ActivityLogs to fetch.
+     */
+    where?: ActivityLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ActivityLogs to fetch.
+     */
+    orderBy?: ActivityLogOrderByWithRelationInput | ActivityLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ActivityLogs.
+     */
+    cursor?: ActivityLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ActivityLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ActivityLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ActivityLogs.
+     */
+    distinct?: ActivityLogScalarFieldEnum | ActivityLogScalarFieldEnum[]
+  }
+
+  /**
+   * ActivityLog create
+   */
+  export type ActivityLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+    /**
+     * The data needed to create a ActivityLog.
+     */
+    data: XOR<ActivityLogCreateInput, ActivityLogUncheckedCreateInput>
+  }
+
+  /**
+   * ActivityLog createMany
+   */
+  export type ActivityLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ActivityLogs.
+     */
+    data: ActivityLogCreateManyInput | ActivityLogCreateManyInput[]
+  }
+
+  /**
+   * ActivityLog createManyAndReturn
+   */
+  export type ActivityLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+    /**
+     * The data used to create many ActivityLogs.
+     */
+    data: ActivityLogCreateManyInput | ActivityLogCreateManyInput[]
+  }
+
+  /**
+   * ActivityLog update
+   */
+  export type ActivityLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+    /**
+     * The data needed to update a ActivityLog.
+     */
+    data: XOR<ActivityLogUpdateInput, ActivityLogUncheckedUpdateInput>
+    /**
+     * Choose, which ActivityLog to update.
+     */
+    where: ActivityLogWhereUniqueInput
+  }
+
+  /**
+   * ActivityLog updateMany
+   */
+  export type ActivityLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ActivityLogs.
+     */
+    data: XOR<ActivityLogUpdateManyMutationInput, ActivityLogUncheckedUpdateManyInput>
+    /**
+     * Filter which ActivityLogs to update
+     */
+    where?: ActivityLogWhereInput
+    /**
+     * Limit how many ActivityLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ActivityLog updateManyAndReturn
+   */
+  export type ActivityLogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+    /**
+     * The data used to update ActivityLogs.
+     */
+    data: XOR<ActivityLogUpdateManyMutationInput, ActivityLogUncheckedUpdateManyInput>
+    /**
+     * Filter which ActivityLogs to update
+     */
+    where?: ActivityLogWhereInput
+    /**
+     * Limit how many ActivityLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ActivityLog upsert
+   */
+  export type ActivityLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+    /**
+     * The filter to search for the ActivityLog to update in case it exists.
+     */
+    where: ActivityLogWhereUniqueInput
+    /**
+     * In case the ActivityLog found by the `where` argument doesn't exist, create a new ActivityLog with this data.
+     */
+    create: XOR<ActivityLogCreateInput, ActivityLogUncheckedCreateInput>
+    /**
+     * In case the ActivityLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ActivityLogUpdateInput, ActivityLogUncheckedUpdateInput>
+  }
+
+  /**
+   * ActivityLog delete
+   */
+  export type ActivityLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+    /**
+     * Filter which ActivityLog to delete.
+     */
+    where: ActivityLogWhereUniqueInput
+  }
+
+  /**
+   * ActivityLog deleteMany
+   */
+  export type ActivityLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ActivityLogs to delete
+     */
+    where?: ActivityLogWhereInput
+    /**
+     * Limit how many ActivityLogs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ActivityLog without action
+   */
+  export type ActivityLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ActivityLog
+     */
+    select?: ActivityLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ActivityLog
+     */
+    omit?: ActivityLogOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -9041,6 +11522,7 @@ export namespace Prisma {
     isActive: 'isActive',
     resetToken: 'resetToken',
     resetTokenExpiry: 'resetTokenExpiry',
+    notificationsSeenAt: 'notificationsSeenAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     staffRoleId: 'staffRoleId'
@@ -9157,6 +11639,36 @@ export namespace Prisma {
   export type RequestLogScalarFieldEnum = (typeof RequestLogScalarFieldEnum)[keyof typeof RequestLogScalarFieldEnum]
 
 
+  export const RequestRevisionScalarFieldEnum: {
+    id: 'id',
+    requestId: 'requestId',
+    editedByUserId: 'editedByUserId',
+    editedByRole: 'editedByRole',
+    editedByName: 'editedByName',
+    previousData: 'previousData',
+    newData: 'newData',
+    approvedAt: 'approvedAt',
+    createdAt: 'createdAt'
+  };
+
+  export type RequestRevisionScalarFieldEnum = (typeof RequestRevisionScalarFieldEnum)[keyof typeof RequestRevisionScalarFieldEnum]
+
+
+  export const ActivityLogScalarFieldEnum: {
+    id: 'id',
+    action: 'action',
+    entityType: 'entityType',
+    entityId: 'entityId',
+    actorUserId: 'actorUserId',
+    actorRole: 'actorRole',
+    actorName: 'actorName',
+    note: 'note',
+    createdAt: 'createdAt'
+  };
+
+  export type ActivityLogScalarFieldEnum = (typeof ActivityLogScalarFieldEnum)[keyof typeof ActivityLogScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -9251,6 +11763,7 @@ export namespace Prisma {
     isActive?: BoolFilter<"User"> | boolean
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
+    notificationsSeenAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     staffRoleId?: IntNullableFilter<"User"> | number | null
@@ -9269,6 +11782,7 @@ export namespace Prisma {
     isActive?: SortOrder
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiry?: SortOrderInput | SortOrder
+    notificationsSeenAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     staffRoleId?: SortOrderInput | SortOrder
@@ -9290,6 +11804,7 @@ export namespace Prisma {
     isActive?: BoolFilter<"User"> | boolean
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
+    notificationsSeenAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     staffRoleId?: IntNullableFilter<"User"> | number | null
@@ -9308,6 +11823,7 @@ export namespace Prisma {
     isActive?: SortOrder
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiry?: SortOrderInput | SortOrder
+    notificationsSeenAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     staffRoleId?: SortOrderInput | SortOrder
@@ -9332,6 +11848,7 @@ export namespace Prisma {
     isActive?: BoolWithAggregatesFilter<"User"> | boolean
     resetToken?: StringNullableWithAggregatesFilter<"User"> | string | null
     resetTokenExpiry?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    notificationsSeenAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     staffRoleId?: IntNullableWithAggregatesFilter<"User"> | number | null
@@ -9580,6 +12097,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     logs?: RequestLogListRelationFilter
+    revisions?: RequestRevisionListRelationFilter
   }
 
   export type BeneficiaryRequestOrderByWithRelationInput = {
@@ -9639,6 +12157,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     user?: UserOrderByWithRelationInput
     logs?: RequestLogOrderByRelationAggregateInput
+    revisions?: RequestRevisionOrderByRelationAggregateInput
   }
 
   export type BeneficiaryRequestWhereUniqueInput = Prisma.AtLeast<{
@@ -9701,6 +12220,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     logs?: RequestLogListRelationFilter
+    revisions?: RequestRevisionListRelationFilter
   }, "id" | "requestNo">
 
   export type BeneficiaryRequestOrderByWithAggregationInput = {
@@ -9897,6 +12417,157 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"RequestLog"> | Date | string
   }
 
+  export type RequestRevisionWhereInput = {
+    AND?: RequestRevisionWhereInput | RequestRevisionWhereInput[]
+    OR?: RequestRevisionWhereInput[]
+    NOT?: RequestRevisionWhereInput | RequestRevisionWhereInput[]
+    id?: IntFilter<"RequestRevision"> | number
+    requestId?: IntFilter<"RequestRevision"> | number
+    editedByUserId?: IntFilter<"RequestRevision"> | number
+    editedByRole?: EnumRoleFilter<"RequestRevision"> | $Enums.Role
+    editedByName?: StringFilter<"RequestRevision"> | string
+    previousData?: StringFilter<"RequestRevision"> | string
+    newData?: StringFilter<"RequestRevision"> | string
+    approvedAt?: DateTimeNullableFilter<"RequestRevision"> | Date | string | null
+    createdAt?: DateTimeFilter<"RequestRevision"> | Date | string
+    request?: XOR<BeneficiaryRequestScalarRelationFilter, BeneficiaryRequestWhereInput>
+  }
+
+  export type RequestRevisionOrderByWithRelationInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    editedByUserId?: SortOrder
+    editedByRole?: SortOrder
+    editedByName?: SortOrder
+    previousData?: SortOrder
+    newData?: SortOrder
+    approvedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    request?: BeneficiaryRequestOrderByWithRelationInput
+  }
+
+  export type RequestRevisionWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: RequestRevisionWhereInput | RequestRevisionWhereInput[]
+    OR?: RequestRevisionWhereInput[]
+    NOT?: RequestRevisionWhereInput | RequestRevisionWhereInput[]
+    requestId?: IntFilter<"RequestRevision"> | number
+    editedByUserId?: IntFilter<"RequestRevision"> | number
+    editedByRole?: EnumRoleFilter<"RequestRevision"> | $Enums.Role
+    editedByName?: StringFilter<"RequestRevision"> | string
+    previousData?: StringFilter<"RequestRevision"> | string
+    newData?: StringFilter<"RequestRevision"> | string
+    approvedAt?: DateTimeNullableFilter<"RequestRevision"> | Date | string | null
+    createdAt?: DateTimeFilter<"RequestRevision"> | Date | string
+    request?: XOR<BeneficiaryRequestScalarRelationFilter, BeneficiaryRequestWhereInput>
+  }, "id">
+
+  export type RequestRevisionOrderByWithAggregationInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    editedByUserId?: SortOrder
+    editedByRole?: SortOrder
+    editedByName?: SortOrder
+    previousData?: SortOrder
+    newData?: SortOrder
+    approvedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: RequestRevisionCountOrderByAggregateInput
+    _avg?: RequestRevisionAvgOrderByAggregateInput
+    _max?: RequestRevisionMaxOrderByAggregateInput
+    _min?: RequestRevisionMinOrderByAggregateInput
+    _sum?: RequestRevisionSumOrderByAggregateInput
+  }
+
+  export type RequestRevisionScalarWhereWithAggregatesInput = {
+    AND?: RequestRevisionScalarWhereWithAggregatesInput | RequestRevisionScalarWhereWithAggregatesInput[]
+    OR?: RequestRevisionScalarWhereWithAggregatesInput[]
+    NOT?: RequestRevisionScalarWhereWithAggregatesInput | RequestRevisionScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"RequestRevision"> | number
+    requestId?: IntWithAggregatesFilter<"RequestRevision"> | number
+    editedByUserId?: IntWithAggregatesFilter<"RequestRevision"> | number
+    editedByRole?: EnumRoleWithAggregatesFilter<"RequestRevision"> | $Enums.Role
+    editedByName?: StringWithAggregatesFilter<"RequestRevision"> | string
+    previousData?: StringWithAggregatesFilter<"RequestRevision"> | string
+    newData?: StringWithAggregatesFilter<"RequestRevision"> | string
+    approvedAt?: DateTimeNullableWithAggregatesFilter<"RequestRevision"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"RequestRevision"> | Date | string
+  }
+
+  export type ActivityLogWhereInput = {
+    AND?: ActivityLogWhereInput | ActivityLogWhereInput[]
+    OR?: ActivityLogWhereInput[]
+    NOT?: ActivityLogWhereInput | ActivityLogWhereInput[]
+    id?: IntFilter<"ActivityLog"> | number
+    action?: StringFilter<"ActivityLog"> | string
+    entityType?: StringNullableFilter<"ActivityLog"> | string | null
+    entityId?: IntNullableFilter<"ActivityLog"> | number | null
+    actorUserId?: IntNullableFilter<"ActivityLog"> | number | null
+    actorRole?: EnumRoleNullableFilter<"ActivityLog"> | $Enums.Role | null
+    actorName?: StringNullableFilter<"ActivityLog"> | string | null
+    note?: StringNullableFilter<"ActivityLog"> | string | null
+    createdAt?: DateTimeFilter<"ActivityLog"> | Date | string
+  }
+
+  export type ActivityLogOrderByWithRelationInput = {
+    id?: SortOrder
+    action?: SortOrder
+    entityType?: SortOrderInput | SortOrder
+    entityId?: SortOrderInput | SortOrder
+    actorUserId?: SortOrderInput | SortOrder
+    actorRole?: SortOrderInput | SortOrder
+    actorName?: SortOrderInput | SortOrder
+    note?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ActivityLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: ActivityLogWhereInput | ActivityLogWhereInput[]
+    OR?: ActivityLogWhereInput[]
+    NOT?: ActivityLogWhereInput | ActivityLogWhereInput[]
+    action?: StringFilter<"ActivityLog"> | string
+    entityType?: StringNullableFilter<"ActivityLog"> | string | null
+    entityId?: IntNullableFilter<"ActivityLog"> | number | null
+    actorUserId?: IntNullableFilter<"ActivityLog"> | number | null
+    actorRole?: EnumRoleNullableFilter<"ActivityLog"> | $Enums.Role | null
+    actorName?: StringNullableFilter<"ActivityLog"> | string | null
+    note?: StringNullableFilter<"ActivityLog"> | string | null
+    createdAt?: DateTimeFilter<"ActivityLog"> | Date | string
+  }, "id">
+
+  export type ActivityLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    action?: SortOrder
+    entityType?: SortOrderInput | SortOrder
+    entityId?: SortOrderInput | SortOrder
+    actorUserId?: SortOrderInput | SortOrder
+    actorRole?: SortOrderInput | SortOrder
+    actorName?: SortOrderInput | SortOrder
+    note?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: ActivityLogCountOrderByAggregateInput
+    _avg?: ActivityLogAvgOrderByAggregateInput
+    _max?: ActivityLogMaxOrderByAggregateInput
+    _min?: ActivityLogMinOrderByAggregateInput
+    _sum?: ActivityLogSumOrderByAggregateInput
+  }
+
+  export type ActivityLogScalarWhereWithAggregatesInput = {
+    AND?: ActivityLogScalarWhereWithAggregatesInput | ActivityLogScalarWhereWithAggregatesInput[]
+    OR?: ActivityLogScalarWhereWithAggregatesInput[]
+    NOT?: ActivityLogScalarWhereWithAggregatesInput | ActivityLogScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"ActivityLog"> | number
+    action?: StringWithAggregatesFilter<"ActivityLog"> | string
+    entityType?: StringNullableWithAggregatesFilter<"ActivityLog"> | string | null
+    entityId?: IntNullableWithAggregatesFilter<"ActivityLog"> | number | null
+    actorUserId?: IntNullableWithAggregatesFilter<"ActivityLog"> | number | null
+    actorRole?: EnumRoleNullableWithAggregatesFilter<"ActivityLog"> | $Enums.Role | null
+    actorName?: StringNullableWithAggregatesFilter<"ActivityLog"> | string | null
+    note?: StringNullableWithAggregatesFilter<"ActivityLog"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ActivityLog"> | Date | string
+  }
+
   export type UserCreateInput = {
     username: string
     email: string
@@ -9907,6 +12578,7 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    notificationsSeenAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     beneficiaryRequests?: BeneficiaryRequestCreateNestedManyWithoutUserInput
@@ -9924,6 +12596,7 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    notificationsSeenAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     staffRoleId?: number | null
@@ -9940,6 +12613,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     beneficiaryRequests?: BeneficiaryRequestUpdateManyWithoutUserNestedInput
@@ -9957,6 +12631,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     staffRoleId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -9974,6 +12649,7 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    notificationsSeenAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     staffRoleId?: number | null
@@ -9989,6 +12665,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10004,6 +12681,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     staffRoleId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -10243,6 +12921,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutBeneficiaryRequestsInput
     logs?: RequestLogCreateNestedManyWithoutRequestInput
+    revisions?: RequestRevisionCreateNestedManyWithoutRequestInput
   }
 
   export type BeneficiaryRequestUncheckedCreateInput = {
@@ -10301,6 +12980,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     logs?: RequestLogUncheckedCreateNestedManyWithoutRequestInput
+    revisions?: RequestRevisionUncheckedCreateNestedManyWithoutRequestInput
   }
 
   export type BeneficiaryRequestUpdateInput = {
@@ -10358,6 +13038,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutBeneficiaryRequestsNestedInput
     logs?: RequestLogUpdateManyWithoutRequestNestedInput
+    revisions?: RequestRevisionUpdateManyWithoutRequestNestedInput
   }
 
   export type BeneficiaryRequestUncheckedUpdateInput = {
@@ -10416,6 +13097,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     logs?: RequestLogUncheckedUpdateManyWithoutRequestNestedInput
+    revisions?: RequestRevisionUncheckedUpdateManyWithoutRequestNestedInput
   }
 
   export type BeneficiaryRequestCreateManyInput = {
@@ -10660,6 +13342,167 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type RequestRevisionCreateInput = {
+    editedByUserId: number
+    editedByRole: $Enums.Role
+    editedByName: string
+    previousData: string
+    newData: string
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+    request: BeneficiaryRequestCreateNestedOneWithoutRevisionsInput
+  }
+
+  export type RequestRevisionUncheckedCreateInput = {
+    id?: number
+    requestId: number
+    editedByUserId: number
+    editedByRole: $Enums.Role
+    editedByName: string
+    previousData: string
+    newData: string
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type RequestRevisionUpdateInput = {
+    editedByUserId?: IntFieldUpdateOperationsInput | number
+    editedByRole?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    editedByName?: StringFieldUpdateOperationsInput | string
+    previousData?: StringFieldUpdateOperationsInput | string
+    newData?: StringFieldUpdateOperationsInput | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    request?: BeneficiaryRequestUpdateOneRequiredWithoutRevisionsNestedInput
+  }
+
+  export type RequestRevisionUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    requestId?: IntFieldUpdateOperationsInput | number
+    editedByUserId?: IntFieldUpdateOperationsInput | number
+    editedByRole?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    editedByName?: StringFieldUpdateOperationsInput | string
+    previousData?: StringFieldUpdateOperationsInput | string
+    newData?: StringFieldUpdateOperationsInput | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RequestRevisionCreateManyInput = {
+    id?: number
+    requestId: number
+    editedByUserId: number
+    editedByRole: $Enums.Role
+    editedByName: string
+    previousData: string
+    newData: string
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type RequestRevisionUpdateManyMutationInput = {
+    editedByUserId?: IntFieldUpdateOperationsInput | number
+    editedByRole?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    editedByName?: StringFieldUpdateOperationsInput | string
+    previousData?: StringFieldUpdateOperationsInput | string
+    newData?: StringFieldUpdateOperationsInput | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RequestRevisionUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    requestId?: IntFieldUpdateOperationsInput | number
+    editedByUserId?: IntFieldUpdateOperationsInput | number
+    editedByRole?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    editedByName?: StringFieldUpdateOperationsInput | string
+    previousData?: StringFieldUpdateOperationsInput | string
+    newData?: StringFieldUpdateOperationsInput | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ActivityLogCreateInput = {
+    action: string
+    entityType?: string | null
+    entityId?: number | null
+    actorUserId?: number | null
+    actorRole?: $Enums.Role | null
+    actorName?: string | null
+    note?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ActivityLogUncheckedCreateInput = {
+    id?: number
+    action: string
+    entityType?: string | null
+    entityId?: number | null
+    actorUserId?: number | null
+    actorRole?: $Enums.Role | null
+    actorName?: string | null
+    note?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ActivityLogUpdateInput = {
+    action?: StringFieldUpdateOperationsInput | string
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableIntFieldUpdateOperationsInput | number | null
+    actorUserId?: NullableIntFieldUpdateOperationsInput | number | null
+    actorRole?: NullableEnumRoleFieldUpdateOperationsInput | $Enums.Role | null
+    actorName?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ActivityLogUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableIntFieldUpdateOperationsInput | number | null
+    actorUserId?: NullableIntFieldUpdateOperationsInput | number | null
+    actorRole?: NullableEnumRoleFieldUpdateOperationsInput | $Enums.Role | null
+    actorName?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ActivityLogCreateManyInput = {
+    id?: number
+    action: string
+    entityType?: string | null
+    entityId?: number | null
+    actorUserId?: number | null
+    actorRole?: $Enums.Role | null
+    actorName?: string | null
+    note?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ActivityLogUpdateManyMutationInput = {
+    action?: StringFieldUpdateOperationsInput | string
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableIntFieldUpdateOperationsInput | number | null
+    actorUserId?: NullableIntFieldUpdateOperationsInput | number | null
+    actorRole?: NullableEnumRoleFieldUpdateOperationsInput | $Enums.Role | null
+    actorName?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ActivityLogUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    action?: StringFieldUpdateOperationsInput | string
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableIntFieldUpdateOperationsInput | number | null
+    actorUserId?: NullableIntFieldUpdateOperationsInput | number | null
+    actorRole?: NullableEnumRoleFieldUpdateOperationsInput | $Enums.Role | null
+    actorName?: NullableStringFieldUpdateOperationsInput | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[]
@@ -10775,6 +13618,7 @@ export namespace Prisma {
     isActive?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
+    notificationsSeenAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     staffRoleId?: SortOrder
@@ -10796,6 +13640,7 @@ export namespace Prisma {
     isActive?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
+    notificationsSeenAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     staffRoleId?: SortOrder
@@ -10812,6 +13657,7 @@ export namespace Prisma {
     isActive?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
+    notificationsSeenAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     staffRoleId?: SortOrder
@@ -11095,7 +13941,17 @@ export namespace Prisma {
     none?: RequestLogWhereInput
   }
 
+  export type RequestRevisionListRelationFilter = {
+    every?: RequestRevisionWhereInput
+    some?: RequestRevisionWhereInput
+    none?: RequestRevisionWhereInput
+  }
+
   export type RequestLogOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type RequestRevisionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -11348,6 +14204,119 @@ export namespace Prisma {
     id?: SortOrder
     requestId?: SortOrder
     actorUserId?: SortOrder
+  }
+
+  export type RequestRevisionCountOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    editedByUserId?: SortOrder
+    editedByRole?: SortOrder
+    editedByName?: SortOrder
+    previousData?: SortOrder
+    newData?: SortOrder
+    approvedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type RequestRevisionAvgOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    editedByUserId?: SortOrder
+  }
+
+  export type RequestRevisionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    editedByUserId?: SortOrder
+    editedByRole?: SortOrder
+    editedByName?: SortOrder
+    previousData?: SortOrder
+    newData?: SortOrder
+    approvedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type RequestRevisionMinOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    editedByUserId?: SortOrder
+    editedByRole?: SortOrder
+    editedByName?: SortOrder
+    previousData?: SortOrder
+    newData?: SortOrder
+    approvedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type RequestRevisionSumOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    editedByUserId?: SortOrder
+  }
+
+  export type EnumRoleNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Role[] | null
+    notIn?: $Enums.Role[] | null
+    not?: NestedEnumRoleNullableFilter<$PrismaModel> | $Enums.Role | null
+  }
+
+  export type ActivityLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    action?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    actorUserId?: SortOrder
+    actorRole?: SortOrder
+    actorName?: SortOrder
+    note?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ActivityLogAvgOrderByAggregateInput = {
+    id?: SortOrder
+    entityId?: SortOrder
+    actorUserId?: SortOrder
+  }
+
+  export type ActivityLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    action?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    actorUserId?: SortOrder
+    actorRole?: SortOrder
+    actorName?: SortOrder
+    note?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ActivityLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    action?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    actorUserId?: SortOrder
+    actorRole?: SortOrder
+    actorName?: SortOrder
+    note?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ActivityLogSumOrderByAggregateInput = {
+    id?: SortOrder
+    entityId?: SortOrder
+    actorUserId?: SortOrder
+  }
+
+  export type EnumRoleNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Role[] | null
+    notIn?: $Enums.Role[] | null
+    not?: NestedEnumRoleNullableWithAggregatesFilter<$PrismaModel> | $Enums.Role | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumRoleNullableFilter<$PrismaModel>
+    _max?: NestedEnumRoleNullableFilter<$PrismaModel>
   }
 
   export type BeneficiaryRequestCreateNestedManyWithoutUserInput = {
@@ -11615,11 +14584,25 @@ export namespace Prisma {
     connect?: RequestLogWhereUniqueInput | RequestLogWhereUniqueInput[]
   }
 
+  export type RequestRevisionCreateNestedManyWithoutRequestInput = {
+    create?: XOR<RequestRevisionCreateWithoutRequestInput, RequestRevisionUncheckedCreateWithoutRequestInput> | RequestRevisionCreateWithoutRequestInput[] | RequestRevisionUncheckedCreateWithoutRequestInput[]
+    connectOrCreate?: RequestRevisionCreateOrConnectWithoutRequestInput | RequestRevisionCreateOrConnectWithoutRequestInput[]
+    createMany?: RequestRevisionCreateManyRequestInputEnvelope
+    connect?: RequestRevisionWhereUniqueInput | RequestRevisionWhereUniqueInput[]
+  }
+
   export type RequestLogUncheckedCreateNestedManyWithoutRequestInput = {
     create?: XOR<RequestLogCreateWithoutRequestInput, RequestLogUncheckedCreateWithoutRequestInput> | RequestLogCreateWithoutRequestInput[] | RequestLogUncheckedCreateWithoutRequestInput[]
     connectOrCreate?: RequestLogCreateOrConnectWithoutRequestInput | RequestLogCreateOrConnectWithoutRequestInput[]
     createMany?: RequestLogCreateManyRequestInputEnvelope
     connect?: RequestLogWhereUniqueInput | RequestLogWhereUniqueInput[]
+  }
+
+  export type RequestRevisionUncheckedCreateNestedManyWithoutRequestInput = {
+    create?: XOR<RequestRevisionCreateWithoutRequestInput, RequestRevisionUncheckedCreateWithoutRequestInput> | RequestRevisionCreateWithoutRequestInput[] | RequestRevisionUncheckedCreateWithoutRequestInput[]
+    connectOrCreate?: RequestRevisionCreateOrConnectWithoutRequestInput | RequestRevisionCreateOrConnectWithoutRequestInput[]
+    createMany?: RequestRevisionCreateManyRequestInputEnvelope
+    connect?: RequestRevisionWhereUniqueInput | RequestRevisionWhereUniqueInput[]
   }
 
   export type EnumBeneficiaryRequestStatusFieldUpdateOperationsInput = {
@@ -11652,6 +14635,20 @@ export namespace Prisma {
     deleteMany?: RequestLogScalarWhereInput | RequestLogScalarWhereInput[]
   }
 
+  export type RequestRevisionUpdateManyWithoutRequestNestedInput = {
+    create?: XOR<RequestRevisionCreateWithoutRequestInput, RequestRevisionUncheckedCreateWithoutRequestInput> | RequestRevisionCreateWithoutRequestInput[] | RequestRevisionUncheckedCreateWithoutRequestInput[]
+    connectOrCreate?: RequestRevisionCreateOrConnectWithoutRequestInput | RequestRevisionCreateOrConnectWithoutRequestInput[]
+    upsert?: RequestRevisionUpsertWithWhereUniqueWithoutRequestInput | RequestRevisionUpsertWithWhereUniqueWithoutRequestInput[]
+    createMany?: RequestRevisionCreateManyRequestInputEnvelope
+    set?: RequestRevisionWhereUniqueInput | RequestRevisionWhereUniqueInput[]
+    disconnect?: RequestRevisionWhereUniqueInput | RequestRevisionWhereUniqueInput[]
+    delete?: RequestRevisionWhereUniqueInput | RequestRevisionWhereUniqueInput[]
+    connect?: RequestRevisionWhereUniqueInput | RequestRevisionWhereUniqueInput[]
+    update?: RequestRevisionUpdateWithWhereUniqueWithoutRequestInput | RequestRevisionUpdateWithWhereUniqueWithoutRequestInput[]
+    updateMany?: RequestRevisionUpdateManyWithWhereWithoutRequestInput | RequestRevisionUpdateManyWithWhereWithoutRequestInput[]
+    deleteMany?: RequestRevisionScalarWhereInput | RequestRevisionScalarWhereInput[]
+  }
+
   export type RequestLogUncheckedUpdateManyWithoutRequestNestedInput = {
     create?: XOR<RequestLogCreateWithoutRequestInput, RequestLogUncheckedCreateWithoutRequestInput> | RequestLogCreateWithoutRequestInput[] | RequestLogUncheckedCreateWithoutRequestInput[]
     connectOrCreate?: RequestLogCreateOrConnectWithoutRequestInput | RequestLogCreateOrConnectWithoutRequestInput[]
@@ -11666,6 +14663,20 @@ export namespace Prisma {
     deleteMany?: RequestLogScalarWhereInput | RequestLogScalarWhereInput[]
   }
 
+  export type RequestRevisionUncheckedUpdateManyWithoutRequestNestedInput = {
+    create?: XOR<RequestRevisionCreateWithoutRequestInput, RequestRevisionUncheckedCreateWithoutRequestInput> | RequestRevisionCreateWithoutRequestInput[] | RequestRevisionUncheckedCreateWithoutRequestInput[]
+    connectOrCreate?: RequestRevisionCreateOrConnectWithoutRequestInput | RequestRevisionCreateOrConnectWithoutRequestInput[]
+    upsert?: RequestRevisionUpsertWithWhereUniqueWithoutRequestInput | RequestRevisionUpsertWithWhereUniqueWithoutRequestInput[]
+    createMany?: RequestRevisionCreateManyRequestInputEnvelope
+    set?: RequestRevisionWhereUniqueInput | RequestRevisionWhereUniqueInput[]
+    disconnect?: RequestRevisionWhereUniqueInput | RequestRevisionWhereUniqueInput[]
+    delete?: RequestRevisionWhereUniqueInput | RequestRevisionWhereUniqueInput[]
+    connect?: RequestRevisionWhereUniqueInput | RequestRevisionWhereUniqueInput[]
+    update?: RequestRevisionUpdateWithWhereUniqueWithoutRequestInput | RequestRevisionUpdateWithWhereUniqueWithoutRequestInput[]
+    updateMany?: RequestRevisionUpdateManyWithWhereWithoutRequestInput | RequestRevisionUpdateManyWithWhereWithoutRequestInput[]
+    deleteMany?: RequestRevisionScalarWhereInput | RequestRevisionScalarWhereInput[]
+  }
+
   export type BeneficiaryRequestCreateNestedOneWithoutLogsInput = {
     create?: XOR<BeneficiaryRequestCreateWithoutLogsInput, BeneficiaryRequestUncheckedCreateWithoutLogsInput>
     connectOrCreate?: BeneficiaryRequestCreateOrConnectWithoutLogsInput
@@ -11678,6 +14689,24 @@ export namespace Prisma {
     upsert?: BeneficiaryRequestUpsertWithoutLogsInput
     connect?: BeneficiaryRequestWhereUniqueInput
     update?: XOR<XOR<BeneficiaryRequestUpdateToOneWithWhereWithoutLogsInput, BeneficiaryRequestUpdateWithoutLogsInput>, BeneficiaryRequestUncheckedUpdateWithoutLogsInput>
+  }
+
+  export type BeneficiaryRequestCreateNestedOneWithoutRevisionsInput = {
+    create?: XOR<BeneficiaryRequestCreateWithoutRevisionsInput, BeneficiaryRequestUncheckedCreateWithoutRevisionsInput>
+    connectOrCreate?: BeneficiaryRequestCreateOrConnectWithoutRevisionsInput
+    connect?: BeneficiaryRequestWhereUniqueInput
+  }
+
+  export type BeneficiaryRequestUpdateOneRequiredWithoutRevisionsNestedInput = {
+    create?: XOR<BeneficiaryRequestCreateWithoutRevisionsInput, BeneficiaryRequestUncheckedCreateWithoutRevisionsInput>
+    connectOrCreate?: BeneficiaryRequestCreateOrConnectWithoutRevisionsInput
+    upsert?: BeneficiaryRequestUpsertWithoutRevisionsInput
+    connect?: BeneficiaryRequestWhereUniqueInput
+    update?: XOR<XOR<BeneficiaryRequestUpdateToOneWithWhereWithoutRevisionsInput, BeneficiaryRequestUpdateWithoutRevisionsInput>, BeneficiaryRequestUncheckedUpdateWithoutRevisionsInput>
+  }
+
+  export type NullableEnumRoleFieldUpdateOperationsInput = {
+    set?: $Enums.Role | null
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -11932,6 +14961,23 @@ export namespace Prisma {
     _max?: NestedEnumGenderFilter<$PrismaModel>
   }
 
+  export type NestedEnumRoleNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Role[] | null
+    notIn?: $Enums.Role[] | null
+    not?: NestedEnumRoleNullableFilter<$PrismaModel> | $Enums.Role | null
+  }
+
+  export type NestedEnumRoleNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Role[] | null
+    notIn?: $Enums.Role[] | null
+    not?: NestedEnumRoleNullableWithAggregatesFilter<$PrismaModel> | $Enums.Role | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumRoleNullableFilter<$PrismaModel>
+    _max?: NestedEnumRoleNullableFilter<$PrismaModel>
+  }
+
   export type BeneficiaryRequestCreateWithoutUserInput = {
     requestNo: string
     status?: $Enums.BeneficiaryRequestStatus
@@ -11986,6 +15032,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     logs?: RequestLogCreateNestedManyWithoutRequestInput
+    revisions?: RequestRevisionCreateNestedManyWithoutRequestInput
   }
 
   export type BeneficiaryRequestUncheckedCreateWithoutUserInput = {
@@ -12043,6 +15090,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     logs?: RequestLogUncheckedCreateNestedManyWithoutRequestInput
+    revisions?: RequestRevisionUncheckedCreateNestedManyWithoutRequestInput
   }
 
   export type BeneficiaryRequestCreateOrConnectWithoutUserInput = {
@@ -12194,6 +15242,7 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    notificationsSeenAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     beneficiaryRequests?: BeneficiaryRequestCreateNestedManyWithoutUserInput
@@ -12210,6 +15259,7 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    notificationsSeenAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     beneficiaryRequests?: BeneficiaryRequestUncheckedCreateNestedManyWithoutUserInput
@@ -12279,6 +15329,7 @@ export namespace Prisma {
     isActive?: BoolFilter<"User"> | boolean
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
+    notificationsSeenAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     staffRoleId?: IntNullableFilter<"User"> | number | null
@@ -12459,6 +15510,7 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    notificationsSeenAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     staffRole?: StaffRoleCreateNestedOneWithoutUsersInput
@@ -12475,6 +15527,7 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    notificationsSeenAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     staffRoleId?: number | null
@@ -12513,6 +15566,36 @@ export namespace Prisma {
     data: RequestLogCreateManyRequestInput | RequestLogCreateManyRequestInput[]
   }
 
+  export type RequestRevisionCreateWithoutRequestInput = {
+    editedByUserId: number
+    editedByRole: $Enums.Role
+    editedByName: string
+    previousData: string
+    newData: string
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type RequestRevisionUncheckedCreateWithoutRequestInput = {
+    id?: number
+    editedByUserId: number
+    editedByRole: $Enums.Role
+    editedByName: string
+    previousData: string
+    newData: string
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type RequestRevisionCreateOrConnectWithoutRequestInput = {
+    where: RequestRevisionWhereUniqueInput
+    create: XOR<RequestRevisionCreateWithoutRequestInput, RequestRevisionUncheckedCreateWithoutRequestInput>
+  }
+
+  export type RequestRevisionCreateManyRequestInputEnvelope = {
+    data: RequestRevisionCreateManyRequestInput | RequestRevisionCreateManyRequestInput[]
+  }
+
   export type UserUpsertWithoutBeneficiaryRequestsInput = {
     update: XOR<UserUpdateWithoutBeneficiaryRequestsInput, UserUncheckedUpdateWithoutBeneficiaryRequestsInput>
     create: XOR<UserCreateWithoutBeneficiaryRequestsInput, UserUncheckedCreateWithoutBeneficiaryRequestsInput>
@@ -12534,6 +15617,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     staffRole?: StaffRoleUpdateOneWithoutUsersNestedInput
@@ -12550,6 +15634,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     staffRoleId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -12583,6 +15668,37 @@ export namespace Prisma {
     actorName?: StringFilter<"RequestLog"> | string
     note?: StringNullableFilter<"RequestLog"> | string | null
     createdAt?: DateTimeFilter<"RequestLog"> | Date | string
+  }
+
+  export type RequestRevisionUpsertWithWhereUniqueWithoutRequestInput = {
+    where: RequestRevisionWhereUniqueInput
+    update: XOR<RequestRevisionUpdateWithoutRequestInput, RequestRevisionUncheckedUpdateWithoutRequestInput>
+    create: XOR<RequestRevisionCreateWithoutRequestInput, RequestRevisionUncheckedCreateWithoutRequestInput>
+  }
+
+  export type RequestRevisionUpdateWithWhereUniqueWithoutRequestInput = {
+    where: RequestRevisionWhereUniqueInput
+    data: XOR<RequestRevisionUpdateWithoutRequestInput, RequestRevisionUncheckedUpdateWithoutRequestInput>
+  }
+
+  export type RequestRevisionUpdateManyWithWhereWithoutRequestInput = {
+    where: RequestRevisionScalarWhereInput
+    data: XOR<RequestRevisionUpdateManyMutationInput, RequestRevisionUncheckedUpdateManyWithoutRequestInput>
+  }
+
+  export type RequestRevisionScalarWhereInput = {
+    AND?: RequestRevisionScalarWhereInput | RequestRevisionScalarWhereInput[]
+    OR?: RequestRevisionScalarWhereInput[]
+    NOT?: RequestRevisionScalarWhereInput | RequestRevisionScalarWhereInput[]
+    id?: IntFilter<"RequestRevision"> | number
+    requestId?: IntFilter<"RequestRevision"> | number
+    editedByUserId?: IntFilter<"RequestRevision"> | number
+    editedByRole?: EnumRoleFilter<"RequestRevision"> | $Enums.Role
+    editedByName?: StringFilter<"RequestRevision"> | string
+    previousData?: StringFilter<"RequestRevision"> | string
+    newData?: StringFilter<"RequestRevision"> | string
+    approvedAt?: DateTimeNullableFilter<"RequestRevision"> | Date | string | null
+    createdAt?: DateTimeFilter<"RequestRevision"> | Date | string
   }
 
   export type BeneficiaryRequestCreateWithoutLogsInput = {
@@ -12639,6 +15755,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutBeneficiaryRequestsInput
+    revisions?: RequestRevisionCreateNestedManyWithoutRequestInput
   }
 
   export type BeneficiaryRequestUncheckedCreateWithoutLogsInput = {
@@ -12696,6 +15813,7 @@ export namespace Prisma {
     submittedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
+    revisions?: RequestRevisionUncheckedCreateNestedManyWithoutRequestInput
   }
 
   export type BeneficiaryRequestCreateOrConnectWithoutLogsInput = {
@@ -12768,6 +15886,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutBeneficiaryRequestsNestedInput
+    revisions?: RequestRevisionUpdateManyWithoutRequestNestedInput
   }
 
   export type BeneficiaryRequestUncheckedUpdateWithoutLogsInput = {
@@ -12825,6 +15944,253 @@ export namespace Prisma {
     submittedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revisions?: RequestRevisionUncheckedUpdateManyWithoutRequestNestedInput
+  }
+
+  export type BeneficiaryRequestCreateWithoutRevisionsInput = {
+    requestNo: string
+    status?: $Enums.BeneficiaryRequestStatus
+    type?: string
+    companyNameKh?: string | null
+    companyNameEn: string
+    registrationNo: string
+    registrationDate: Date | string
+    companyProvince: string
+    companyDistrict: string
+    companyCommune: string
+    companyVillage: string
+    companyStreet: string
+    companyHouse: string
+    companyPhone: string
+    companyOfficePhone?: string | null
+    companyEmail: string
+    shLastNameKh?: string | null
+    shFirstNameKh?: string | null
+    shLastNameEn: string
+    shFirstNameEn: string
+    shDob: Date | string
+    shNationality: string
+    shGender: $Enums.Gender
+    shIdCard?: string | null
+    shIdIssuedDate?: Date | string | null
+    shIdExpiredDate?: Date | string | null
+    shEmail?: string | null
+    shPhone?: string | null
+    shPhotoName?: string | null
+    shIdDocNames?: string
+    ownerLastNameKh?: string | null
+    ownerFirstNameKh?: string | null
+    ownerLastNameEn: string
+    ownerFirstNameEn: string
+    ownerDob: Date | string
+    ownerNationality: string
+    ownerGender: $Enums.Gender
+    ownerIdCard?: string | null
+    ownerIdIssuedDate?: Date | string | null
+    ownerIdExpiredDate?: Date | string | null
+    ownerEmail?: string | null
+    ownerPhone?: string | null
+    ownerPhotoName?: string | null
+    ownerIdDocNames?: string
+    shareAmount: string
+    shareholderContractDocNames?: string
+    otherDocNames?: string
+    consentAgreed?: boolean
+    rejectionReason?: string | null
+    submittedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutBeneficiaryRequestsInput
+    logs?: RequestLogCreateNestedManyWithoutRequestInput
+  }
+
+  export type BeneficiaryRequestUncheckedCreateWithoutRevisionsInput = {
+    id?: number
+    requestNo: string
+    userId: number
+    status?: $Enums.BeneficiaryRequestStatus
+    type?: string
+    companyNameKh?: string | null
+    companyNameEn: string
+    registrationNo: string
+    registrationDate: Date | string
+    companyProvince: string
+    companyDistrict: string
+    companyCommune: string
+    companyVillage: string
+    companyStreet: string
+    companyHouse: string
+    companyPhone: string
+    companyOfficePhone?: string | null
+    companyEmail: string
+    shLastNameKh?: string | null
+    shFirstNameKh?: string | null
+    shLastNameEn: string
+    shFirstNameEn: string
+    shDob: Date | string
+    shNationality: string
+    shGender: $Enums.Gender
+    shIdCard?: string | null
+    shIdIssuedDate?: Date | string | null
+    shIdExpiredDate?: Date | string | null
+    shEmail?: string | null
+    shPhone?: string | null
+    shPhotoName?: string | null
+    shIdDocNames?: string
+    ownerLastNameKh?: string | null
+    ownerFirstNameKh?: string | null
+    ownerLastNameEn: string
+    ownerFirstNameEn: string
+    ownerDob: Date | string
+    ownerNationality: string
+    ownerGender: $Enums.Gender
+    ownerIdCard?: string | null
+    ownerIdIssuedDate?: Date | string | null
+    ownerIdExpiredDate?: Date | string | null
+    ownerEmail?: string | null
+    ownerPhone?: string | null
+    ownerPhotoName?: string | null
+    ownerIdDocNames?: string
+    shareAmount: string
+    shareholderContractDocNames?: string
+    otherDocNames?: string
+    consentAgreed?: boolean
+    rejectionReason?: string | null
+    submittedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    logs?: RequestLogUncheckedCreateNestedManyWithoutRequestInput
+  }
+
+  export type BeneficiaryRequestCreateOrConnectWithoutRevisionsInput = {
+    where: BeneficiaryRequestWhereUniqueInput
+    create: XOR<BeneficiaryRequestCreateWithoutRevisionsInput, BeneficiaryRequestUncheckedCreateWithoutRevisionsInput>
+  }
+
+  export type BeneficiaryRequestUpsertWithoutRevisionsInput = {
+    update: XOR<BeneficiaryRequestUpdateWithoutRevisionsInput, BeneficiaryRequestUncheckedUpdateWithoutRevisionsInput>
+    create: XOR<BeneficiaryRequestCreateWithoutRevisionsInput, BeneficiaryRequestUncheckedCreateWithoutRevisionsInput>
+    where?: BeneficiaryRequestWhereInput
+  }
+
+  export type BeneficiaryRequestUpdateToOneWithWhereWithoutRevisionsInput = {
+    where?: BeneficiaryRequestWhereInput
+    data: XOR<BeneficiaryRequestUpdateWithoutRevisionsInput, BeneficiaryRequestUncheckedUpdateWithoutRevisionsInput>
+  }
+
+  export type BeneficiaryRequestUpdateWithoutRevisionsInput = {
+    requestNo?: StringFieldUpdateOperationsInput | string
+    status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
+    type?: StringFieldUpdateOperationsInput | string
+    companyNameKh?: NullableStringFieldUpdateOperationsInput | string | null
+    companyNameEn?: StringFieldUpdateOperationsInput | string
+    registrationNo?: StringFieldUpdateOperationsInput | string
+    registrationDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    companyProvince?: StringFieldUpdateOperationsInput | string
+    companyDistrict?: StringFieldUpdateOperationsInput | string
+    companyCommune?: StringFieldUpdateOperationsInput | string
+    companyVillage?: StringFieldUpdateOperationsInput | string
+    companyStreet?: StringFieldUpdateOperationsInput | string
+    companyHouse?: StringFieldUpdateOperationsInput | string
+    companyPhone?: StringFieldUpdateOperationsInput | string
+    companyOfficePhone?: NullableStringFieldUpdateOperationsInput | string | null
+    companyEmail?: StringFieldUpdateOperationsInput | string
+    shLastNameKh?: NullableStringFieldUpdateOperationsInput | string | null
+    shFirstNameKh?: NullableStringFieldUpdateOperationsInput | string | null
+    shLastNameEn?: StringFieldUpdateOperationsInput | string
+    shFirstNameEn?: StringFieldUpdateOperationsInput | string
+    shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shNationality?: StringFieldUpdateOperationsInput | string
+    shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+    shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
+    shIdIssuedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shIdExpiredDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    shPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    shPhotoName?: NullableStringFieldUpdateOperationsInput | string | null
+    shIdDocNames?: StringFieldUpdateOperationsInput | string
+    ownerLastNameKh?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerFirstNameKh?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerLastNameEn?: StringFieldUpdateOperationsInput | string
+    ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
+    ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerNationality?: StringFieldUpdateOperationsInput | string
+    ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+    ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerIdIssuedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ownerIdExpiredDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ownerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerPhotoName?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerIdDocNames?: StringFieldUpdateOperationsInput | string
+    shareAmount?: StringFieldUpdateOperationsInput | string
+    shareholderContractDocNames?: StringFieldUpdateOperationsInput | string
+    otherDocNames?: StringFieldUpdateOperationsInput | string
+    consentAgreed?: BoolFieldUpdateOperationsInput | boolean
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    submittedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutBeneficiaryRequestsNestedInput
+    logs?: RequestLogUpdateManyWithoutRequestNestedInput
+  }
+
+  export type BeneficiaryRequestUncheckedUpdateWithoutRevisionsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    requestNo?: StringFieldUpdateOperationsInput | string
+    userId?: IntFieldUpdateOperationsInput | number
+    status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
+    type?: StringFieldUpdateOperationsInput | string
+    companyNameKh?: NullableStringFieldUpdateOperationsInput | string | null
+    companyNameEn?: StringFieldUpdateOperationsInput | string
+    registrationNo?: StringFieldUpdateOperationsInput | string
+    registrationDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    companyProvince?: StringFieldUpdateOperationsInput | string
+    companyDistrict?: StringFieldUpdateOperationsInput | string
+    companyCommune?: StringFieldUpdateOperationsInput | string
+    companyVillage?: StringFieldUpdateOperationsInput | string
+    companyStreet?: StringFieldUpdateOperationsInput | string
+    companyHouse?: StringFieldUpdateOperationsInput | string
+    companyPhone?: StringFieldUpdateOperationsInput | string
+    companyOfficePhone?: NullableStringFieldUpdateOperationsInput | string | null
+    companyEmail?: StringFieldUpdateOperationsInput | string
+    shLastNameKh?: NullableStringFieldUpdateOperationsInput | string | null
+    shFirstNameKh?: NullableStringFieldUpdateOperationsInput | string | null
+    shLastNameEn?: StringFieldUpdateOperationsInput | string
+    shFirstNameEn?: StringFieldUpdateOperationsInput | string
+    shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shNationality?: StringFieldUpdateOperationsInput | string
+    shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+    shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
+    shIdIssuedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shIdExpiredDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    shPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    shPhotoName?: NullableStringFieldUpdateOperationsInput | string | null
+    shIdDocNames?: StringFieldUpdateOperationsInput | string
+    ownerLastNameKh?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerFirstNameKh?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerLastNameEn?: StringFieldUpdateOperationsInput | string
+    ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
+    ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerNationality?: StringFieldUpdateOperationsInput | string
+    ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
+    ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerIdIssuedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ownerIdExpiredDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ownerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerPhotoName?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerIdDocNames?: StringFieldUpdateOperationsInput | string
+    shareAmount?: StringFieldUpdateOperationsInput | string
+    shareholderContractDocNames?: StringFieldUpdateOperationsInput | string
+    otherDocNames?: StringFieldUpdateOperationsInput | string
+    consentAgreed?: BoolFieldUpdateOperationsInput | boolean
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    submittedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    logs?: RequestLogUncheckedUpdateManyWithoutRequestNestedInput
   }
 
   export type BeneficiaryRequestCreateManyUserInput = {
@@ -12937,6 +16303,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     logs?: RequestLogUpdateManyWithoutRequestNestedInput
+    revisions?: RequestRevisionUpdateManyWithoutRequestNestedInput
   }
 
   export type BeneficiaryRequestUncheckedUpdateWithoutUserInput = {
@@ -12994,6 +16361,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     logs?: RequestLogUncheckedUpdateManyWithoutRequestNestedInput
+    revisions?: RequestRevisionUncheckedUpdateManyWithoutRequestNestedInput
   }
 
   export type BeneficiaryRequestUncheckedUpdateManyWithoutUserInput = {
@@ -13063,6 +16431,7 @@ export namespace Prisma {
     isActive?: boolean
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    notificationsSeenAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -13085,6 +16454,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     beneficiaryRequests?: BeneficiaryRequestUpdateManyWithoutUserNestedInput
@@ -13101,6 +16471,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     beneficiaryRequests?: BeneficiaryRequestUncheckedUpdateManyWithoutUserNestedInput
@@ -13117,6 +16488,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -13187,6 +16559,17 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type RequestRevisionCreateManyRequestInput = {
+    id?: number
+    editedByUserId: number
+    editedByRole: $Enums.Role
+    editedByName: string
+    previousData: string
+    newData: string
+    approvedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
   export type RequestLogUpdateWithoutRequestInput = {
     action?: StringFieldUpdateOperationsInput | string
     actorUserId?: IntFieldUpdateOperationsInput | number
@@ -13213,6 +16596,38 @@ export namespace Prisma {
     actorRole?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     actorName?: StringFieldUpdateOperationsInput | string
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RequestRevisionUpdateWithoutRequestInput = {
+    editedByUserId?: IntFieldUpdateOperationsInput | number
+    editedByRole?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    editedByName?: StringFieldUpdateOperationsInput | string
+    previousData?: StringFieldUpdateOperationsInput | string
+    newData?: StringFieldUpdateOperationsInput | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RequestRevisionUncheckedUpdateWithoutRequestInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    editedByUserId?: IntFieldUpdateOperationsInput | number
+    editedByRole?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    editedByName?: StringFieldUpdateOperationsInput | string
+    previousData?: StringFieldUpdateOperationsInput | string
+    newData?: StringFieldUpdateOperationsInput | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RequestRevisionUncheckedUpdateManyWithoutRequestInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    editedByUserId?: IntFieldUpdateOperationsInput | number
+    editedByRole?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    editedByName?: StringFieldUpdateOperationsInput | string
+    previousData?: StringFieldUpdateOperationsInput | string
+    newData?: StringFieldUpdateOperationsInput | string
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

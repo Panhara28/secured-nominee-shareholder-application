@@ -3,32 +3,120 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, ChevronDown, FileText, Loader2, Paperclip, Save, Sparkles, Upload, X, XCircle } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Paperclip, RotateCcw, Save, Send, Sparkles, Upload, X, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-function StepCard({
+function StepTabs({
+  steps,
+  activeStep,
+  onChange,
+}: {
+  steps: { number: number; title: string; disabled: boolean; flagged?: boolean }[];
+  activeStep: number;
+  onChange: (step: number) => void;
+}) {
+  return (
+    <div className="flex overflow-x-auto border-b border-slate-200">
+      {steps.map((s) => {
+        const isActive = s.number === activeStep;
+        return (
+          <button
+            key={s.number}
+            type="button"
+            onClick={() => !s.disabled && onChange(s.number)}
+            disabled={s.disabled}
+            className={cn(
+              "relative flex items-center gap-2 px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors",
+              s.disabled
+                ? "border-transparent text-slate-300 cursor-not-allowed"
+                : isActive
+                ? "border-blue-600 text-blue-700"
+                : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+            )}
+          >
+            <span
+              className={cn(
+                "flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold",
+                s.disabled ? "bg-slate-100 text-slate-300" : isActive ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500"
+              )}
+            >
+              {s.number}
+            </span>
+            {s.title}
+            {s.flagged && (
+              <span className="h-2 w-2 rounded-full bg-orange-500 flex-shrink-0" />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function StepPanel({
   stepNumber,
-  title,
+  activeStep,
   children,
 }: {
   stepNumber: number;
-  title: string;
+  activeStep: number;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(true);
-  return (
-    <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-3.5 bg-blue-700 text-white"
-      >
-        <span className="text-sm font-semibold">Step {stepNumber} — {title}</span>
-        <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", open && "rotate-180")} />
-      </button>
-      {open && <div className="bg-white px-5 py-5">{children}</div>}
-    </div>
-  );
+  if (stepNumber !== activeStep) return null;
+  return <div className="bg-white px-5 py-5">{children}</div>;
+}
+
+function guessFieldsFromReason(reason: string): { fields: string[]; steps: number[] } {
+  const text = reason.toLowerCase();
+  const fields: string[] = [];
+  const steps = new Set<number>();
+
+  // Company-level (step 1) keywords
+  if (text.includes("registration") || text.includes("business registry")) {
+    fields.push("registrationNo");
+    steps.add(1);
+  }
+  if (text.includes("company email")) {
+    fields.push("companyEmail");
+    steps.add(1);
+  }
+  if (text.includes("company phone")) {
+    fields.push("companyPhone");
+    steps.add(1);
+  }
+  if (text.includes("company address") || text.includes("addresses could not be cross-verified")) {
+    fields.push("companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse");
+    steps.add(1);
+  }
+
+  // Person-level (step 2/3) keywords — if the reason doesn't say which person, flag both.
+  const mentionsShareholder = text.includes("shareholder") || text.includes("nominee");
+  const mentionsOwner = text.includes("beneficial owner") || text.includes("beneficiary owner") || text.includes(" owner");
+  const targets: (2 | 3)[] = [];
+  if (mentionsShareholder) targets.push(2);
+  if (mentionsOwner) targets.push(3);
+  if (targets.length === 0) targets.push(2, 3);
+
+  const personField = (suffix: string, step: 2 | 3) =>
+    step === 2 ? `sh${suffix}` : `${suffix.charAt(0).toLowerCase()}${suffix.slice(1)}`;
+
+  const mentionsIdCard = text.includes("id card") || text.includes("passport") || text.includes("id number") || text.includes("id issue") || text.includes("issuing province");
+  const mentionsDob = text.includes("date of birth") || text.includes("dob");
+  const mentionsPersonEmail = !text.includes("company") && text.includes("email");
+  const mentionsPersonPhone = !text.includes("company") && text.includes("phone");
+
+  if (mentionsIdCard || mentionsDob || mentionsPersonEmail || mentionsPersonPhone) {
+    for (const step of targets) {
+      if (mentionsIdCard) fields.push(personField("IdCard", step), personField("IdIssuedDate", step), personField("IdExpiredDate", step));
+      if (mentionsDob) fields.push(personField("Dob", step));
+      if (mentionsPersonEmail) fields.push(personField("Email", step));
+      if (mentionsPersonPhone) fields.push(personField("Phone", step));
+      steps.add(step);
+    }
+  }
+
+  return { fields, steps: [...steps].sort((a, b) => a - b) };
 }
 
 const PROVINCES_KH = [
@@ -152,6 +240,8 @@ function PersonFields({
   setIdDocs,
   requiredFields,
   extraContent,
+  flaggedFields = [],
+  unchangedFields = [],
 }: {
   t: ReturnType<typeof useTranslations>;
   prefix: string;
@@ -166,12 +256,23 @@ function PersonFields({
   setIdDocs: React.Dispatch<React.SetStateAction<UploadedDoc[]>>;
   requiredFields: string[];
   extraContent?: React.ReactNode;
+  flaggedFields?: string[];
+  unchangedFields?: string[];
 }) {
   const key = (f: string) => (prefix ? `${prefix}${f}` : `${f.charAt(0).toLowerCase()}${f.slice(1)}`);
-  const fieldError = (f: string) => touched[key(f)] && !form[key(f)] ? t("required") : "";
+  const isFlagged = (f: string) => flaggedFields.includes(key(f));
+  const isUnchanged = (f: string) => unchangedFields.includes(key(f));
+  const fieldError = (f: string) =>
+    isUnchanged(f) ? t("unchangedFieldInline") : touched[key(f)] && !form[key(f)] ? t("required") : "";
   const inputCls = (f: string) =>
     cn("w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
-      fieldError(f) ? "border-red-400" : "border-slate-300");
+      isUnchanged(f)
+        ? "border-red-400 ring-2 ring-red-100"
+        : fieldError(f)
+        ? "border-red-400"
+        : isFlagged(f)
+        ? "border-orange-400 ring-2 ring-orange-100"
+        : "border-slate-300");
 
   return (
     <div className="space-y-5">
@@ -337,6 +438,12 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
   const [loading, setLoading] = useState(!!editId);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [notAllowed, setNotAllowed] = useState(false);
+  const [activeStep, setActiveStep] = useState(1);
+  const [returnReason, setReturnReason] = useState<string | null>(null);
+  const [returnSteps, setReturnSteps] = useState<number[]>([]);
+  const [flaggedFields, setFlaggedFields] = useState<string[]>([]);
+  const [originalFlaggedValues, setOriginalFlaggedValues] = useState<Record<string, string>>({});
+  const [unchangedFields, setUnchangedFields] = useState<string[]>([]);
 
   useEffect(() => {
     if (!editId) return;
@@ -351,12 +458,12 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           return;
         }
         const data = await res.json();
-        if (data.status !== "APPROVED") {
+        if (data.status !== "APPROVED" && data.status !== "RETURNED") {
           setNotAllowed(true);
           return;
         }
         const dateOnly = (iso: string | null) => (iso ? iso.slice(0, 10) : "");
-        setForm({
+        const mappedForm: FormData = {
           companyNameKh: data.companyNameKh ?? "", companyNameEn: data.companyNameEn ?? "",
           registrationNo: data.registrationNo ?? "", registrationDate: dateOnly(data.registrationDate),
           companyProvince: data.companyProvince ?? "", companyDistrict: data.companyDistrict ?? "",
@@ -374,7 +481,20 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           shDob: dateOnly(data.shDob), shNationality: data.shNationality ?? "", shGender: data.shGender ?? "",
           shIdCard: data.shIdCard ?? "", shIdIssuedDate: dateOnly(data.shIdIssuedDate), shIdExpiredDate: dateOnly(data.shIdExpiredDate),
           shEmail: data.shEmail ?? "", shPhone: data.shPhone ?? "",
-        });
+        };
+        if (data.status === "RETURNED" && data.rejectionReason) {
+          setReturnReason(data.rejectionReason);
+          const { fields, steps } = guessFieldsFromReason(data.rejectionReason);
+          setReturnSteps(steps);
+          if (steps.length > 0) {
+            setActiveStep(steps[0]);
+            setFlaggedFields(fields);
+            const snapshot: Record<string, string> = {};
+            fields.forEach((f) => { snapshot[f] = mappedForm[f as keyof FormData] ?? ""; });
+            setOriginalFlaggedValues(snapshot);
+          }
+        }
+        setForm(mappedForm);
         setOwnerPhotoName(data.ownerPhotoName ?? null);
         setShPhotoName(data.shPhotoName ?? null);
         setOwnerIdDocs((data.ownerIdDocNames ?? []).map((name: string) => ({ name })));
@@ -396,8 +516,19 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
-  const set = (patch: Partial<FormData>) => setForm((p) => ({ ...p, ...patch }));
-  const setAny = (patch: Record<string, string>) => setForm((p) => ({ ...p, ...patch }));
+  const clearResolvedUnchangedFields = (patch: Record<string, string>) => {
+    if (unchangedFields.length === 0) return;
+    const resolved = Object.keys(patch).filter((k) => unchangedFields.includes(k) && patch[k] !== originalFlaggedValues[k]);
+    if (resolved.length > 0) setUnchangedFields((prev) => prev.filter((f) => !resolved.includes(f)));
+  };
+  const set = (patch: Partial<FormData>) => {
+    clearResolvedUnchangedFields(patch as Record<string, string>);
+    setForm((p) => ({ ...p, ...patch }));
+  };
+  const setAny = (patch: Record<string, string>) => {
+    clearResolvedUnchangedFields(patch);
+    setForm((p) => ({ ...p, ...patch }));
+  };
   const setTouchedPatch = (patch: Record<string, boolean>) => setTouched((p) => ({ ...p, ...patch }));
 
   const fillFakeData = () => {
@@ -414,8 +545,27 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     setConsentAgreed(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const STEP_OF_FIELD: Record<string, number> = {
+    companyNameEn: 1, registrationNo: 1, registrationDate: 1,
+    companyProvince: 1, companyDistrict: 1, companyCommune: 1, companyVillage: 1, companyStreet: 1, companyHouse: 1,
+    companyPhone: 1, companyEmail: 1,
+    shLastNameEn: 2, shFirstNameEn: 2, shDob: 2, shNationality: 2, shGender: 2,
+    lastNameEn: 3, firstNameEn: 3, dob: 3, nationality: 3, gender: 3, shareAmount: 3,
+  };
+
+  const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = Object.entries(STEP_OF_FIELD).reduce(
+    (acc, [field, step]) => {
+      acc[step] = acc[step] ?? [];
+      acc[step].push(field as keyof FormData);
+      return acc;
+    },
+    {} as Record<number, (keyof FormData)[]>
+  );
+
+  const isStepComplete = (step: number) =>
+    (STEP_REQUIRED_FIELDS[step] ?? []).every((f) => !!form[f]);
+
+  const validateAndFocusStep = () => {
     const required: (keyof FormData)[] = [
       "companyNameEn", "registrationNo", "registrationDate",
       "companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse",
@@ -427,40 +577,108 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     required.forEach((k) => (t2[k] = true));
     setTouched(t2);
     setConsentTouched(true);
-    if (required.some((k) => !form[k])) return;
-    if (!consentAgreed) return;
+    const missing = required.filter((k) => !form[k]);
+    if (missing.length > 0) {
+      const missingSteps = missing.map((k) => STEP_OF_FIELD[k] ?? 1);
+      setActiveStep(Math.min(...missingSteps));
+      return false;
+    }
+    if (flaggedFields.length > 0) {
+      const stillUnchanged = flaggedFields.filter((f) => form[f as keyof FormData] === originalFlaggedValues[f]);
+      if (stillUnchanged.length > 0) {
+        setUnchangedFields(stillUnchanged);
+        if (returnSteps.length > 0) setActiveStep(returnSteps[0]);
+        toast.error(t("unchangedFlaggedFieldError"));
+        return false;
+      }
+    }
+    if (!consentAgreed) {
+      setActiveStep(4);
+      return false;
+    }
+    return true;
+  };
+
+  const saveRequest = async (): Promise<string | null> => {
+    const url = editId ? `/api/portal/beneficiary/requests/${editId}` : "/api/portal/beneficiary/requests";
+    const payload = {
+      ...form,
+      ownerPhotoName,
+      ownerIdDocNames: ownerIdDocs.map((d) => d.name),
+      shPhotoName,
+      shIdDocNames: shIdDocs.map((d) => d.name),
+      shareholderContractDocNames: shareholderContractDocs.map((d) => d.name),
+      otherDocNames: supportingDocs.map((d) => d.name),
+      consentAgreed,
+      ...(editId && { action: "edit" }),
+    };
+    const res = await fetch(url, {
+      method: editId ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: t("submitError") }));
+      const message = err.error ?? t("submitError");
+      setSubmitError(message);
+      toast.error(message);
+      return null;
+    }
+
+    const saved = await res.json();
+    return editId ?? saved.id;
+  };
+
+  const handleSaveDraft = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateAndFocusStep()) return;
 
     setSubmitError(null);
     setSubmitting(true);
     try {
-      const url = editId ? `/api/portal/beneficiary/requests/${editId}` : "/api/portal/beneficiary/requests";
-      const payload = {
-        ...form,
-        ownerPhotoName,
-        ownerIdDocNames: ownerIdDocs.map((d) => d.name),
-        shPhotoName,
-        shIdDocNames: shIdDocs.map((d) => d.name),
-        shareholderContractDocNames: shareholderContractDocs.map((d) => d.name),
-        otherDocNames: supportingDocs.map((d) => d.name),
-        consentAgreed,
-        ...(editId && { action: "edit" }),
-      };
-      const res = await fetch(url, {
-        method: editId ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: t("submitError") }));
-        setSubmitError(err.error ?? t("submitError"));
-        return;
-      }
-
-      const saved = await res.json();
-      router.push(`/${locale}/portal/beneficiary/all-requests/${editId ?? saved.id}`);
+      const id = await saveRequest();
+      if (!id) return;
+      toast.success(editId ? t("draftUpdated") : t("draftSaved"));
+      router.push(`/${locale}/portal/beneficiary/all-requests`);
     } catch {
       setSubmitError(t("submitError"));
+      toast.error(t("submitError"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateAndFocusStep()) return;
+
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      const id = await saveRequest();
+      if (!id) return;
+
+      if (!editId) {
+        const submitRes = await fetch(`/api/portal/beneficiary/requests/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "submit" }),
+        });
+        if (!submitRes.ok) {
+          const err = await submitRes.json().catch(() => ({ error: t("submitError") }));
+          const message = err.error ?? t("submitError");
+          setSubmitError(message);
+          toast.error(message);
+          return;
+        }
+      }
+
+      toast.success(t("requestSubmitted"));
+      router.push(`/${locale}/portal/beneficiary/all-requests/${id}`);
+    } catch {
+      setSubmitError(t("submitError"));
+      toast.error(t("submitError"));
     } finally {
       setSubmitting(false);
     }
@@ -468,10 +686,18 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
 
   const inputCls = (key: keyof FormData) =>
     cn("w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
-      touched[key] && !form[key] ? "border-red-400" : "border-slate-300");
+      unchangedFields.includes(key)
+        ? "border-red-400 ring-2 ring-red-100"
+        : touched[key] && !form[key]
+        ? "border-red-400"
+        : flaggedFields.includes(key)
+        ? "border-orange-400 ring-2 ring-orange-100"
+        : "border-slate-300");
 
   const fieldError = (key: keyof FormData) =>
-    touched[key] && !form[key] ? t("required") : "";
+    unchangedFields.includes(key)
+      ? t("unchangedFieldInline")
+      : touched[key] && !form[key] ? t("required") : "";
 
   if (editId && loading) {
     return (
@@ -513,10 +739,39 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
         <p className="text-sm text-slate-500 mt-0.5">{t("pageSubtitle")}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {returnReason && (
+        <div className="flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 px-5 py-4">
+          <RotateCcw className="h-4.5 w-4.5 text-orange-600 flex-shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-orange-800">{t("returnReasonBannerTitle")}</p>
+            <p className="mt-0.5 text-sm text-orange-700">{returnReason}</p>
+            {returnSteps.length > 0 && (
+              <p className="mt-1.5 text-xs text-orange-600">
+                {t("returnReasonStepHint", {
+                  step: returnSteps.map((s) => t(`step${s}Title` as "step1Title")).join(" / "),
+                })}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleSaveDraft} className="space-y-4">
+
+        <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden bg-white">
+          <StepTabs
+            steps={[1, 2, 3, 4].map((n) => ({
+              number: n,
+              title: t(`step${n}Title` as "step1Title"),
+              disabled: n > activeStep && Array.from({ length: n - 1 }, (_, i) => i + 1).some((s) => !isStepComplete(s)),
+              flagged: returnSteps.includes(n),
+            }))}
+            activeStep={activeStep}
+            onChange={setActiveStep}
+          />
 
         {/* Step 1 — Company Information */}
-        <StepCard stepNumber={1} title={t("step1Title")}>
+        <StepPanel stepNumber={1} activeStep={activeStep}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t("companyNameKh")}</label>
@@ -601,10 +856,10 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
               </div>
             </div>
           </div>
-        </StepCard>
+        </StepPanel>
 
         {/* Step 2 — Nominee Shareholder Information */}
-        <StepCard stepNumber={2} title={t("step2Title")}>
+        <StepPanel stepNumber={2} activeStep={activeStep}>
           <PersonFields
             t={t}
             prefix="sh"
@@ -618,11 +873,13 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             idDocs={shIdDocs}
             setIdDocs={setShIdDocs}
             requiredFields={["shLastNameEn", "shFirstNameEn", "shDob", "shNationality", "shGender"]}
+            flaggedFields={flaggedFields}
+            unchangedFields={unchangedFields}
           />
-        </StepCard>
+        </StepPanel>
 
         {/* Step 3 — Beneficial Owner Information */}
-        <StepCard stepNumber={3} title={t("step3Title")}>
+        <StepPanel stepNumber={3} activeStep={activeStep}>
           <PersonFields
             t={t}
             prefix=""
@@ -636,6 +893,8 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             idDocs={ownerIdDocs}
             setIdDocs={setOwnerIdDocs}
             requiredFields={["lastNameEn", "firstNameEn", "dob", "nationality", "gender"]}
+            flaggedFields={flaggedFields}
+            unchangedFields={unchangedFields}
             extraContent={
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
@@ -657,10 +916,10 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
               </div>
             }
           />
-        </StepCard>
+        </StepPanel>
 
         {/* Step 4 — Agreement of Nominees and Beneficial Owner */}
-        <StepCard stepNumber={4} title={t("step4Title")}>
+        <StepPanel stepNumber={4} activeStep={activeStep}>
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -727,23 +986,56 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
               )}
             </div>
           </div>
-        </StepCard>
+        </StepPanel>
+        </div>
 
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-3">
-          {submitError && <p className="text-sm text-red-600 mr-auto">{submitError}</p>}
-          <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-            <XCircle className="h-4 w-4" />
-            {t("cancel")}
-          </button>
+        {/* Step navigation / Actions */}
+        <div className="flex items-center justify-between gap-3">
           <button
-            type="submit"
-            disabled={submitting || !consentAgreed}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            type="button"
+            onClick={() => setActiveStep((s) => Math.max(1, s - 1))}
+            disabled={activeStep === 1}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Save className="h-4 w-4" />
-            {submitting ? t("submitting") : t("submit")}
+            {t("previous")}
           </button>
+
+          {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+
+          {activeStep < 4 ? (
+            <button
+              type="button"
+              onClick={() => setActiveStep((s) => Math.min(4, s + 1))}
+              disabled={!isStepComplete(activeStep)}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {t("next")}
+            </button>
+          ) : (
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                <XCircle className="h-4 w-4" />
+                {t("cancel")}
+              </button>
+              <button
+                type="submit"
+                disabled={submitting || !consentAgreed}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 bg-white px-5 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Save className="h-4 w-4" />
+                {submitting ? t("submitting") : t("submit")}
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmitRequest}
+                disabled={submitting || !consentAgreed}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Send className="h-4 w-4" />
+                {submitting ? t("submittingRequest") : t("submitRequest")}
+              </button>
+            </div>
+          )}
         </div>
       </form>
     </div>

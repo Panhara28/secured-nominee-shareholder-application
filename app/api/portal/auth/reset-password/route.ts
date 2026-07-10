@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-log";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as {
@@ -31,6 +32,13 @@ export async function POST(request: Request) {
   await prisma.user.update({
     where: { id: user.id },
     data: { passwordHash, resetToken: null, resetTokenExpiry: null },
+  });
+
+  await logActivity({
+    action: "PASSWORD_RESET",
+    entityType: "User",
+    entityId: user.id,
+    actor: { id: user.id, role: user.role, fullName: user.fullName },
   });
 
   return Response.json({ ok: true });

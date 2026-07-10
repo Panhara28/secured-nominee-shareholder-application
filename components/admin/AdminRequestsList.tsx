@@ -16,7 +16,8 @@ function formatDate(iso: string): string {
   return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
 }
 
-const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED"];
+const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
+const DEFAULT_STATUS = "PENDING,UPDATE_REQUESTED";
 
 type SortKey = "requestNo" | "companyNameEn" | "submittedAt" | "status";
 type SortDir = "asc" | "desc";
@@ -34,7 +35,7 @@ type RequestRow = {
   status: string;
 };
 
-type Summary = { drafted: number; request: number; inReview: number; approved: number; rejected: number };
+type Summary = { drafted: number; request: number; inReview: number; approved: number; rejected: number; returned: number };
 
 export default function AdminRequestsList() {
   const t = useTranslations("admin.requests");
@@ -43,7 +44,7 @@ export default function AdminRequestsList() {
 
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(DEFAULT_STATUS);
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>("submittedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -51,7 +52,7 @@ export default function AdminRequestsList() {
 
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [total, setTotal] = useState(0);
-  const [summary, setSummary] = useState<Summary>({ drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0 });
+  const [summary, setSummary] = useState<Summary>({ drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0, returned: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -99,7 +100,7 @@ export default function AdminRequestsList() {
   const handleReset = () => {
     setQuery("");
     setAppliedQuery("");
-    setStatus("");
+    setStatus(DEFAULT_STATUS);
     setPage(1);
   };
 
@@ -138,7 +139,7 @@ export default function AdminRequestsList() {
     <div className="space-y-4">
       <h1 className="text-xl font-semibold text-slate-800">{t("pageTitle")}</h1>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
             <FileEdit className="h-5 w-5 text-slate-500" />
@@ -184,6 +185,15 @@ export default function AdminRequestsList() {
             <p className="text-xl font-semibold text-slate-800">{summary.rejected}</p>
           </div>
         </div>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+            <RotateCcw className="h-5 w-5 text-orange-600" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-slate-500 truncate">{ta("summary.returned")}</p>
+            <p className="text-xl font-semibold text-slate-800">{summary.returned}</p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
@@ -208,6 +218,7 @@ export default function AdminRequestsList() {
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               <option value="">{ta("statusAll")}</option>
+              <option value={DEFAULT_STATUS}>{ta("statusAwaitingReview")}</option>
               {STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s}>
                   {ta(`status.${s}` as Parameters<typeof ta>[0])}

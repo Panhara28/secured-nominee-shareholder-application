@@ -18,6 +18,8 @@ enum BeneficiaryRequestStatus {
   IN_REVIEW
   APPROVED
   REJECTED
+  RETURNED
+  UPDATE_REQUESTED
 }
 
 enum Gender {
@@ -36,6 +38,7 @@ model User {
   isActive            Boolean              @default(true)
   resetToken          String?
   resetTokenExpiry    DateTime?
+  notificationsSeenAt DateTime?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   beneficiaryRequests BeneficiaryRequest[]
@@ -148,7 +151,8 @@ model BeneficiaryRequest {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  logs RequestLog[]
+  logs      RequestLog[]
+  revisions RequestRevision[]
 
   @@index([userId])
   @@index([status])
@@ -166,4 +170,35 @@ model RequestLog {
   createdAt   DateTime           @default(now())
 
   @@index([requestId])
+}
+
+model RequestRevision {
+  id             Int                @id @default(autoincrement())
+  requestId      Int
+  request        BeneficiaryRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  editedByUserId Int
+  editedByRole   Role
+  editedByName   String
+  previousData   String
+  newData        String
+  approvedAt     DateTime?
+  createdAt      DateTime           @default(now())
+
+  @@index([requestId])
+}
+
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  action      String
+  entityType  String?
+  entityId    Int?
+  actorUserId Int?
+  actorRole   Role?
+  actorName   String?
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorUserId])
+  @@index([action])
 }

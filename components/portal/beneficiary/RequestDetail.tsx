@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/lib/navigation";
-import { ArrowLeft, Building2, FileText, History, MessageSquare, Pencil, Send, Users } from "lucide-react";
+import { Link, useRouter } from "@/lib/navigation";
+import { ArrowLeft, Building2, FileText, GitCompare, History, MessageSquare, Pencil, Send, Users } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import RequestActivityLog, { type ActivityLogEntry } from "@/components/beneficiary/RequestActivityLog";
+import RequestRevisionHistory, { type RequestRevisionEntry } from "@/components/beneficiary/RequestRevisionHistory";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "-";
@@ -119,11 +120,13 @@ type RequestDetailData = {
   submittedAt: string;
   rejectionReason: string | null;
   logs: ActivityLogEntry[];
+  revisions: RequestRevisionEntry[];
 };
 
 export default function RequestDetail({ id }: { id: string }) {
   const t = useTranslations("beneficiary.allRequests");
   const tf = useTranslations("beneficiary.request");
+  const trev = useTranslations("beneficiary.revisions");
   const router = useRouter();
   const [request, setRequest] = useState<RequestDetailData | null | undefined>(undefined);
   const [error, setError] = useState(false);
@@ -212,6 +215,17 @@ export default function RequestDetail({ id }: { id: string }) {
                 <p className="mt-2 text-sm text-blue-600">{t("pendingNotice")}</p>
               ) : request.status === "IN_REVIEW" ? (
                 <p className="mt-2 text-sm text-purple-600">{t("inReviewNotice")}</p>
+              ) : request.status === "UPDATE_REQUESTED" ? (
+                <div className="mt-2 space-y-1.5">
+                  <p className="text-sm text-teal-600">{t("updateRequestedNotice")}</p>
+                  <Link
+                    href={`/portal/beneficiary/revisions?requestId=${request.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 px-3 py-1 text-xs font-medium text-teal-700 transition-colors"
+                  >
+                    <GitCompare className="h-3.5 w-3.5" />
+                    {trev("diffCompare")}
+                  </Link>
+                </div>
               ) : (
                 <div className="flex items-center gap-2 mt-2">
                   <StatusBadge status={request.status} label={t(`status.${request.status}` as Parameters<typeof t>[0])} />
@@ -232,7 +246,7 @@ export default function RequestDetail({ id }: { id: string }) {
                 {submitError && <p className="mt-2 text-xs text-red-600 max-w-xs">{submitError}</p>}
               </div>
             )}
-            {request.status === "APPROVED" && (
+            {request.status === "RETURNED" && (
               <div className="flex-shrink-0 text-right">
                 <button
                   type="button"
@@ -250,11 +264,13 @@ export default function RequestDetail({ id }: { id: string }) {
         )}
       </div>
 
-      {request && request.status === "REJECTED" && request.rejectionReason && (
+      {request && (request.status === "REJECTED" || request.status === "RETURNED") && request.rejectionReason && (
         <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
           <MessageSquare className="h-4.5 w-4.5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div className="min-w-0">
-            <p className="text-sm font-medium text-amber-800">{t("rejectionReason")}</p>
+            <p className="text-sm font-medium text-amber-800">
+              {request.status === "RETURNED" ? t("returnReason") : t("rejectionReason")}
+            </p>
             <p className="mt-0.5 text-sm text-amber-700">{request.rejectionReason}</p>
           </div>
         </div>
@@ -362,7 +378,10 @@ export default function RequestDetail({ id }: { id: string }) {
           </SectionCard>
         </div>
 
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4 space-y-4">
+          <SectionCard icon={<Pencil className="h-4 w-4" />} title={trev("title")}>
+            <RequestRevisionHistory revisions={request.revisions} />
+          </SectionCard>
           <SectionCard icon={<History className="h-4 w-4" />} title={t("log.title")}>
             <RequestActivityLog logs={request.logs} />
           </SectionCard>

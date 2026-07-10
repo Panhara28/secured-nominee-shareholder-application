@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/lib/generated/prisma";
 
-type LogAction = "CREATED" | "SUBMITTED" | "APPROVED" | "REJECTED" | "EDITED";
+type LogAction = "CREATED" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RETURNED" | "EDITED";
 
 export async function logRequestEvent(
   requestId: number,

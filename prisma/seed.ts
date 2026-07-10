@@ -18,6 +18,7 @@ async function main() {
 
   console.log("Cleaning database…");
 
+  await prisma.activityLog.deleteMany({});
   await prisma.beneficiaryRequest.deleteMany({});
   await prisma.user.deleteMany({});
   await prisma.staffRolePermission.deleteMany({});

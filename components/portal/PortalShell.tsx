@@ -4,9 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/lib/navigation";
-import { LayoutDashboard, Users, Menu, X, LogOut, User, ChevronDown, ListChecks, FilePlus2 } from "lucide-react";
+import { LayoutDashboard, Users, Menu, X, LogOut, User, ChevronDown, ListChecks, FilePlus2, FileEdit, GitCompare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
+import NotificationBell from "@/components/portal/NotificationBell";
 
 type Props = {
   fullName: string;
@@ -17,6 +18,7 @@ export default function PortalShell({ fullName, children }: Props) {
   const t = useTranslations("portal.nav");
   const tAllRequests = useTranslations("beneficiary.allRequests");
   const tRequest = useTranslations("beneficiary.request");
+  const tRevisions = useTranslations("beneficiary.revisions");
   const pathname = usePathname() ?? "";
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -91,13 +93,39 @@ export default function PortalShell({ fullName, children }: Props) {
                 onClick={() => setMobileOpen(false)}
                 className={cn(
                   "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors text-sm",
-                  pathname.startsWith("/portal/beneficiary/request")
+                  pathname === "/portal/beneficiary/request" || pathname.startsWith("/portal/beneficiary/request/")
                     ? "bg-white/15 text-white font-medium"
                     : "text-blue-200 hover:bg-blue-800/70 hover:text-white"
                 )}
               >
                 <FilePlus2 className="h-4 w-4 flex-shrink-0" />
                 {tRequest("pageTitle")}
+              </Link>
+              <Link
+                href="/portal/beneficiary/request-update"
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors text-sm",
+                  pathname.startsWith("/portal/beneficiary/request-update")
+                    ? "bg-white/15 text-white font-medium"
+                    : "text-blue-200 hover:bg-blue-800/70 hover:text-white"
+                )}
+              >
+                <FileEdit className="h-4 w-4 flex-shrink-0" />
+                {t("requestToUpdate")}
+              </Link>
+              <Link
+                href="/portal/beneficiary/revisions"
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors text-sm",
+                  pathname.startsWith("/portal/beneficiary/revisions")
+                    ? "bg-white/15 text-white font-medium"
+                    : "text-blue-200 hover:bg-blue-800/70 hover:text-white"
+                )}
+              >
+                <GitCompare className="h-4 w-4 flex-shrink-0" />
+                {tRevisions("diffCompare")}
               </Link>
             </div>
           )}
@@ -143,11 +171,14 @@ export default function PortalShell({ fullName, children }: Props) {
           </button>
 
           <div className="ml-auto flex items-center gap-3">
-            <LanguageSwitcher />
-            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-              <User className="h-4 w-4 text-blue-700" />
+            <NotificationBell />
+            <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
+              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <User className="h-4 w-4 text-blue-700" />
+              </div>
+              <span className="hidden sm:block text-sm font-medium text-slate-700">{fullName}</span>
+              <LanguageSwitcher />
             </div>
-            <span className="hidden sm:block text-sm font-medium text-slate-700">{fullName}</span>
           </div>
         </header>
         <main className="p-4 lg:p-6">{children}</main>

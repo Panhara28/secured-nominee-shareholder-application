@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/activity-log";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as { email?: string } | null;
@@ -21,6 +22,13 @@ export async function POST(request: Request) {
   await prisma.user.update({
     where: { id: user.id },
     data: { resetToken: token, resetTokenExpiry: expiry },
+  });
+
+  await logActivity({
+    action: "PASSWORD_RESET_REQUESTED",
+    entityType: "User",
+    entityId: user.id,
+    actor: { id: user.id, role: user.role, fullName: user.fullName },
   });
 
   // Simulation: return the reset link directly (no email sent)

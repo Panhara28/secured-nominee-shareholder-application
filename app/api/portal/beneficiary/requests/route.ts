@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { requireShareholder } from "@/lib/auth";
 import { logRequestEvent } from "@/lib/request-log";
+import { logActivity } from "@/lib/activity-log";
 import type { Prisma } from "@/lib/generated/prisma";
 
 const SORTABLE_FIELDS = ["requestNo", "companyNameEn", "submittedAt", "status"] as const;
 type SortKey = (typeof SORTABLE_FIELDS)[number];
 
-const STATUS_VALUES = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED"] as const;
+const STATUS_VALUES = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"] as const;
 type StatusValue = (typeof STATUS_VALUES)[number];
 
 const REQUIRED_FIELDS = [
@@ -83,13 +84,15 @@ export async function GET(request: Request) {
     }),
   ]);
 
-  const summary = { drafted: 0, inReview: 0, verifying: 0, approved: 0, rejected: 0 };
+  const summary = { drafted: 0, inReview: 0, verifying: 0, approved: 0, rejected: 0, returned: 0, updateRequested: 0 };
   for (const g of groups) {
     if (g.status === "DRAFT") summary.drafted = g._count;
     else if (g.status === "PENDING") summary.inReview = g._count;
     else if (g.status === "IN_REVIEW") summary.verifying = g._count;
     else if (g.status === "APPROVED") summary.approved = g._count;
     else if (g.status === "REJECTED") summary.rejected = g._count;
+    else if (g.status === "RETURNED") summary.returned = g._count;
+    else if (g.status === "UPDATE_REQUESTED") summary.updateRequested = g._count;
   }
 
   const data = records.map((r) => ({
@@ -194,7 +197,9 @@ export async function POST(request: Request) {
 
   const actor = await prisma.user.findUnique({ where: { id: session.userId }, select: { fullName: true, role: true } });
   if (actor) {
-    await logRequestEvent(record.id, "CREATED", { id: session.userId, role: actor.role, fullName: actor.fullName });
+    const actorInfo = { id: session.userId, role: actor.role, fullName: actor.fullName };
+    await logRequestEvent(record.id, "CREATED", actorInfo);
+    await logActivity({ action: "REQUEST_CREATED", entityType: "BeneficiaryRequest", entityId: record.id, actor: actorInfo, note: record.requestNo });
   }
 
   return Response.json(record, { status: 201 });

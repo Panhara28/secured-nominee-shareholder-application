@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { setRequestLocale } from "next-intl/server";
 import AllRequestsList from "@/components/portal/beneficiary/AllRequestsList";
 
@@ -11,5 +12,9 @@ type Props = { params: Promise<{ locale: string }> };
 export default async function AllRequestsPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <AllRequestsList />;
+  return (
+    <Suspense>
+      <AllRequestsList />
+    </Suspense>
+  );
 }
