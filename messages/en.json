@@ -2,7 +2,7 @@
   "portal": {
     "login": {
       "title": "Participant Login",
-      "welcome": "Welcome Back",
+      "welcome": "Welcome",
       "subtitle": "LOGON TO ONLINE FILING INFORMATION, AND NOMINEE SHAREHOLDER AGREEMENTS",
       "username": "Username",
       "usernamePlaceholder": "Enter your username",
@@ -405,18 +405,7 @@
   "auth": {
     "brand": {
       "headline": "ONLINE FILING INFORMATION, AND NOMINEE SHAREHOLDER AGREEMENTS",
-      "description": "A simulation platform for managing nominee shareholding structures, business registrations, and corporate documentation.",
-      "stat1Label": "Active Shareholders",
-      "stat1Value": "—",
-      "stat1Sub": "Registered nominees",
-      "stat2Label": "Registrations",
-      "stat2Value": "—",
-      "stat2Sub": "Active business filings",
-      "feature": "Feature",
-      "feature1": "Nominee Management",
-      "feature2": "Share Tracking",
-      "feature3": "Document Vault",
-      "feature4": "Audit Trail"
+      "copyright": "© 2026 Ministry of Commerce. All rights reserved by Ministry of Commerce"
     }
   }
 }
