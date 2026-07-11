@@ -3,7 +3,7 @@
     "login": {
       "title": "Participant Login",
       "welcome": "Welcome",
-      "subtitle": "LOGON TO ONLINE FILING INFORMATION, AND NOMINEE SHAREHOLDER AGREEMENTS",
+      "subtitle": "Logon to Online Filing Information, and Nominee Shareholder Agreements",
       "username": "Username",
       "usernamePlaceholder": "Enter your username",
       "password": "Password",
@@ -18,9 +18,13 @@
     },
     "register": {
       "title": "Create Account",
-      "subtitle": "Register for Secured Nominee Shareholder",
-      "fullName": "Full Name",
-      "fullNamePlaceholder": "Enter your full name",
+      "subtitle": "Register for Online Filing Information, and Nominee Shareholder Agreements",
+      "companyName": "Company Name or Entity Number",
+      "companyNamePlaceholder": "Enter your company name or entity number",
+      "lastName": "Surname",
+      "lastNamePlaceholder": "Enter your surname",
+      "firstName": "First Name",
+      "firstNamePlaceholder": "Enter your first name",
       "email": "Email Address",
       "emailPlaceholder": "Enter your email",
       "username": "Username",
@@ -36,6 +40,19 @@
       "success": "Account created successfully. Please sign in.",
       "haveAccount": "Already have an account?",
       "signIn": "Sign in"
+    },
+    "pendingApproval": {
+      "title": "Your Account Is Pending Approval",
+      "message": "Hi {fullName}, your account has been created and is now awaiting review by our administration team. You'll gain full access to the portal as soon as it's approved.",
+      "timeframe": "Approvals are typically processed within 8 business hours.",
+      "refresh": "Refresh Status",
+      "refreshing": "Checking…",
+      "returnedTitle": "Your Registration Needs Correction",
+      "returnedMessage": "Hi {fullName}, our administration team reviewed your registration and found something that needs to be corrected before it can be approved:",
+      "resubmit": "Resubmit for Review",
+      "resubmitting": "Submitting…",
+      "resubmitSuccess": "Your updated information has been submitted for review.",
+      "resubmitError": "Failed to submit your update. Please try again."
     },
     "forgotPassword": {
       "title": "Reset Password",
@@ -63,7 +80,7 @@
       "backToLogin": "Back to Login"
     },
     "nav": {
-      "portalName": "Nominee Shareholder Portal",
+      "portalName": "Online Filing Information, and Nominee Shareholder Agreements",
       "dashboard": "Dashboard",
       "shareholdings": "My Shareholdings",
       "documents": "Documents",
@@ -249,6 +266,7 @@
         "requestType": "Request Type"
       },
       "view": "View",
+      "requestUpdate": "Request Update",
       "empty": "No requests submitted yet.",
       "loadError": "Failed to load requests. Please try again.",
       "retry": "Retry",
@@ -272,7 +290,12 @@
       "updateRequestedNotice": "Your update is pending admin review. They can compare it against the previously approved data.",
       "rejectionReason": "Rejection Reason",
       "returnReason": "Return Reason",
-      "requestToEdit": "Request to Edit",
+      "requestToEdit": "Edit",
+      "downloadCertificate": "Download Letter Attesting of Filling Nominee Shareholder Agreements",
+      "downloadCertificatePreview": "Preview your certificate below, then click Download to save it.",
+      "download": "Download",
+      "downloading": "Downloading…",
+      "downloadCertificateError": "Failed to download certificate. Please try again.",
       "editRequestTitle": "Edit Request",
       "editNotAllowed": "Only approved or returned requests can be edited.",
       "editLoadError": "Failed to load the request. Please try again.",
@@ -295,7 +318,7 @@
   "admin": {
     "login": {
       "welcome": "Admin Sign In",
-      "subtitle": "LOGON TO ONLINE FILING INFORMATION, AND NOMINEE SHAREHOLDER AGREEMENTS",
+      "subtitle": "Logon to Online Filing Information, and Nominee Shareholder Agreements",
       "username": "Username",
       "usernamePlaceholder": "Enter your username",
       "password": "Password",
@@ -310,9 +333,10 @@
       "dashboard": "Dashboard",
       "requests": "Requests",
       "activitiesLogs": "Activities Log",
-      "users": "Users",
-      "allUsers": "All Users",
-      "createUser": "Create User",
+      "users": "External Users",
+      "internalUsers": "Administrators",
+      "allInternalUsers": "All Administrators",
+      "createInternalUser": "Create User",
       "rolesPermissions": "Role & Permission",
       "assignRole": "Assign Role",
       "signOut": "Sign Out"
@@ -328,7 +352,8 @@
       "rejected": "Rejected",
       "returned": "Returned",
       "statusBreakdown": "Status Breakdown",
-      "recentRequests": "Recent Requests"
+      "recentRequests": "Recent Requests",
+      "recentUsers": "Recently Registered Users"
     },
     "comingSoon": {
       "message": "This section is coming soon."
@@ -361,11 +386,84 @@
       "returnReason": "Return Reason",
       "confirmReturn": "Return Request"
     },
+    "users": {
+      "pageTitle": "User Registrations",
+      "pageSubtitle": "Review and approve new shareholder account registrations before they can sign in to the portal.",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Name, company, username, or email",
+      "statusLabel": "Status",
+      "statusAll": "All",
+      "statusPending": "Pending",
+      "statusReturned": "Returned",
+      "statusActive": "Active",
+      "reset": "Reset",
+      "search": "Search",
+      "retry": "Retry",
+      "loadError": "Failed to load users. Please try again.",
+      "empty": "No user registrations found.",
+      "summary": {
+        "pending": "Pending Approval",
+        "returned": "Returned for Correction",
+        "active": "Active Accounts"
+      },
+      "col": {
+        "name": "Name",
+        "company": "Company",
+        "contact": "Contact",
+        "registeredAt": "Registered",
+        "status": "Status",
+        "action": "Action"
+      },
+      "view": "Review",
+      "verify": "Verify",
+      "verifying": "Verifying…",
+      "verifyError": "Failed to verify user. Please try again.",
+      "verifyPassed": "Company Name / Entity Number verified — no issues found.",
+      "verifyFailed": "Verification found a possible issue with the Company Name or Entity Number:",
+      "approve": "Approve",
+      "reject": "Reject",
+      "return": "Return",
+      "returning": "Returning…",
+      "returnDialogTitle": "Return Registration",
+      "returnDialogDescription": "Please describe what the applicant needs to correct (e.g. Company Name or Entity Number). They will see this message and be able to update and resubmit.",
+      "confirmReturn": "Return Registration",
+      "returnReasonLabel": "Return Reason",
+      "approveSuccess": "User approved. They can now sign in to the portal.",
+      "rejectSuccess": "Registration rejected and removed.",
+      "returnSuccess": "Registration returned to the applicant for correction.",
+      "approveError": "Failed to approve user. Please try again.",
+      "rejectError": "Failed to reject user. Please try again.",
+      "returnError": "Failed to return registration. Please try again."
+    },
+    "internalUsers": {
+      "pageTitle": "Internal Users",
+      "pageSubtitle": "Staff and administrator accounts used to manage the admin backend.",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Name, username, or email",
+      "reset": "Reset",
+      "search": "Search",
+      "retry": "Retry",
+      "loadError": "Failed to load internal users. Please try again.",
+      "empty": "No internal users found.",
+      "col": {
+        "name": "Name",
+        "contact": "Contact",
+        "role": "Staff Role",
+        "createdAt": "Created",
+        "status": "Status",
+        "action": "Action"
+      },
+      "noRole": "No role assigned",
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "view": "View"
+    },
     "notifications": {
       "title": "Notifications",
       "empty": "No new notifications.",
       "pendingNotice": "Awaiting review",
-      "updateRequestedNotice": "Update requested — review diff"
+      "updateRequestedNotice": "Update requested — review diff",
+      "userPendingNotice": "New registration awaiting approval"
     },
     "activitiesLogs": {
       "pageTitle": "Activities Log",
@@ -398,13 +496,18 @@
         "REQUEST_APPROVED": "Approved request",
         "REQUEST_REJECTED": "Rejected request",
         "REQUEST_RETURNED": "Returned request",
-        "REQUEST_VERIFIED": "Verified request"
+        "REQUEST_VERIFIED": "Verified request",
+        "USER_APPROVED": "Approved user registration",
+        "USER_REJECTED": "Rejected user registration",
+        "USER_VERIFIED": "Verified user registration",
+        "USER_RETURNED": "Returned user registration for correction",
+        "REGISTRATION_RESUBMITTED": "Resubmitted corrected registration"
       }
     }
   },
   "auth": {
     "brand": {
-      "headline": "ONLINE FILING INFORMATION, AND NOMINEE SHAREHOLDER AGREEMENTS",
+      "headline": "Online Filing Information, and Nominee Shareholder Agreements",
       "copyright": "© 2026 Ministry of Commerce. All rights reserved by Ministry of Commerce"
     }
   }

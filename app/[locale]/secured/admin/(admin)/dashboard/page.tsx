@@ -10,7 +10,7 @@ export default async function AdminDashboardPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const [totalShareholders, totalRequests, statusGroups, recent] = await Promise.all([
+  const [totalShareholders, totalRequests, statusGroups, recent, recentUsers] = await Promise.all([
     prisma.user.count({ where: { role: "SHAREHOLDER" } }),
     prisma.beneficiaryRequest.count(),
     prisma.beneficiaryRequest.groupBy({ by: ["status"], _count: true }),
@@ -18,6 +18,12 @@ export default async function AdminDashboardPage({ params }: Props) {
       orderBy: { submittedAt: "desc" },
       take: 5,
       select: { id: true, requestNo: true, companyNameEn: true, status: true, submittedAt: true },
+    }),
+    prisma.user.findMany({
+      where: { role: "SHAREHOLDER", isActive: false },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, fullName: true, companyName: true, email: true, username: true, isActive: true, createdAt: true },
     }),
   ]);
 
@@ -32,6 +38,7 @@ export default async function AdminDashboardPage({ params }: Props) {
   }
 
   const recentSerialized = recent.map((r) => ({ ...r, submittedAt: r.submittedAt.toISOString() }));
+  const recentUsersSerialized = recentUsers.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() }));
 
   return (
     <DashboardClient
@@ -39,6 +46,7 @@ export default async function AdminDashboardPage({ params }: Props) {
       totalRequests={totalRequests}
       summary={summary}
       recent={recentSerialized}
+      recentUsers={recentUsersSerialized}
     />
   );
 }

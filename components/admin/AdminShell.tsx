@@ -39,12 +39,13 @@ export default function AdminShell({ fullName, children }: Props) {
     { label: t("requests"), href: "/secured/admin/requests", icon: FileText },
     { label: t("activitiesLogs"), href: "/secured/admin/activities-logs", icon: History },
     { label: trev("diffCompare"), href: "/secured/admin/revisions", icon: GitCompare },
+    { label: t("users"), href: "/secured/admin/users", icon: User },
     {
-      label: t("users"),
+      label: t("internalUsers"),
       icon: UserCog,
       children: [
-        { label: t("allUsers"), href: "/secured/admin/users", icon: User },
-        { label: t("createUser"), href: "/secured/admin/users/add", icon: EditIcon },
+        { label: t("allInternalUsers"), href: "/secured/admin/internal-users", icon: User },
+        { label: t("createInternalUser"), href: "/secured/admin/internal-users/add", icon: EditIcon },
       ],
     },
     {

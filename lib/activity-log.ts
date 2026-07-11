@@ -14,7 +14,12 @@ export type ActivityAction =
   | "REQUEST_REJECTED"
   | "REQUEST_RETURNED"
   | "REQUEST_VERIFIED"
-  | "NOTIFICATIONS_SEEN";
+  | "NOTIFICATIONS_SEEN"
+  | "USER_APPROVED"
+  | "USER_REJECTED"
+  | "USER_VERIFIED"
+  | "USER_RETURNED"
+  | "REGISTRATION_RESUBMITTED";
 
 export async function logActivity(params: {
   action: ActivityAction;

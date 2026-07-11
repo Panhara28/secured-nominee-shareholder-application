@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, FileText, Loader2, Paperclip, RotateCcw, Save, Send, Sparkles, Upload, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, splitReasonItems } from "@/lib/utils";
 
 function StepTabs({
   steps,
@@ -640,7 +640,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
       const id = await saveRequest();
       if (!id) return;
       toast.success(editId ? t("draftUpdated") : t("draftSaved"));
-      router.push(`/${locale}/portal/beneficiary/all-requests`);
+      router.push(editId ? `/${locale}/portal/beneficiary/all-requests/${id}` : `/${locale}/portal/beneficiary/all-requests`);
     } catch {
       setSubmitError(t("submitError"));
       toast.error(t("submitError"));
@@ -744,7 +744,11 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           <RotateCcw className="h-4.5 w-4.5 text-orange-600 flex-shrink-0 mt-0.5" />
           <div className="min-w-0">
             <p className="text-sm font-medium text-orange-800">{t("returnReasonBannerTitle")}</p>
-            <p className="mt-0.5 text-sm text-orange-700">{returnReason}</p>
+            <ol className="mt-0.5 text-sm text-orange-700 list-decimal list-inside space-y-0.5">
+              {splitReasonItems(returnReason).map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ol>
             {returnSteps.length > 0 && (
               <p className="mt-1.5 text-xs text-orange-600">
                 {t("returnReasonStepHint", {

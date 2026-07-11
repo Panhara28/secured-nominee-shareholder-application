@@ -28,20 +28,25 @@ enum Gender {
 }
 
 model User {
-  id                  Int                  @id @default(autoincrement())
-  username            String               @unique
-  email               String               @unique
-  passwordHash        String
-  fullName            String
-  phoneNumber         String?
-  role                Role                 @default(SHAREHOLDER)
-  isActive            Boolean              @default(true)
-  resetToken          String?
-  resetTokenExpiry    DateTime?
-  notificationsSeenAt DateTime?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  beneficiaryRequests BeneficiaryRequest[]
+  id                       Int                  @id @default(autoincrement())
+  username                 String               @unique
+  email                    String               @unique
+  passwordHash             String
+  fullName                 String
+  companyName              String?
+  firstName                String?
+  lastName                 String?
+  phoneNumber              String?
+  role                     Role                 @default(SHAREHOLDER)
+  isActive                 Boolean              @default(true)
+  registrationReturnReason String?
+  registrationReturnedAt   DateTime?
+  resetToken               String?
+  resetTokenExpiry         DateTime?
+  notificationsSeenAt      DateTime?
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  beneficiaryRequests      BeneficiaryRequest[]
 
   staffRoleId Int?
   staffRole   StaffRole? @relation(fields: [staffRoleId], references: [id])

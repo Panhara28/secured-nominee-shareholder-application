@@ -3,18 +3,31 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Users, FileText, FileEdit, CheckCircle2, XCircle, TimerReset, ShieldCheck, RotateCcw, Loader2 } from "lucide-react";
+import { Link } from "@/lib/navigation";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
 
 type Summary = { drafted: number; request: number; inReview: number; approved: number; rejected: number; returned: number };
 type RecentRow = { id: number; requestNo: string; companyNameEn: string; status: string; submittedAt: string };
+type RecentUserRow = {
+  id: number;
+  fullName: string;
+  companyName: string | null;
+  email: string;
+  username: string;
+  isActive: boolean;
+  status?: "PENDING" | "RETURNED" | "ACTIVE";
+  createdAt: string;
+};
 
 type Props = {
   totalShareholders: number;
   totalRequests: number;
   summary: Summary;
   recent: RecentRow[];
+  recentUsers: RecentUserRow[];
 };
 
 function formatDate(iso: string): string {
@@ -23,13 +36,18 @@ function formatDate(iso: string): string {
   return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
 }
 
-export default function DashboardClient({ totalShareholders, totalRequests, summary, recent: initialRecent }: Props) {
+export default function DashboardClient({ totalShareholders, totalRequests, summary, recent: initialRecent, recentUsers: initialRecentUsers }: Props) {
   const t = useTranslations("admin.dashboard");
   const tr = useTranslations("beneficiary.allRequests");
+  const tu = useTranslations("admin.users");
 
   const [status, setStatus] = useState("PENDING");
   const [recent, setRecent] = useState<RecentRow[]>(initialRecent);
   const [loading, setLoading] = useState(false);
+
+  const [userStatus, setUserStatus] = useState("PENDING");
+  const [recentUsers, setRecentUsers] = useState<RecentUserRow[]>(initialRecentUsers);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,6 +77,35 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
       cancelled = true;
     };
   }, [status]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchRecentUsers() {
+      setUsersLoading(true);
+      try {
+        const params = new URLSearchParams({
+          status: userStatus,
+          sortKey: "createdAt",
+          sortDir: "desc",
+          page: "1",
+          limit: "5",
+        });
+        const res = await fetch(`/api/secured/admin/users?${params.toString()}`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (cancelled) return;
+        setRecentUsers(json.data);
+      } finally {
+        if (!cancelled) setUsersLoading(false);
+      }
+    }
+
+    fetchRecentUsers();
+    return () => {
+      cancelled = true;
+    };
+  }, [userStatus]);
 
   const topCards = [
     { label: t("totalShareholders"), value: totalShareholders, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
@@ -163,6 +210,80 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
                       <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{formatDate(r.submittedAt)}</td>
                     </tr>
                   ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-700">
+              {t("recentUsers")}
+            </h3>
+            <select
+              value={userStatus}
+              onChange={(e) => setUserStatus(e.target.value)}
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="">{tu("statusAll")}</option>
+              <option value="PENDING">{tu("statusPending")}</option>
+              <option value="RETURNED">{tu("statusReturned")}</option>
+              <option value="ACTIVE">{tu("statusActive")}</option>
+            </select>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">{tu("col.name")}</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">{tu("col.company")}</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">{tu("col.status")}</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">{tu("col.registeredAt")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usersLoading ? (
+                  <tr>
+                    <td colSpan={4} className="py-10 text-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-slate-400 inline-block" />
+                    </td>
+                  </tr>
+                ) : recentUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-10 text-center text-sm text-slate-400">{tu("empty")}</td>
+                  </tr>
+                ) : (
+                  recentUsers.map((u) => {
+                    const status = u.status ?? (u.isActive ? "ACTIVE" : "PENDING");
+                    return (
+                      <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-2.5 text-slate-800">
+                          <Link href={`/secured/admin/users/${u.id}`} className="hover:underline">
+                            {u.fullName}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-700">{u.companyName ?? "-"}</td>
+                        <td className="px-4 py-2.5">
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium",
+                              status === "ACTIVE"
+                                ? "bg-green-50 text-green-700"
+                                : status === "RETURNED"
+                                  ? "bg-orange-50 text-orange-700"
+                                  : "bg-amber-50 text-amber-700"
+                            )}
+                          >
+                            {status === "ACTIVE" ? tu("statusActive") : status === "RETURNED" ? tu("statusReturned") : tu("statusPending")}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{formatDate(u.createdAt)}</td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

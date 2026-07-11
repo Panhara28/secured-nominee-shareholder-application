@@ -1718,9 +1718,14 @@ export namespace Prisma {
     email: string | null
     passwordHash: string | null
     fullName: string | null
+    companyName: string | null
+    firstName: string | null
+    lastName: string | null
     phoneNumber: string | null
     role: $Enums.Role | null
     isActive: boolean | null
+    registrationReturnReason: string | null
+    registrationReturnedAt: Date | null
     resetToken: string | null
     resetTokenExpiry: Date | null
     notificationsSeenAt: Date | null
@@ -1735,9 +1740,14 @@ export namespace Prisma {
     email: string | null
     passwordHash: string | null
     fullName: string | null
+    companyName: string | null
+    firstName: string | null
+    lastName: string | null
     phoneNumber: string | null
     role: $Enums.Role | null
     isActive: boolean | null
+    registrationReturnReason: string | null
+    registrationReturnedAt: Date | null
     resetToken: string | null
     resetTokenExpiry: Date | null
     notificationsSeenAt: Date | null
@@ -1752,9 +1762,14 @@ export namespace Prisma {
     email: number
     passwordHash: number
     fullName: number
+    companyName: number
+    firstName: number
+    lastName: number
     phoneNumber: number
     role: number
     isActive: number
+    registrationReturnReason: number
+    registrationReturnedAt: number
     resetToken: number
     resetTokenExpiry: number
     notificationsSeenAt: number
@@ -1781,9 +1796,14 @@ export namespace Prisma {
     email?: true
     passwordHash?: true
     fullName?: true
+    companyName?: true
+    firstName?: true
+    lastName?: true
     phoneNumber?: true
     role?: true
     isActive?: true
+    registrationReturnReason?: true
+    registrationReturnedAt?: true
     resetToken?: true
     resetTokenExpiry?: true
     notificationsSeenAt?: true
@@ -1798,9 +1818,14 @@ export namespace Prisma {
     email?: true
     passwordHash?: true
     fullName?: true
+    companyName?: true
+    firstName?: true
+    lastName?: true
     phoneNumber?: true
     role?: true
     isActive?: true
+    registrationReturnReason?: true
+    registrationReturnedAt?: true
     resetToken?: true
     resetTokenExpiry?: true
     notificationsSeenAt?: true
@@ -1815,9 +1840,14 @@ export namespace Prisma {
     email?: true
     passwordHash?: true
     fullName?: true
+    companyName?: true
+    firstName?: true
+    lastName?: true
     phoneNumber?: true
     role?: true
     isActive?: true
+    registrationReturnReason?: true
+    registrationReturnedAt?: true
     resetToken?: true
     resetTokenExpiry?: true
     notificationsSeenAt?: true
@@ -1919,9 +1949,14 @@ export namespace Prisma {
     email: string
     passwordHash: string
     fullName: string
+    companyName: string | null
+    firstName: string | null
+    lastName: string | null
     phoneNumber: string | null
     role: $Enums.Role
     isActive: boolean
+    registrationReturnReason: string | null
+    registrationReturnedAt: Date | null
     resetToken: string | null
     resetTokenExpiry: Date | null
     notificationsSeenAt: Date | null
@@ -1955,9 +1990,14 @@ export namespace Prisma {
     email?: boolean
     passwordHash?: boolean
     fullName?: boolean
+    companyName?: boolean
+    firstName?: boolean
+    lastName?: boolean
     phoneNumber?: boolean
     role?: boolean
     isActive?: boolean
+    registrationReturnReason?: boolean
+    registrationReturnedAt?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
     notificationsSeenAt?: boolean
@@ -1975,9 +2015,14 @@ export namespace Prisma {
     email?: boolean
     passwordHash?: boolean
     fullName?: boolean
+    companyName?: boolean
+    firstName?: boolean
+    lastName?: boolean
     phoneNumber?: boolean
     role?: boolean
     isActive?: boolean
+    registrationReturnReason?: boolean
+    registrationReturnedAt?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
     notificationsSeenAt?: boolean
@@ -1993,9 +2038,14 @@ export namespace Prisma {
     email?: boolean
     passwordHash?: boolean
     fullName?: boolean
+    companyName?: boolean
+    firstName?: boolean
+    lastName?: boolean
     phoneNumber?: boolean
     role?: boolean
     isActive?: boolean
+    registrationReturnReason?: boolean
+    registrationReturnedAt?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
     notificationsSeenAt?: boolean
@@ -2011,9 +2061,14 @@ export namespace Prisma {
     email?: boolean
     passwordHash?: boolean
     fullName?: boolean
+    companyName?: boolean
+    firstName?: boolean
+    lastName?: boolean
     phoneNumber?: boolean
     role?: boolean
     isActive?: boolean
+    registrationReturnReason?: boolean
+    registrationReturnedAt?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
     notificationsSeenAt?: boolean
@@ -2022,7 +2077,7 @@ export namespace Prisma {
     staffRoleId?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "fullName" | "phoneNumber" | "role" | "isActive" | "resetToken" | "resetTokenExpiry" | "notificationsSeenAt" | "createdAt" | "updatedAt" | "staffRoleId", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "fullName" | "companyName" | "firstName" | "lastName" | "phoneNumber" | "role" | "isActive" | "registrationReturnReason" | "registrationReturnedAt" | "resetToken" | "resetTokenExpiry" | "notificationsSeenAt" | "createdAt" | "updatedAt" | "staffRoleId", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     beneficiaryRequests?: boolean | User$beneficiaryRequestsArgs<ExtArgs>
     staffRole?: boolean | User$staffRoleArgs<ExtArgs>
@@ -2047,9 +2102,14 @@ export namespace Prisma {
       email: string
       passwordHash: string
       fullName: string
+      companyName: string | null
+      firstName: string | null
+      lastName: string | null
       phoneNumber: string | null
       role: $Enums.Role
       isActive: boolean
+      registrationReturnReason: string | null
+      registrationReturnedAt: Date | null
       resetToken: string | null
       resetTokenExpiry: Date | null
       notificationsSeenAt: Date | null
@@ -2486,9 +2546,14 @@ export namespace Prisma {
     readonly email: FieldRef<"User", 'String'>
     readonly passwordHash: FieldRef<"User", 'String'>
     readonly fullName: FieldRef<"User", 'String'>
+    readonly companyName: FieldRef<"User", 'String'>
+    readonly firstName: FieldRef<"User", 'String'>
+    readonly lastName: FieldRef<"User", 'String'>
     readonly phoneNumber: FieldRef<"User", 'String'>
     readonly role: FieldRef<"User", 'Role'>
     readonly isActive: FieldRef<"User", 'Boolean'>
+    readonly registrationReturnReason: FieldRef<"User", 'String'>
+    readonly registrationReturnedAt: FieldRef<"User", 'DateTime'>
     readonly resetToken: FieldRef<"User", 'String'>
     readonly resetTokenExpiry: FieldRef<"User", 'DateTime'>
     readonly notificationsSeenAt: FieldRef<"User", 'DateTime'>
@@ -11517,9 +11582,14 @@ export namespace Prisma {
     email: 'email',
     passwordHash: 'passwordHash',
     fullName: 'fullName',
+    companyName: 'companyName',
+    firstName: 'firstName',
+    lastName: 'lastName',
     phoneNumber: 'phoneNumber',
     role: 'role',
     isActive: 'isActive',
+    registrationReturnReason: 'registrationReturnReason',
+    registrationReturnedAt: 'registrationReturnedAt',
     resetToken: 'resetToken',
     resetTokenExpiry: 'resetTokenExpiry',
     notificationsSeenAt: 'notificationsSeenAt',
@@ -11758,9 +11828,14 @@ export namespace Prisma {
     email?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
     fullName?: StringFilter<"User"> | string
+    companyName?: StringNullableFilter<"User"> | string | null
+    firstName?: StringNullableFilter<"User"> | string | null
+    lastName?: StringNullableFilter<"User"> | string | null
     phoneNumber?: StringNullableFilter<"User"> | string | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
     isActive?: BoolFilter<"User"> | boolean
+    registrationReturnReason?: StringNullableFilter<"User"> | string | null
+    registrationReturnedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
     notificationsSeenAt?: DateTimeNullableFilter<"User"> | Date | string | null
@@ -11777,9 +11852,14 @@ export namespace Prisma {
     email?: SortOrder
     passwordHash?: SortOrder
     fullName?: SortOrder
+    companyName?: SortOrderInput | SortOrder
+    firstName?: SortOrderInput | SortOrder
+    lastName?: SortOrderInput | SortOrder
     phoneNumber?: SortOrderInput | SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    registrationReturnReason?: SortOrderInput | SortOrder
+    registrationReturnedAt?: SortOrderInput | SortOrder
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiry?: SortOrderInput | SortOrder
     notificationsSeenAt?: SortOrderInput | SortOrder
@@ -11799,9 +11879,14 @@ export namespace Prisma {
     NOT?: UserWhereInput | UserWhereInput[]
     passwordHash?: StringFilter<"User"> | string
     fullName?: StringFilter<"User"> | string
+    companyName?: StringNullableFilter<"User"> | string | null
+    firstName?: StringNullableFilter<"User"> | string | null
+    lastName?: StringNullableFilter<"User"> | string | null
     phoneNumber?: StringNullableFilter<"User"> | string | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
     isActive?: BoolFilter<"User"> | boolean
+    registrationReturnReason?: StringNullableFilter<"User"> | string | null
+    registrationReturnedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
     notificationsSeenAt?: DateTimeNullableFilter<"User"> | Date | string | null
@@ -11818,9 +11903,14 @@ export namespace Prisma {
     email?: SortOrder
     passwordHash?: SortOrder
     fullName?: SortOrder
+    companyName?: SortOrderInput | SortOrder
+    firstName?: SortOrderInput | SortOrder
+    lastName?: SortOrderInput | SortOrder
     phoneNumber?: SortOrderInput | SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    registrationReturnReason?: SortOrderInput | SortOrder
+    registrationReturnedAt?: SortOrderInput | SortOrder
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiry?: SortOrderInput | SortOrder
     notificationsSeenAt?: SortOrderInput | SortOrder
@@ -11843,9 +11933,14 @@ export namespace Prisma {
     email?: StringWithAggregatesFilter<"User"> | string
     passwordHash?: StringWithAggregatesFilter<"User"> | string
     fullName?: StringWithAggregatesFilter<"User"> | string
+    companyName?: StringNullableWithAggregatesFilter<"User"> | string | null
+    firstName?: StringNullableWithAggregatesFilter<"User"> | string | null
+    lastName?: StringNullableWithAggregatesFilter<"User"> | string | null
     phoneNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
     role?: EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
     isActive?: BoolWithAggregatesFilter<"User"> | boolean
+    registrationReturnReason?: StringNullableWithAggregatesFilter<"User"> | string | null
+    registrationReturnedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     resetToken?: StringNullableWithAggregatesFilter<"User"> | string | null
     resetTokenExpiry?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     notificationsSeenAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
@@ -12573,9 +12668,14 @@ export namespace Prisma {
     email: string
     passwordHash: string
     fullName: string
+    companyName?: string | null
+    firstName?: string | null
+    lastName?: string | null
     phoneNumber?: string | null
     role?: $Enums.Role
     isActive?: boolean
+    registrationReturnReason?: string | null
+    registrationReturnedAt?: Date | string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     notificationsSeenAt?: Date | string | null
@@ -12591,9 +12691,14 @@ export namespace Prisma {
     email: string
     passwordHash: string
     fullName: string
+    companyName?: string | null
+    firstName?: string | null
+    lastName?: string | null
     phoneNumber?: string | null
     role?: $Enums.Role
     isActive?: boolean
+    registrationReturnReason?: string | null
+    registrationReturnedAt?: Date | string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     notificationsSeenAt?: Date | string | null
@@ -12608,9 +12713,14 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
+    registrationReturnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -12626,9 +12736,14 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
+    registrationReturnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -12644,9 +12759,14 @@ export namespace Prisma {
     email: string
     passwordHash: string
     fullName: string
+    companyName?: string | null
+    firstName?: string | null
+    lastName?: string | null
     phoneNumber?: string | null
     role?: $Enums.Role
     isActive?: boolean
+    registrationReturnReason?: string | null
+    registrationReturnedAt?: Date | string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     notificationsSeenAt?: Date | string | null
@@ -12660,9 +12780,14 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
+    registrationReturnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -12676,9 +12801,14 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
+    registrationReturnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -13613,9 +13743,14 @@ export namespace Prisma {
     email?: SortOrder
     passwordHash?: SortOrder
     fullName?: SortOrder
+    companyName?: SortOrder
+    firstName?: SortOrder
+    lastName?: SortOrder
     phoneNumber?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    registrationReturnReason?: SortOrder
+    registrationReturnedAt?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
     notificationsSeenAt?: SortOrder
@@ -13635,9 +13770,14 @@ export namespace Prisma {
     email?: SortOrder
     passwordHash?: SortOrder
     fullName?: SortOrder
+    companyName?: SortOrder
+    firstName?: SortOrder
+    lastName?: SortOrder
     phoneNumber?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    registrationReturnReason?: SortOrder
+    registrationReturnedAt?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
     notificationsSeenAt?: SortOrder
@@ -13652,9 +13792,14 @@ export namespace Prisma {
     email?: SortOrder
     passwordHash?: SortOrder
     fullName?: SortOrder
+    companyName?: SortOrder
+    firstName?: SortOrder
+    lastName?: SortOrder
     phoneNumber?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    registrationReturnReason?: SortOrder
+    registrationReturnedAt?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
     notificationsSeenAt?: SortOrder
@@ -15237,9 +15382,14 @@ export namespace Prisma {
     email: string
     passwordHash: string
     fullName: string
+    companyName?: string | null
+    firstName?: string | null
+    lastName?: string | null
     phoneNumber?: string | null
     role?: $Enums.Role
     isActive?: boolean
+    registrationReturnReason?: string | null
+    registrationReturnedAt?: Date | string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     notificationsSeenAt?: Date | string | null
@@ -15254,9 +15404,14 @@ export namespace Prisma {
     email: string
     passwordHash: string
     fullName: string
+    companyName?: string | null
+    firstName?: string | null
+    lastName?: string | null
     phoneNumber?: string | null
     role?: $Enums.Role
     isActive?: boolean
+    registrationReturnReason?: string | null
+    registrationReturnedAt?: Date | string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     notificationsSeenAt?: Date | string | null
@@ -15324,9 +15479,14 @@ export namespace Prisma {
     email?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
     fullName?: StringFilter<"User"> | string
+    companyName?: StringNullableFilter<"User"> | string | null
+    firstName?: StringNullableFilter<"User"> | string | null
+    lastName?: StringNullableFilter<"User"> | string | null
     phoneNumber?: StringNullableFilter<"User"> | string | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
     isActive?: BoolFilter<"User"> | boolean
+    registrationReturnReason?: StringNullableFilter<"User"> | string | null
+    registrationReturnedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     resetToken?: StringNullableFilter<"User"> | string | null
     resetTokenExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
     notificationsSeenAt?: DateTimeNullableFilter<"User"> | Date | string | null
@@ -15505,9 +15665,14 @@ export namespace Prisma {
     email: string
     passwordHash: string
     fullName: string
+    companyName?: string | null
+    firstName?: string | null
+    lastName?: string | null
     phoneNumber?: string | null
     role?: $Enums.Role
     isActive?: boolean
+    registrationReturnReason?: string | null
+    registrationReturnedAt?: Date | string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     notificationsSeenAt?: Date | string | null
@@ -15522,9 +15687,14 @@ export namespace Prisma {
     email: string
     passwordHash: string
     fullName: string
+    companyName?: string | null
+    firstName?: string | null
+    lastName?: string | null
     phoneNumber?: string | null
     role?: $Enums.Role
     isActive?: boolean
+    registrationReturnReason?: string | null
+    registrationReturnedAt?: Date | string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     notificationsSeenAt?: Date | string | null
@@ -15612,9 +15782,14 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
+    registrationReturnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -15629,9 +15804,14 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
+    registrationReturnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -16426,9 +16606,14 @@ export namespace Prisma {
     email: string
     passwordHash: string
     fullName: string
+    companyName?: string | null
+    firstName?: string | null
+    lastName?: string | null
     phoneNumber?: string | null
     role?: $Enums.Role
     isActive?: boolean
+    registrationReturnReason?: string | null
+    registrationReturnedAt?: Date | string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
     notificationsSeenAt?: Date | string | null
@@ -16449,9 +16634,14 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
+    registrationReturnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -16466,9 +16656,14 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
+    registrationReturnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -16483,9 +16678,14 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
+    registrationReturnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notificationsSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null

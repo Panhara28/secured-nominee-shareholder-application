@@ -21,11 +21,10 @@ export function AuthBrandSection() {
           <div>
             <h1 className="text-4xl font-extrabold leading-tight">ក្រសួងពាណិជ្ជកម្ម</h1>
             <p className="mt-1 text-lg font-semibold text-blue-100">Ministry Of Commerce</p>
-            <p className="mt-0.5 text-lg text-blue-200/80">Business Registration Portal</p>
           </div>
         </div>
 
-        <h2 className="mt-10 text-3xl font-semibold leading-relaxed whitespace-pre-line">{t("headline")}</h2>
+        <h2 className="mt-10 text-4xl font-semibold leading-relaxed whitespace-pre-line">{t("headline")}</h2>
 
         <p className="mt-auto text-sm text-blue-200/70">{t("copyright")}</p>
       </div>

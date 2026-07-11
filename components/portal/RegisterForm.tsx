@@ -1,14 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, User, Mail, Lock, UserPlus } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Lock, UserPlus, Building2, Wand2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { useRouter } from "@/lib/navigation";
 import { Link } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+const FAKE_COMPANY_NAMES = ["Mekong Trading Co., Ltd.", "Angkor Star Enterprise", "Golden Delta Holdings", "Chenla Import Export Co., Ltd.", "Sokha Business Group"];
+const FAKE_LAST_NAMES = ["Sok", "Chan", "Heng", "Pich", "Vann"];
+const FAKE_FIRST_NAMES = ["Dara", "Sopheak", "Rithy", "Chenda", "Vibol"];
+
+function randomOf<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function generateFakeRegistration() {
+  const lastName = randomOf(FAKE_LAST_NAMES);
+  const firstName = randomOf(FAKE_FIRST_NAMES);
+  const suffix = Math.floor(1000 + Math.random() * 9000);
+  const password = `Passw0rd!${suffix}`;
+  return {
+    companyName: randomOf(FAKE_COMPANY_NAMES),
+    lastName,
+    firstName,
+    email: `${firstName}.${lastName}${suffix}@example.com`.toLowerCase(),
+    username: `${firstName}${suffix}`.toLowerCase(),
+    password,
+    confirmPassword: password,
+  };
+}
 
 export function RegisterForm() {
   const t = useTranslations("portal.register");
@@ -17,7 +40,9 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    fullName: "",
+    companyName: "",
+    lastName: "",
+    firstName: "",
     email: "",
     username: "",
     password: "",
@@ -37,7 +62,9 @@ export function RegisterForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName: formData.fullName,
+          companyName: formData.companyName,
+          lastName: formData.lastName,
+          firstName: formData.firstName,
           email: formData.email,
           username: formData.username,
           password: formData.password,
@@ -47,8 +74,8 @@ export function RegisterForm() {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? t("error"));
       }
-      toast.success(t("success"));
-      router.push("/portal/login");
+      router.push("/portal/dashboard");
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("error"));
       setIsLoading(false);
@@ -66,24 +93,69 @@ export function RegisterForm() {
         <p className="text-slate-600">{t("subtitle")}</p>
       </div>
 
+      {process.env.NODE_ENV !== "production" && (
+        <button
+          type="button"
+          onClick={() => setFormData(generateFakeRegistration())}
+          className="mb-4 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-purple-300 bg-purple-50 px-3 py-2 text-xs font-medium text-purple-700 hover:bg-purple-100 transition-colors"
+        >
+          <Wand2 className="h-3.5 w-3.5" />
+          Autofill demo data
+        </button>
+      )}
+
       {error && (
         <div className="mb-4 p-3 rounded-md bg-red-100 text-red-700 text-sm">{error}</div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="fullName">{t("fullName")}</Label>
+          <Label htmlFor="companyName">{t("companyName")}</Label>
           <div className="relative mt-1">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
+            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
             <Input
-              id="fullName"
+              id="companyName"
               type="text"
               required
               className="pl-10"
-              placeholder={t("fullNamePlaceholder")}
-              value={formData.fullName}
-              onChange={field("fullName")}
+              placeholder={t("companyNamePlaceholder")}
+              value={formData.companyName}
+              onChange={field("companyName")}
             />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="lastName">{t("lastName")}</Label>
+            <div className="relative mt-1">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
+              <Input
+                id="lastName"
+                type="text"
+                required
+                className="pl-10"
+                placeholder={t("lastNamePlaceholder")}
+                value={formData.lastName}
+                onChange={field("lastName")}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="firstName">{t("firstName")}</Label>
+            <div className="relative mt-1">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
+              <Input
+                id="firstName"
+                type="text"
+                required
+                className="pl-10"
+                placeholder={t("firstNamePlaceholder")}
+                value={formData.firstName}
+                onChange={field("firstName")}
+              />
+            </div>
           </div>
         </div>
 

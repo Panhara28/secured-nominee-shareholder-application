@@ -33,9 +33,14 @@ model User {
   email               String               @unique
   passwordHash        String
   fullName            String
+  companyName         String?
+  firstName           String?
+  lastName            String?
   phoneNumber         String?
   role                Role                 @default(SHAREHOLDER)
   isActive            Boolean              @default(true)
+  registrationReturnReason String?
+  registrationReturnedAt   DateTime?
   resetToken          String?
   resetTokenExpiry    DateTime?
   notificationsSeenAt DateTime?

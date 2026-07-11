@@ -39,8 +39,10 @@ export default function NotificationBell() {
     }
 
     fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30_000);
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
   }, []);
 

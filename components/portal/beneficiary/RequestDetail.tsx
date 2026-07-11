@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Link, useRouter } from "@/lib/navigation";
-import { ArrowLeft, Building2, FileText, GitCompare, History, MessageSquare, Pencil, Send, Users } from "lucide-react";
+import { ArrowLeft, Building2, Download, FileText, GitCompare, History, MessageSquare, Pencil, Send, Users } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { splitReasonItems } from "@/lib/utils";
 import RequestActivityLog, { type ActivityLogEntry } from "@/components/beneficiary/RequestActivityLog";
 import RequestRevisionHistory, { type RequestRevisionEntry } from "@/components/beneficiary/RequestRevisionHistory";
 
@@ -132,6 +136,29 @@ export default function RequestDetail({ id }: { id: string }) {
   const [error, setError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [certificateOpen, setCertificateOpen] = useState(false);
+  const [downloadingCertificate, setDownloadingCertificate] = useState(false);
+
+  const handleDownloadCertificate = async () => {
+    setDownloadingCertificate(true);
+    try {
+      const res = await fetch(`/api/portal/beneficiary/requests/${id}/certificate`);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `certificate-${request?.requestNo ?? id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t("downloadCertificateError"));
+    } finally {
+      setDownloadingCertificate(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -258,6 +285,18 @@ export default function RequestDetail({ id }: { id: string }) {
                 </button>
               </div>
             )}
+            {request.status === "APPROVED" && (
+              <div className="flex-shrink-0 text-right">
+                <button
+                  type="button"
+                  onClick={() => setCertificateOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-700 px-4 py-2 text-sm font-medium text-white transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  {t("downloadCertificate")}
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <h1 className="text-lg font-semibold text-slate-800">{t("detailTitle")}</h1>
@@ -271,7 +310,11 @@ export default function RequestDetail({ id }: { id: string }) {
             <p className="text-sm font-medium text-amber-800">
               {request.status === "RETURNED" ? t("returnReason") : t("rejectionReason")}
             </p>
-            <p className="mt-0.5 text-sm text-amber-700">{request.rejectionReason}</p>
+            <ol className="mt-0.5 text-sm text-amber-700 list-decimal list-inside space-y-0.5">
+              {splitReasonItems(request.rejectionReason).map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ol>
           </div>
         </div>
       )}
@@ -388,6 +431,35 @@ export default function RequestDetail({ id }: { id: string }) {
         </div>
         </div>
       )}
+
+      <Dialog open={certificateOpen} onOpenChange={setCertificateOpen}>
+        <DialogContent className="inset-4 max-w-none w-auto h-auto translate-x-0 translate-y-0 flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t("downloadCertificate")}</DialogTitle>
+            <DialogDescription>{t("downloadCertificatePreview")}</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 rounded-lg border border-slate-200 overflow-hidden bg-slate-50">
+            {certificateOpen && (
+              <iframe
+                src={`/api/portal/beneficiary/requests/${id}/certificate`}
+                title={t("downloadCertificate")}
+                className="w-full h-full"
+              />
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={handleDownloadCertificate}
+              disabled={downloadingCertificate}
+              className="bg-green-600 text-white hover:bg-green-700"
+            >
+              <Download className="h-4 w-4" />
+              {downloadingCertificate ? t("downloading") : t("download")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

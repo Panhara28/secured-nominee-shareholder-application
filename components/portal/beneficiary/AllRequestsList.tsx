@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/lib/navigation";
-import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Eye, FileEdit, Loader2, Plus, RefreshCw, RotateCcw, Search, ShieldCheck, TimerReset, XCircle } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Eye, FileEdit, Loader2, Pencil, Plus, RefreshCw, RotateCcw, Search, ShieldCheck, TimerReset, XCircle } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import StatusBadge from "@/components/ui/StatusBadge";
 import TablePagination from "@/components/ui/TablePagination";
@@ -315,16 +315,27 @@ export default function AllRequestsList() {
                     <td className="px-4 py-3">
                       <StatusBadge status={req.status} label={t(`status.${req.status}` as Parameters<typeof t>[0])} />
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => router.push(`/portal/beneficiary/all-requests/${req.id}`)}
-                        className={cn(
-                          "inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => router.push(`/portal/beneficiary/all-requests/${req.id}`)}
+                          className={cn(
+                            "inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                          )}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          {t("view")}
+                        </button>
+                        {req.status === "APPROVED" && (
+                          <button
+                            onClick={() => router.push(`/portal/beneficiary/all-requests/${req.id}/edit`)}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 transition-colors"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            {t("requestUpdate")}
+                          </button>
                         )}
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        {t("view")}
-                      </button>
+                      </div>
                     </td>
                   </tr>
                 ))

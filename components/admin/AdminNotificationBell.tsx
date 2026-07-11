@@ -3,16 +3,31 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
-import { Bell, GitCompare, TimerReset } from "lucide-react";
+import { Bell, GitCompare, TimerReset, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type PendingRow = { id: number; requestNo: string; companyNameEn: string; companyNameKh: string | null; status: string };
+type PendingRequestRow = {
+  kind: "request";
+  id: number;
+  requestNo: string;
+  companyNameEn: string;
+  companyNameKh: string | null;
+  status: string;
+};
+type PendingUserRow = {
+  kind: "user";
+  id: number;
+  fullName: string;
+  companyName: string | null;
+};
+type PendingRow = PendingRequestRow | PendingUserRow;
 
 const NOTIFY_STATUSES = ["PENDING", "UPDATE_REQUESTED"] as const;
 
 const STATUS_STYLES: Record<string, { icon: React.ElementType; iconBg: string; iconColor: string; textColor: string; noticeKey: string }> = {
   PENDING: { icon: TimerReset, iconBg: "bg-blue-50", iconColor: "text-blue-600", textColor: "text-blue-600", noticeKey: "pendingNotice" },
   UPDATE_REQUESTED: { icon: GitCompare, iconBg: "bg-teal-50", iconColor: "text-teal-600", textColor: "text-teal-600", noticeKey: "updateRequestedNotice" },
+  USER: { icon: UserPlus, iconBg: "bg-amber-50", iconColor: "text-amber-600", textColor: "text-amber-600", noticeKey: "userPendingNotice" },
 };
 
 export default function AdminNotificationBell() {
@@ -31,21 +46,38 @@ export default function AdminNotificationBell() {
           const params = new URLSearchParams({ status, sortKey: "submittedAt", sortDir: "desc", page: "1", limit: "10" });
           return fetch(`/api/secured/admin/requests?${params.toString()}`).then((res) => (res.ok ? res.json() : null));
         };
+        const fetchPendingUsers = () => {
+          const params = new URLSearchParams({ status: "PENDING", sortKey: "createdAt", sortDir: "desc", page: "1", limit: "10" });
+          return fetch(`/api/secured/admin/users?${params.toString()}`).then((res) => (res.ok ? res.json() : null));
+        };
 
-        const results = await Promise.all(NOTIFY_STATUSES.map((status) => fetchStatus(status)));
+        const [requestResults, userResult] = await Promise.all([
+          Promise.all(NOTIFY_STATUSES.map((status) => fetchStatus(status))),
+          fetchPendingUsers(),
+        ]);
         if (cancelled) return;
 
-        const merged: PendingRow[] = results.flatMap((r) => r?.data ?? []);
-        setRows(merged.slice(0, 10));
-        setTotal(results.reduce((sum, r) => sum + (r?.total ?? 0), 0));
+        const requestRows: PendingRow[] = requestResults.flatMap(
+          (r) => (r?.data ?? []).map((d: Omit<PendingRequestRow, "kind">) => ({ kind: "request" as const, ...d }))
+        );
+        const userRows: PendingRow[] = (userResult?.data ?? []).map(
+          (u: { id: number; fullName: string; companyName: string | null }) => ({ kind: "user" as const, ...u })
+        );
+
+        setRows([...userRows, ...requestRows].slice(0, 10));
+        setTotal(
+          requestResults.reduce((sum, r) => sum + (r?.total ?? 0), 0) + (userResult?.total ?? 0)
+        );
       } catch {
         // silently ignore — notifications are non-critical
       }
     }
 
     fetchAwaitingReview();
+    const interval = setInterval(fetchAwaitingReview, 30_000);
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
   }, []);
 
@@ -84,10 +116,33 @@ export default function AdminNotificationBell() {
           ) : (
             <ul className="max-h-80 overflow-y-auto divide-y divide-slate-100">
               {rows.map((r) => {
+                if (r.kind === "user") {
+                  const style = STATUS_STYLES.USER;
+                  const Icon = style.icon;
+                  return (
+                    <li key={`user-${r.id}`}>
+                      <Link
+                        href={`/secured/admin/users/${r.id}`}
+                        onClick={() => setOpen(false)}
+                        className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className={cn("h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5", style.iconBg)}>
+                          <Icon className={cn("h-4 w-4", style.iconColor)} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-800 truncate">{r.fullName}</p>
+                          <p className="text-xs text-slate-500 truncate">{r.companyName ?? "-"}</p>
+                          <p className={cn("text-xs mt-0.5", style.textColor)}>{t(style.noticeKey as Parameters<typeof t>[0])}</p>
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                }
+
                 const style = STATUS_STYLES[r.status] ?? STATUS_STYLES.PENDING;
                 const Icon = style.icon;
                 return (
-                  <li key={r.id}>
+                  <li key={`request-${r.id}`}>
                     <Link
                       href={`/secured/admin/requests/${r.id}`}
                       onClick={() => setOpen(false)}

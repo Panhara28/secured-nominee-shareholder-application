@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import { CheckCircle2, FileEdit, Pencil, RotateCcw, TimerReset, XCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, splitReasonItems } from "@/lib/utils";
 
 export type ActivityLogEntry = {
   id: number;
@@ -64,9 +64,11 @@ export default function RequestActivityLog({ logs = [] }: { logs?: ActivityLogEn
                 {t("log.by", { name: entry.actorName })} · {formatDateTime(entry.createdAt)}
               </p>
               {entry.note && (
-                <p className="mt-1.5 text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-                  {entry.note}
-                </p>
+                <ol className="mt-1.5 text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 list-decimal list-inside space-y-0.5">
+                  {splitReasonItems(entry.note).map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ol>
               )}
             </div>
           </li>

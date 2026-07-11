@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/lib/navigation";
 import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, FileText, GitCompare, History, Loader2, MessageSquare, Pencil, RotateCcw, ShieldCheck, Users, X, XCircle } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { splitReasonItems } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -368,7 +369,11 @@ export default function AdminRequestDetail({ id }: { id: string }) {
             <p className="text-sm font-medium text-amber-800">
               {request.status === "RETURNED" ? ta("returnReason") : ta("rejectionReason")}
             </p>
-            <p className="mt-0.5 text-sm text-amber-700">{request.rejectionReason}</p>
+            <ol className="mt-0.5 text-sm text-amber-700 list-decimal list-inside space-y-0.5">
+              {splitReasonItems(request.rejectionReason).map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ol>
           </div>
         </div>
       )}
