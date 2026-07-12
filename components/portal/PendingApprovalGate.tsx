@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { AlertTriangle, Building2, Clock, Mail, RefreshCw, ShieldCheck, User } from "lucide-react";
@@ -37,6 +37,19 @@ export default function PendingApprovalGate({ fullName, companyName, firstName, 
       router.refresh();
     });
   };
+
+  useEffect(() => {
+    // Real-time: the moment an admin approves/returns/rejects this
+    // registration, refresh so the shareholder doesn't have to sit here
+    // clicking "Refresh" manually.
+    const source = new EventSource("/api/portal/notifications/stream");
+    source.onmessage = () => router.refresh();
+
+    return () => {
+      source.close();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const field = (id: keyof typeof formData) =>
     (e: React.ChangeEvent<HTMLInputElement>) =>

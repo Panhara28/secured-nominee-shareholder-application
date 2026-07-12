@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
-import { emitAdminUsersNotification } from "@/lib/notification-events";
+import { emitAdminUsersNotification, emitUserNotification } from "@/lib/notification-events";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -79,6 +79,7 @@ export async function PATCH(request: Request, { params }: Props) {
       });
     }
     emitAdminUsersNotification();
+    emitUserNotification(id);
     return Response.json({ id: updated.id, isActive: updated.isActive });
   }
 
@@ -101,9 +102,11 @@ export async function PATCH(request: Request, { params }: Props) {
       });
     }
     emitAdminUsersNotification();
+    emitUserNotification(id);
     return Response.json({ id: updated.id, isActive: updated.isActive, registrationReturnReason: updated.registrationReturnReason });
   }
 
+  emitUserNotification(id);
   await prisma.user.delete({ where: { id } });
   if (actorUser) {
     await logActivity({
