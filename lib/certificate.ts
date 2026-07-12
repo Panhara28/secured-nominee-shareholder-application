@@ -31,7 +31,7 @@ function qrDataUri(data: string): string {
 
 function Header() {
   return Row(
-    Photo(path.join(process.cwd(), "public/cert-logo.png")).width(110).height(110).scaleType("contain"),
+    Photo(path.join(process.cwd(), "public/cert-logo.png")).width(150).height(150).scaleType("contain"),
     Column().flex(1),
     Column(
       Text("ព្រះរាជាណាចក្រកម្ពុជា").font(HEAD).weight("bold").size(15).color(INK).align("center"),
@@ -43,8 +43,6 @@ function Header() {
 
 function MinistryLabel() {
   return Column(
-    Text("ក្រសួងពាណិជ្ជកម្ម").font(HEAD).weight("bold").size(13).color(INK),
-    Text("MINISTRY OF COMMERCE").font(BODY).size(11).weight("bold").color(INK),
     Text("លេខលិខិតបញ្ជាក់ ៖ .....................").font(BODY).size(11).color(INK),
     Text("កាលបរិច្ឆេទ ៖ .............................").font(BODY).size(11).color(INK)
   ).gap(4);
@@ -105,7 +103,6 @@ function QrBox(qr: string) {
       Text("Verify").font(BODY).size(10).weight("bold").color(INK).align("center")
     )
       .width(120).height(120)
-      .borderWidth(1.5).borderColor(INK)
       .justifyContent("center").alignItems("center").gap(4)
   );
 }
@@ -131,7 +128,7 @@ function Document(data: CertificateData, qr: string, companyLine: string) {
     QrBox(qr)
   )
     .gap(14)
-    .padding(48)
+    .padding(96, 84) // top/bottom 2.54cm, left/right 2.22cm @ 96dpi
     .bg("white")
     .width(794); // A4 @ 96dpi
 }
