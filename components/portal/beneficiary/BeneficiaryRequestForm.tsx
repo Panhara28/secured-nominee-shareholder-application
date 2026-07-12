@@ -1010,44 +1010,44 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             type="button"
             onClick={() => setActiveStep((s) => Math.max(1, s - 1))}
             disabled={activeStep === 1}
-            className="order-2 sm:order-1 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="order-1 sm:order-1 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t("previous")}
           </button>
 
-          {submitError && <p className="order-1 sm:order-2 text-sm text-red-600">{submitError}</p>}
+          {submitError && <p className="order-2 sm:order-2 text-sm text-red-600">{submitError}</p>}
 
           {activeStep < 4 ? (
             <button
               type="button"
               onClick={() => setActiveStep((s) => Math.min(4, s + 1))}
               disabled={!isStepComplete(activeStep)}
-              className="order-1 sm:order-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="order-3 sm:order-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {t("next")}
             </button>
           ) : (
-            <div className="order-1 sm:order-3 flex flex-col sm:flex-row items-stretch gap-3">
-              <button type="button" onClick={() => router.back()} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                <XCircle className="h-4 w-4" />
-                {t("cancel")}
-              </button>
-              <button
-                type="submit"
-                disabled={submitting || !consentAgreed}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-600 bg-white px-5 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <Save className="h-4 w-4" />
-                {submitting ? t("submitting") : t("submit")}
-              </button>
+            <div className="order-3 sm:order-3 flex flex-col sm:flex-row items-stretch gap-3">
               <button
                 type="button"
                 onClick={handleSubmitRequest}
                 disabled={submitting || !consentAgreed}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="order-1 sm:order-3 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Send className="h-4 w-4" />
                 {submitting ? t("submittingRequest") : t("submitRequest")}
+              </button>
+              <button
+                type="submit"
+                disabled={submitting || !consentAgreed}
+                className="order-2 sm:order-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-600 bg-white px-5 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Save className="h-4 w-4" />
+                {submitting ? t("submitting") : t("submit")}
+              </button>
+              <button type="button" onClick={() => router.back()} className="order-3 sm:order-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                <XCircle className="h-4 w-4" />
+                {t("cancel")}
               </button>
             </div>
           )}
