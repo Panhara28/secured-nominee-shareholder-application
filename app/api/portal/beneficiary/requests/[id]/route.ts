@@ -3,6 +3,7 @@ import { requireShareholder } from "@/lib/auth";
 import { logRequestEvent } from "@/lib/request-log";
 import { logActivity } from "@/lib/activity-log";
 import { toRequestSnapshot } from "@/lib/request-revision";
+import { emitAdminNotification } from "@/lib/notification-events";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -119,6 +120,7 @@ export async function PATCH(request: Request, { params }: Props) {
       await logRequestEvent(id, "SUBMITTED", actor);
       await logActivity({ action: "REQUEST_SUBMITTED", entityType: "BeneficiaryRequest", entityId: id, actor, note: record.requestNo });
     }
+    emitAdminNotification();
 
     const updated = await prisma.beneficiaryRequest.findUnique({
       where: { id },
@@ -224,6 +226,7 @@ export async function PATCH(request: Request, { params }: Props) {
     await logRequestEvent(id, "EDITED", actor);
     await logActivity({ action: "REQUEST_EDITED", entityType: "BeneficiaryRequest", entityId: id, actor, note: record.requestNo });
   }
+  emitAdminNotification();
 
   const updated = await prisma.beneficiaryRequest.findUnique({
     where: { id },

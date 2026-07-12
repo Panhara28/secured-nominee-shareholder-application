@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
+import { emitUserNotification } from "@/lib/notification-events";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -45,6 +46,7 @@ export async function POST(_request: Request, { params }: Props) {
 
   if (record.status !== "IN_REVIEW") {
     await prisma.beneficiaryRequest.update({ where: { id }, data: { status: "IN_REVIEW" } });
+    emitUserNotification(record.userId);
   }
 
   const actorUser = await prisma.user.findUnique({ where: { id: session.userId }, select: { fullName: true, role: true } });

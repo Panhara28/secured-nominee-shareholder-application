@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { logRequestEvent } from "@/lib/request-log";
 import { logActivity, type ActivityAction } from "@/lib/activity-log";
+import { emitUserNotification } from "@/lib/notification-events";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -118,6 +119,7 @@ export async function PATCH(request: Request, { params }: Props) {
       data: { approvedAt: new Date() },
     });
   }
+  emitUserNotification(record.userId);
 
   const actorUser = await prisma.user.findUnique({ where: { id: session.userId }, select: { fullName: true, role: true } });
   if (actorUser) {

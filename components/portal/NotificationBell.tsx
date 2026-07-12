@@ -62,10 +62,18 @@ export default function NotificationBell() {
     }
 
     fetchNotifications();
+    // Fallback poll in case the SSE connection drops and doesn't reconnect in time.
     const interval = setInterval(fetchNotifications, 30_000);
+
+    // Real-time push: the server notifies this stream the instant a relevant
+    // status change happens, and we just re-run the same fetch immediately.
+    const source = new EventSource("/api/portal/notifications/stream");
+    source.onmessage = () => fetchNotifications();
+
     return () => {
       cancelled = true;
       clearInterval(interval);
+      source.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

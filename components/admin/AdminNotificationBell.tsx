@@ -98,10 +98,18 @@ export default function AdminNotificationBell() {
     }
 
     fetchAwaitingReview();
+    // Fallback poll in case the SSE connection drops and doesn't reconnect in time.
     const interval = setInterval(fetchAwaitingReview, 30_000);
+
+    // Real-time push: the server notifies this stream the instant a shareholder
+    // submits/edits a request, and we just re-run the same fetch immediately.
+    const source = new EventSource("/api/secured/admin/notifications/stream");
+    source.onmessage = () => fetchAwaitingReview();
+
     return () => {
       cancelled = true;
       clearInterval(interval);
+      source.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
