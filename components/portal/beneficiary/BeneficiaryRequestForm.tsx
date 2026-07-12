@@ -164,6 +164,17 @@ const FAKE_LAST_EN = ["Chan", "San", "Kim", "Ly", "Ouch"];
 const NATIONALITIES = ["KH", "CN", "TH", "VN"];
 const GENDERS = ["M", "F"];
 
+const FAKE_COMPANIES: { en: string; kh: string }[] = [
+  { en: "Mekong Trading Co., Ltd.", kh: "ក្រុមហ៊ុន ពាណិជ្ជកម្មមេគង្គ ម.ក" },
+  { en: "Angkor Star Enterprise Co., Ltd.", kh: "ក្រុមហ៊ុន សហគ្រាសផ្កាយអង្គរ ម.ក" },
+  { en: "Golden Delta Holdings Co., Ltd.", kh: "ក្រុមហ៊ុន ហូលឌីងសុវណ្ណដែលតា ម.ក" },
+  { en: "Chenla Import Export Co., Ltd.", kh: "ក្រុមហ៊ុន នាំចេញនាំចូលចេនឡា ម.ក" },
+  { en: "Sokha Business Group Co., Ltd.", kh: "ក្រុមហ៊ុន សុខាប៊ីស្សនេសក្រុប ម.ក" },
+  { en: "Bayon Construction Materials Co., Ltd.", kh: "ក្រុមហ៊ុន សំណង់បាយ័ន ម.ក" },
+  { en: "Battambang Rice Milling Co., Ltd.", kh: "ក្រុមហ៊ុន កិនស្រូវបាត់ដំបង ម.ក" },
+  { en: "Kampong Cham Rubber Plantation Co., Ltd.", kh: "ក្រុមហ៊ុន ដាំកៅស៊ូកំពង់ចាម ម.ក" },
+];
+
 function randomOf<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -206,10 +217,11 @@ const FAKE_CONTRACT_DOC_NAME = "Nominee shareholder agreement KHM.pdf";
 const FAKE_OTHER_DOC_NAME = "This is  other documents.pdf";
 
 function generateFakeFormData(): FormData {
-  const companyName = `Sample Trading ${randomDigits(3)}`;
+  const company = randomOf(FAKE_COMPANIES);
+  const emailSlug = company.en.toLowerCase().replace(/[^a-z0-9]/g, "");
   return {
-    companyNameKh: "ក្រុមហ៊ុន សំណាកគំរូ",
-    companyNameEn: companyName,
+    companyNameKh: company.kh,
+    companyNameEn: company.en,
     registrationNo: `CO-${randomDigits(5)}`,
     registrationDate: randomDateBetween(2015, 2024),
     companyProvince: randomOf(PROVINCES_KH),
@@ -220,7 +232,7 @@ function generateFakeFormData(): FormData {
     companyHouse: `#${randomDigits(3)}`,
     companyPhone: `${Math.floor(Math.random() * 90) + 10} ${randomDigits(3)} ${randomDigits(3)}`,
     companyOfficePhone: `${Math.floor(Math.random() * 90) + 10} ${randomDigits(3)} ${randomDigits(3)}`,
-    companyEmail: `${companyName.toLowerCase().replace(/\s/g, "")}@example.com`,
+    companyEmail: `${emailSlug}@example.com`,
     shareAmount: String(Math.floor(Math.random() * 9000) + 1000),
     ...generateFakePerson(""),
     ...generateFakePerson("sh"),
