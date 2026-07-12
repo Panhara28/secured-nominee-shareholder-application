@@ -302,7 +302,8 @@ export default function RequestDetail({ id }: { id: string }) {
                   className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-700 px-4 py-2 text-sm font-medium text-white transition-colors"
                 >
                   <Download className="h-4 w-4" />
-                  {t("downloadCertificate")}
+                  <span className="hidden sm:inline">{t("downloadCertificate")}</span>
+                  <span className="sm:hidden">{t("download")}</span>
                 </button>
               </div>
             )}
