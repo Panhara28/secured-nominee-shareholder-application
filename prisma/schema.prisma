@@ -27,6 +27,12 @@ enum Gender {
   F
 }
 
+enum RegistrantPosition {
+  SHAREHOLDER
+  DIRECTOR
+  SECRETARY
+}
+
 model User {
   id                  Int                  @id @default(autoincrement())
   username            String               @unique
@@ -37,6 +43,7 @@ model User {
   firstName           String?
   lastName            String?
   phoneNumber         String?
+  position            RegistrantPosition?
   role                Role                 @default(SHAREHOLDER)
   isActive            Boolean              @default(true)
   registrationReturnReason String?

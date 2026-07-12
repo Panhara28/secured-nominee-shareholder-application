@@ -86,6 +86,15 @@ export const Gender: {
 
 export type Gender = (typeof Gender)[keyof typeof Gender]
 
+
+export const RegistrantPosition: {
+  SHAREHOLDER: 'SHAREHOLDER',
+  DIRECTOR: 'DIRECTOR',
+  SECRETARY: 'SECRETARY'
+};
+
+export type RegistrantPosition = (typeof RegistrantPosition)[keyof typeof RegistrantPosition]
+
 }
 
 export type Role = $Enums.Role
@@ -99,6 +108,10 @@ export const BeneficiaryRequestStatus: typeof $Enums.BeneficiaryRequestStatus
 export type Gender = $Enums.Gender
 
 export const Gender: typeof $Enums.Gender
+
+export type RegistrantPosition = $Enums.RegistrantPosition
+
+export const RegistrantPosition: typeof $Enums.RegistrantPosition
 
 /**
  * ##  Prisma Client ʲˢ
@@ -1722,6 +1735,7 @@ export namespace Prisma {
     firstName: string | null
     lastName: string | null
     phoneNumber: string | null
+    position: $Enums.RegistrantPosition | null
     role: $Enums.Role | null
     isActive: boolean | null
     registrationReturnReason: string | null
@@ -1744,6 +1758,7 @@ export namespace Prisma {
     firstName: string | null
     lastName: string | null
     phoneNumber: string | null
+    position: $Enums.RegistrantPosition | null
     role: $Enums.Role | null
     isActive: boolean | null
     registrationReturnReason: string | null
@@ -1766,6 +1781,7 @@ export namespace Prisma {
     firstName: number
     lastName: number
     phoneNumber: number
+    position: number
     role: number
     isActive: number
     registrationReturnReason: number
@@ -1800,6 +1816,7 @@ export namespace Prisma {
     firstName?: true
     lastName?: true
     phoneNumber?: true
+    position?: true
     role?: true
     isActive?: true
     registrationReturnReason?: true
@@ -1822,6 +1839,7 @@ export namespace Prisma {
     firstName?: true
     lastName?: true
     phoneNumber?: true
+    position?: true
     role?: true
     isActive?: true
     registrationReturnReason?: true
@@ -1844,6 +1862,7 @@ export namespace Prisma {
     firstName?: true
     lastName?: true
     phoneNumber?: true
+    position?: true
     role?: true
     isActive?: true
     registrationReturnReason?: true
@@ -1953,6 +1972,7 @@ export namespace Prisma {
     firstName: string | null
     lastName: string | null
     phoneNumber: string | null
+    position: $Enums.RegistrantPosition | null
     role: $Enums.Role
     isActive: boolean
     registrationReturnReason: string | null
@@ -1994,6 +2014,7 @@ export namespace Prisma {
     firstName?: boolean
     lastName?: boolean
     phoneNumber?: boolean
+    position?: boolean
     role?: boolean
     isActive?: boolean
     registrationReturnReason?: boolean
@@ -2019,6 +2040,7 @@ export namespace Prisma {
     firstName?: boolean
     lastName?: boolean
     phoneNumber?: boolean
+    position?: boolean
     role?: boolean
     isActive?: boolean
     registrationReturnReason?: boolean
@@ -2042,6 +2064,7 @@ export namespace Prisma {
     firstName?: boolean
     lastName?: boolean
     phoneNumber?: boolean
+    position?: boolean
     role?: boolean
     isActive?: boolean
     registrationReturnReason?: boolean
@@ -2065,6 +2088,7 @@ export namespace Prisma {
     firstName?: boolean
     lastName?: boolean
     phoneNumber?: boolean
+    position?: boolean
     role?: boolean
     isActive?: boolean
     registrationReturnReason?: boolean
@@ -2077,7 +2101,7 @@ export namespace Prisma {
     staffRoleId?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "fullName" | "companyName" | "firstName" | "lastName" | "phoneNumber" | "role" | "isActive" | "registrationReturnReason" | "registrationReturnedAt" | "resetToken" | "resetTokenExpiry" | "notificationsSeenAt" | "createdAt" | "updatedAt" | "staffRoleId", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "fullName" | "companyName" | "firstName" | "lastName" | "phoneNumber" | "position" | "role" | "isActive" | "registrationReturnReason" | "registrationReturnedAt" | "resetToken" | "resetTokenExpiry" | "notificationsSeenAt" | "createdAt" | "updatedAt" | "staffRoleId", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     beneficiaryRequests?: boolean | User$beneficiaryRequestsArgs<ExtArgs>
     staffRole?: boolean | User$staffRoleArgs<ExtArgs>
@@ -2106,6 +2130,7 @@ export namespace Prisma {
       firstName: string | null
       lastName: string | null
       phoneNumber: string | null
+      position: $Enums.RegistrantPosition | null
       role: $Enums.Role
       isActive: boolean
       registrationReturnReason: string | null
@@ -2550,6 +2575,7 @@ export namespace Prisma {
     readonly firstName: FieldRef<"User", 'String'>
     readonly lastName: FieldRef<"User", 'String'>
     readonly phoneNumber: FieldRef<"User", 'String'>
+    readonly position: FieldRef<"User", 'RegistrantPosition'>
     readonly role: FieldRef<"User", 'Role'>
     readonly isActive: FieldRef<"User", 'Boolean'>
     readonly registrationReturnReason: FieldRef<"User", 'String'>
@@ -11612,6 +11638,7 @@ export namespace Prisma {
     firstName: 'firstName',
     lastName: 'lastName',
     phoneNumber: 'phoneNumber',
+    position: 'position',
     role: 'role',
     isActive: 'isActive',
     registrationReturnReason: 'registrationReturnReason',
@@ -11803,6 +11830,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'RegistrantPosition'
+   */
+  export type EnumRegistrantPositionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RegistrantPosition'>
+    
+
+
+  /**
    * Reference to a field of type 'Role'
    */
   export type EnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Role'>
@@ -11860,6 +11894,7 @@ export namespace Prisma {
     firstName?: StringNullableFilter<"User"> | string | null
     lastName?: StringNullableFilter<"User"> | string | null
     phoneNumber?: StringNullableFilter<"User"> | string | null
+    position?: EnumRegistrantPositionNullableFilter<"User"> | $Enums.RegistrantPosition | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
     isActive?: BoolFilter<"User"> | boolean
     registrationReturnReason?: StringNullableFilter<"User"> | string | null
@@ -11884,6 +11919,7 @@ export namespace Prisma {
     firstName?: SortOrderInput | SortOrder
     lastName?: SortOrderInput | SortOrder
     phoneNumber?: SortOrderInput | SortOrder
+    position?: SortOrderInput | SortOrder
     role?: SortOrder
     isActive?: SortOrder
     registrationReturnReason?: SortOrderInput | SortOrder
@@ -11911,6 +11947,7 @@ export namespace Prisma {
     firstName?: StringNullableFilter<"User"> | string | null
     lastName?: StringNullableFilter<"User"> | string | null
     phoneNumber?: StringNullableFilter<"User"> | string | null
+    position?: EnumRegistrantPositionNullableFilter<"User"> | $Enums.RegistrantPosition | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
     isActive?: BoolFilter<"User"> | boolean
     registrationReturnReason?: StringNullableFilter<"User"> | string | null
@@ -11935,6 +11972,7 @@ export namespace Prisma {
     firstName?: SortOrderInput | SortOrder
     lastName?: SortOrderInput | SortOrder
     phoneNumber?: SortOrderInput | SortOrder
+    position?: SortOrderInput | SortOrder
     role?: SortOrder
     isActive?: SortOrder
     registrationReturnReason?: SortOrderInput | SortOrder
@@ -11965,6 +12003,7 @@ export namespace Prisma {
     firstName?: StringNullableWithAggregatesFilter<"User"> | string | null
     lastName?: StringNullableWithAggregatesFilter<"User"> | string | null
     phoneNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
+    position?: EnumRegistrantPositionNullableWithAggregatesFilter<"User"> | $Enums.RegistrantPosition | null
     role?: EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
     isActive?: BoolWithAggregatesFilter<"User"> | boolean
     registrationReturnReason?: StringNullableWithAggregatesFilter<"User"> | string | null
@@ -12710,6 +12749,7 @@ export namespace Prisma {
     firstName?: string | null
     lastName?: string | null
     phoneNumber?: string | null
+    position?: $Enums.RegistrantPosition | null
     role?: $Enums.Role
     isActive?: boolean
     registrationReturnReason?: string | null
@@ -12733,6 +12773,7 @@ export namespace Prisma {
     firstName?: string | null
     lastName?: string | null
     phoneNumber?: string | null
+    position?: $Enums.RegistrantPosition | null
     role?: $Enums.Role
     isActive?: boolean
     registrationReturnReason?: string | null
@@ -12755,6 +12796,7 @@ export namespace Prisma {
     firstName?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    position?: NullableEnumRegistrantPositionFieldUpdateOperationsInput | $Enums.RegistrantPosition | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
     registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -12778,6 +12820,7 @@ export namespace Prisma {
     firstName?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    position?: NullableEnumRegistrantPositionFieldUpdateOperationsInput | $Enums.RegistrantPosition | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
     registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -12801,6 +12844,7 @@ export namespace Prisma {
     firstName?: string | null
     lastName?: string | null
     phoneNumber?: string | null
+    position?: $Enums.RegistrantPosition | null
     role?: $Enums.Role
     isActive?: boolean
     registrationReturnReason?: string | null
@@ -12822,6 +12866,7 @@ export namespace Prisma {
     firstName?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    position?: NullableEnumRegistrantPositionFieldUpdateOperationsInput | $Enums.RegistrantPosition | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
     registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -12843,6 +12888,7 @@ export namespace Prisma {
     firstName?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    position?: NullableEnumRegistrantPositionFieldUpdateOperationsInput | $Enums.RegistrantPosition | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
     registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13724,6 +13770,13 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type EnumRegistrantPositionNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.RegistrantPosition | EnumRegistrantPositionFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RegistrantPosition[] | null
+    notIn?: $Enums.RegistrantPosition[] | null
+    not?: NestedEnumRegistrantPositionNullableFilter<$PrismaModel> | $Enums.RegistrantPosition | null
+  }
+
   export type EnumRoleFilter<$PrismaModel = never> = {
     equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel>
     in?: $Enums.Role[]
@@ -13799,6 +13852,7 @@ export namespace Prisma {
     firstName?: SortOrder
     lastName?: SortOrder
     phoneNumber?: SortOrder
+    position?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
     registrationReturnReason?: SortOrder
@@ -13826,6 +13880,7 @@ export namespace Prisma {
     firstName?: SortOrder
     lastName?: SortOrder
     phoneNumber?: SortOrder
+    position?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
     registrationReturnReason?: SortOrder
@@ -13848,6 +13903,7 @@ export namespace Prisma {
     firstName?: SortOrder
     lastName?: SortOrder
     phoneNumber?: SortOrder
+    position?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
     registrationReturnReason?: SortOrder
@@ -13913,6 +13969,16 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type EnumRegistrantPositionNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RegistrantPosition | EnumRegistrantPositionFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RegistrantPosition[] | null
+    notIn?: $Enums.RegistrantPosition[] | null
+    not?: NestedEnumRegistrantPositionNullableWithAggregatesFilter<$PrismaModel> | $Enums.RegistrantPosition | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumRegistrantPositionNullableFilter<$PrismaModel>
+    _max?: NestedEnumRegistrantPositionNullableFilter<$PrismaModel>
   }
 
   export type EnumRoleWithAggregatesFilter<$PrismaModel = never> = {
@@ -14550,6 +14616,10 @@ export namespace Prisma {
     set?: string | null
   }
 
+  export type NullableEnumRegistrantPositionFieldUpdateOperationsInput = {
+    set?: $Enums.RegistrantPosition | null
+  }
+
   export type EnumRoleFieldUpdateOperationsInput = {
     set?: $Enums.Role
   }
@@ -14951,6 +15021,13 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type NestedEnumRegistrantPositionNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.RegistrantPosition | EnumRegistrantPositionFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RegistrantPosition[] | null
+    notIn?: $Enums.RegistrantPosition[] | null
+    not?: NestedEnumRegistrantPositionNullableFilter<$PrismaModel> | $Enums.RegistrantPosition | null
+  }
+
   export type NestedEnumRoleFilter<$PrismaModel = never> = {
     equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel>
     in?: $Enums.Role[]
@@ -15055,6 +15132,16 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumRegistrantPositionNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RegistrantPosition | EnumRegistrantPositionFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RegistrantPosition[] | null
+    notIn?: $Enums.RegistrantPosition[] | null
+    not?: NestedEnumRegistrantPositionNullableWithAggregatesFilter<$PrismaModel> | $Enums.RegistrantPosition | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumRegistrantPositionNullableFilter<$PrismaModel>
+    _max?: NestedEnumRegistrantPositionNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumRoleWithAggregatesFilter<$PrismaModel = never> = {
@@ -15450,6 +15537,7 @@ export namespace Prisma {
     firstName?: string | null
     lastName?: string | null
     phoneNumber?: string | null
+    position?: $Enums.RegistrantPosition | null
     role?: $Enums.Role
     isActive?: boolean
     registrationReturnReason?: string | null
@@ -15472,6 +15560,7 @@ export namespace Prisma {
     firstName?: string | null
     lastName?: string | null
     phoneNumber?: string | null
+    position?: $Enums.RegistrantPosition | null
     role?: $Enums.Role
     isActive?: boolean
     registrationReturnReason?: string | null
@@ -15547,6 +15636,7 @@ export namespace Prisma {
     firstName?: StringNullableFilter<"User"> | string | null
     lastName?: StringNullableFilter<"User"> | string | null
     phoneNumber?: StringNullableFilter<"User"> | string | null
+    position?: EnumRegistrantPositionNullableFilter<"User"> | $Enums.RegistrantPosition | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
     isActive?: BoolFilter<"User"> | boolean
     registrationReturnReason?: StringNullableFilter<"User"> | string | null
@@ -15733,6 +15823,7 @@ export namespace Prisma {
     firstName?: string | null
     lastName?: string | null
     phoneNumber?: string | null
+    position?: $Enums.RegistrantPosition | null
     role?: $Enums.Role
     isActive?: boolean
     registrationReturnReason?: string | null
@@ -15755,6 +15846,7 @@ export namespace Prisma {
     firstName?: string | null
     lastName?: string | null
     phoneNumber?: string | null
+    position?: $Enums.RegistrantPosition | null
     role?: $Enums.Role
     isActive?: boolean
     registrationReturnReason?: string | null
@@ -15850,6 +15942,7 @@ export namespace Prisma {
     firstName?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    position?: NullableEnumRegistrantPositionFieldUpdateOperationsInput | $Enums.RegistrantPosition | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
     registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -15872,6 +15965,7 @@ export namespace Prisma {
     firstName?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    position?: NullableEnumRegistrantPositionFieldUpdateOperationsInput | $Enums.RegistrantPosition | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
     registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16698,6 +16792,7 @@ export namespace Prisma {
     firstName?: string | null
     lastName?: string | null
     phoneNumber?: string | null
+    position?: $Enums.RegistrantPosition | null
     role?: $Enums.Role
     isActive?: boolean
     registrationReturnReason?: string | null
@@ -16726,6 +16821,7 @@ export namespace Prisma {
     firstName?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    position?: NullableEnumRegistrantPositionFieldUpdateOperationsInput | $Enums.RegistrantPosition | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
     registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16748,6 +16844,7 @@ export namespace Prisma {
     firstName?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    position?: NullableEnumRegistrantPositionFieldUpdateOperationsInput | $Enums.RegistrantPosition | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
     registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16770,6 +16867,7 @@ export namespace Prisma {
     firstName?: NullableStringFieldUpdateOperationsInput | string | null
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    position?: NullableEnumRegistrantPositionFieldUpdateOperationsInput | $Enums.RegistrantPosition | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
     registrationReturnReason?: NullableStringFieldUpdateOperationsInput | string | null

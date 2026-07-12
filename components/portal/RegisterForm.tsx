@@ -13,7 +13,10 @@ const FAKE_COMPANY_NAMES = ["Mekong Trading Co., Ltd.", "Angkor Star Enterprise"
 const FAKE_LAST_NAMES = ["Sok", "Chan", "Heng", "Pich", "Vann"];
 const FAKE_FIRST_NAMES = ["Dara", "Sopheak", "Rithy", "Chenda", "Vibol"];
 
-function randomOf<T>(arr: T[]): T {
+const POSITION_VALUES = ["SHAREHOLDER", "DIRECTOR", "SECRETARY"] as const;
+type Position = (typeof POSITION_VALUES)[number];
+
+function randomOf<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -30,6 +33,7 @@ function generateFakeRegistration() {
     username: `${firstName}${suffix}`.toLowerCase(),
     password,
     confirmPassword: password,
+    position: randomOf(POSITION_VALUES),
   };
 }
 
@@ -47,12 +51,17 @@ export function RegisterForm() {
     username: "",
     password: "",
     confirmPassword: "",
+    position: "" as Position | "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       setError(t("passwordMismatch"));
+      return;
+    }
+    if (!formData.position) {
+      setError(t("positionRequired"));
       return;
     }
     setIsLoading(true);
@@ -68,6 +77,7 @@ export function RegisterForm() {
           email: formData.email,
           username: formData.username,
           password: formData.password,
+          position: formData.position,
         }),
       });
       if (!res.ok) {
@@ -227,6 +237,29 @@ export function RegisterForm() {
               value={formData.confirmPassword}
               onChange={field("confirmPassword")}
             />
+          </div>
+        </div>
+
+        <div>
+          <Label>{t("position")}</Label>
+          <div className="mt-1 space-y-2">
+            {POSITION_VALUES.map((value) => (
+              <label
+                key={value}
+                className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
+              >
+                <input
+                  type="radio"
+                  name="position"
+                  value={value}
+                  required
+                  checked={formData.position === value}
+                  onChange={() => setFormData((p) => ({ ...p, position: value }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                />
+                {t(`positionOptions.${value}`)}
+              </label>
+            ))}
           </div>
         </div>
 

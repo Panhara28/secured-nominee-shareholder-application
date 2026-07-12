@@ -33,6 +33,13 @@
       "passwordPlaceholder": "បង្កើតពាក្យសម្ងាត់",
       "confirmPassword": "បញ្ជាក់ពាក្យសម្ងាត់",
       "confirmPasswordPlaceholder": "ធ្វើម្ដងទៀតនូវពាក្យសម្ងាត់",
+      "position": "តួនាទីរបស់អ្នកនៅក្នុងក្រុមហ៊ុន",
+      "positionOptions": {
+        "SHAREHOLDER": "ម្ចាស់ហ៊ុន",
+        "DIRECTOR": "អភិបាល",
+        "SECRETARY": "លេខាធិការក្រុមហ៊ុន"
+      },
+      "positionRequired": "សូមជ្រើសរើសតួនាទីរបស់អ្នកនៅក្នុងក្រុមហ៊ុន។",
       "register": "បង្កើតគណនី",
       "registering": "កំពុងបង្កើតគណនី…",
       "error": "ការចុះឈ្មោះបានបរាជ័យ។ សូមព្យាយាមម្ដងទៀត។",

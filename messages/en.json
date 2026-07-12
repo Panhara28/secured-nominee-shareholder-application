@@ -33,6 +33,13 @@
       "passwordPlaceholder": "Create a password",
       "confirmPassword": "Confirm Password",
       "confirmPasswordPlaceholder": "Repeat your password",
+      "position": "Your Position in the Company",
+      "positionOptions": {
+        "SHAREHOLDER": "Shareholder",
+        "DIRECTOR": "Director",
+        "SECRETARY": "Company Secretary"
+      },
+      "positionRequired": "Please select your position in the company.",
       "register": "Create Account",
       "registering": "Creating account…",
       "error": "Registration failed. Please try again.",
