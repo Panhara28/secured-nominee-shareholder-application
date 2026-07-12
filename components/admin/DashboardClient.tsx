@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Users, FileText, FileEdit, CheckCircle2, XCircle, TimerReset, ShieldCheck, RotateCcw, Loader2 } from "lucide-react";
+import { Users, FileText, FileEdit, CheckCircle2, XCircle, TimerReset, ShieldCheck, RotateCcw, Loader2, GitCompare } from "lucide-react";
 import { Link } from "@/lib/navigation";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
 
-type Summary = { drafted: number; request: number; inReview: number; approved: number; rejected: number; returned: number };
+type Summary = { drafted: number; request: number; inReview: number; approved: number; rejected: number; returned: number; updateRequested: number };
 type RecentRow = { id: number; requestNo: string; companyNameEn: string; status: string; submittedAt: string };
 type RecentUserRow = {
   id: number;
@@ -159,6 +159,7 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
     { label: t("approved"), value: stats.summary.approved, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
     { label: t("rejected"), value: stats.summary.rejected, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
     { label: t("returned"), value: stats.summary.returned, icon: RotateCcw, color: "text-orange-600", bg: "bg-orange-50" },
+    { label: t("updateRequested"), value: stats.summary.updateRequested, icon: GitCompare, color: "text-teal-600", bg: "bg-teal-50" },
   ];
 
   return (
@@ -174,7 +175,7 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
                 <Icon className={`h-5 w-5 ${c.color}`} />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-slate-500 truncate">{c.label}</p>
+                <p className="text-xs text-slate-500 leading-tight">{c.label}</p>
                 <p className="text-xl font-semibold text-slate-800">{c.value}</p>
               </div>
             </div>
@@ -182,7 +183,7 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
         })}
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-7 gap-4">
         {bottomCards.map((c) => {
           const Icon = c.icon;
           return (
@@ -191,7 +192,7 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
                 <Icon className={`h-5 w-5 ${c.color}`} />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-slate-500 truncate">{c.label}</p>
+                <p className="text-xs text-slate-500 leading-tight">{c.label}</p>
                 <p className="text-xl font-semibold text-slate-800">{c.value}</p>
               </div>
             </div>

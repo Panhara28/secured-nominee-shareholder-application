@@ -115,6 +115,7 @@
       "approvedLabel": "Approved",
       "rejectedLabel": "Rejected",
       "returnedLabel": "Returned",
+      "updateRequestedLabel": "Update Requested",
       "allRequestsTitle": "All Requests",
       "viewAll": "View All",
       "returnedWarningTitle": "{count, plural, one {You have # request that was returned and needs correction.} other {You have # requests that were returned and need correction.}}",
@@ -262,7 +263,8 @@
         "verifying": "In Review",
         "approved": "Approved",
         "rejected": "Rejected",
-        "returned": "Returned"
+        "returned": "Returned",
+        "updateRequested": "Update Requested"
       },
       "col": {
         "requestNo": "Request No.",
@@ -360,6 +362,7 @@
       "approved": "Approved",
       "rejected": "Rejected",
       "returned": "Returned",
+      "updateRequested": "Update Requested",
       "statusBreakdown": "Status Breakdown",
       "recentRequests": "Recent Requests",
       "recentUsers": "Recently Registered Users"

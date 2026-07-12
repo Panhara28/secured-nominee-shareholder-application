@@ -115,6 +115,7 @@
       "approvedLabel": "អនុម័ត",
       "rejectedLabel": "បដិសេធ",
       "returnedLabel": "បានប្រគល់ត្រឡប់",
+      "updateRequestedLabel": "ស្នើសុំធ្វើបច្ចុប្បន្នភាព",
       "allRequestsTitle": "សំណើទាំងអស់",
       "viewAll": "មើលទាំងអស់",
       "returnedWarningTitle": "អ្នកមានសំណើចំនួន {count} ដែលត្រូវបានប្រគល់ត្រឡប់ និងត្រូវការកែតម្រូវ។",
@@ -262,7 +263,8 @@
         "verifying": "កំពុងពិនិត្យ",
         "approved": "អនុម័ត",
         "rejected": "បដិសេធ",
-        "returned": "បានប្រគល់ត្រឡប់"
+        "returned": "បានប្រគល់ត្រឡប់",
+        "updateRequested": "ស្នើសុំធ្វើបច្ចុប្បន្នភាព"
       },
       "col": {
         "requestNo": "លេខសំណើ",
@@ -360,6 +362,7 @@
       "approved": "អនុម័ត",
       "rejected": "បដិសេធ",
       "returned": "បានប្រគល់ត្រឡប់",
+      "updateRequested": "ស្នើសុំធ្វើបច្ចុប្បន្នភាព",
       "statusBreakdown": "ស្ថានភាពសំណើ",
       "recentRequests": "សំណើថ្មីៗ",
       "recentUsers": "អ្នកប្រើប្រាស់ដែលទើបចុះឈ្មោះ"
