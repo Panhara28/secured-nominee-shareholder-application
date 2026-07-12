@@ -6,6 +6,13 @@ RUN npm ci
 FROM node:22-slim AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_PUBLIC_* vars are inlined into the client bundle at build time, so
+# this has to be a build arg (not a runtime env var on the container) —
+# lets non-production environments like UAT opt into demo-only UI (e.g. the
+# registration form's "Autofill demo data" button) without exposing it in
+# a real production build.
+ARG NEXT_PUBLIC_SHOW_DEMO_TOOLS=false
+ENV NEXT_PUBLIC_SHOW_DEMO_TOOLS=$NEXT_PUBLIC_SHOW_DEMO_TOOLS
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate

@@ -103,7 +103,7 @@ export function RegisterForm() {
         <p className="text-slate-600">{t("subtitle")}</p>
       </div>
 
-      {process.env.NODE_ENV !== "production" && (
+      {(process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_SHOW_DEMO_TOOLS === "true") && (
         <button
           type="button"
           onClick={() => setFormData(generateFakeRegistration())}

@@ -44,7 +44,7 @@ ssh "$SERVER" "
   rm -rf src && mkdir src
   tar -xzf src.tar.gz -C src
   cd src
-  docker build -t $IMAGE_TAG .
+  docker build --build-arg NEXT_PUBLIC_SHOW_DEMO_TOOLS=true -t $IMAGE_TAG .
 "
 
 echo "==> Starting new container (old one kept as rollback target)"
