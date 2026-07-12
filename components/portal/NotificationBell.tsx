@@ -26,7 +26,6 @@ export default function NotificationBell() {
   const knownKeys = useRef<Set<string> | null>(null);
 
   useEffect(() => {
-    requestNotificationPermission();
     let cancelled = false;
 
     async function fetchNotifications() {
@@ -79,6 +78,19 @@ export default function NotificationBell() {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    // Browsers require a genuine user gesture to show the permission prompt
+    // (a request fired on mount is silently ignored/shown as a muted icon by
+    // Chrome's abusive-notification-permission heuristics) — so ask on the
+    // user's first click anywhere on the page instead.
+    function handleFirstClick() {
+      requestNotificationPermission();
+      document.removeEventListener("click", handleFirstClick);
+    }
+    document.addEventListener("click", handleFirstClick);
+    return () => document.removeEventListener("click", handleFirstClick);
   }, []);
 
   const handleOpen = () => {
