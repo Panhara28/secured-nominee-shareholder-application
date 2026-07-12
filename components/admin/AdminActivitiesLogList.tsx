@@ -110,7 +110,11 @@ export default function AdminActivitiesLogList() {
       cancelled = true;
       source.close();
     };
-  }, [appliedQuery, action, page, retryToken, t]);
+    // `t` is intentionally excluded — including it would tear down and
+    // recreate the EventSource on every render if its reference isn't
+    // perfectly stable, making the real-time connection unreliable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedQuery, action, page, retryToken]);
 
   const handleSearch = () => {
     setAppliedQuery(query);
