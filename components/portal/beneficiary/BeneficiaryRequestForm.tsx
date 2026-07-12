@@ -1005,37 +1005,37 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
         </div>
 
         {/* Step navigation / Actions */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <button
             type="button"
             onClick={() => setActiveStep((s) => Math.max(1, s - 1))}
             disabled={activeStep === 1}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="order-2 sm:order-1 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t("previous")}
           </button>
 
-          {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+          {submitError && <p className="order-1 sm:order-2 text-sm text-red-600">{submitError}</p>}
 
           {activeStep < 4 ? (
             <button
               type="button"
               onClick={() => setActiveStep((s) => Math.min(4, s + 1))}
               disabled={!isStepComplete(activeStep)}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="order-1 sm:order-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {t("next")}
             </button>
           ) : (
-            <div className="flex items-center gap-3">
-              <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+            <div className="order-1 sm:order-3 flex flex-col sm:flex-row items-stretch gap-3">
+              <button type="button" onClick={() => router.back()} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
                 <XCircle className="h-4 w-4" />
                 {t("cancel")}
               </button>
               <button
                 type="submit"
                 disabled={submitting || !consentAgreed}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 bg-white px-5 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-600 bg-white px-5 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Save className="h-4 w-4" />
                 {submitting ? t("submitting") : t("submit")}
@@ -1044,7 +1044,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
                 type="button"
                 onClick={handleSubmitRequest}
                 disabled={submitting || !consentAgreed}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Send className="h-4 w-4" />
                 {submitting ? t("submittingRequest") : t("submitRequest")}
