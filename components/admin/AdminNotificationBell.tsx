@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Link } from "@/lib/navigation";
-import { Bell } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { notify, requestNotificationPermission } from "@/lib/browser-notifications";
 import { notifyStatusStyle } from "@/lib/notification-status";
@@ -32,6 +32,71 @@ const NOTICE_KEYS: Record<string, string> = {
   UPDATE_REQUESTED: "updateRequestedNotice",
   USER: "userPendingNotice",
 };
+
+function PendingRows({
+  rows,
+  emptyLabel,
+  t,
+  onNavigate,
+}: {
+  rows: PendingRow[];
+  emptyLabel: string;
+  t: ReturnType<typeof useTranslations>;
+  onNavigate: () => void;
+}) {
+  if (rows.length === 0) {
+    return <p className="px-4 py-6 text-center text-sm text-slate-400">{emptyLabel}</p>;
+  }
+  return (
+    <ul className="divide-y divide-slate-100">
+      {rows.map((r) => {
+        if (r.kind === "user") {
+          const style = notifyStatusStyle("USER");
+          const Icon = style.icon;
+          return (
+            <li key={`user-${r.id}`}>
+              <Link
+                href={`/secured/admin/users/${r.id}`}
+                onClick={onNavigate}
+                className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
+              >
+                <div className={cn("h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5", style.iconBg)}>
+                  <Icon className={cn("h-4 w-4", style.iconColor)} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-800 truncate">{r.fullName}</p>
+                  <p className="text-xs text-slate-500 truncate">{r.companyName ?? "-"}</p>
+                  <p className={cn("text-xs mt-0.5", style.textColor)}>{t(NOTICE_KEYS.USER as Parameters<typeof t>[0])}</p>
+                </div>
+              </Link>
+            </li>
+          );
+        }
+
+        const style = notifyStatusStyle(r.status);
+        const Icon = style.icon;
+        return (
+          <li key={`request-${r.id}`}>
+            <Link
+              href={`/secured/admin/requests/${r.id}`}
+              onClick={onNavigate}
+              className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
+            >
+              <div className={cn("h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5", style.iconBg)}>
+                <Icon className={cn("h-4 w-4", style.iconColor)} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-800 truncate">{r.companyNameEn}</p>
+                <p className="text-xs text-slate-500 font-mono">{r.requestNo}</p>
+                <p className={cn("text-xs mt-0.5", style.textColor)}>{t((NOTICE_KEYS[r.status] ?? NOTICE_KEYS.PENDING) as Parameters<typeof t>[0])}</p>
+              </div>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 export default function AdminNotificationBell() {
   const t = useTranslations("admin.notifications");
@@ -170,66 +235,46 @@ export default function AdminNotificationBell() {
         )}
       </button>
 
+      {/* Desktop: anchored dropdown */}
       {open && (
-        <div className="fixed left-4 right-4 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80 sm:max-w-[90vw] rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden z-40">
+        <div className="hidden sm:block absolute right-0 mt-2 w-80 max-w-[90vw] rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden z-40">
           <div className="px-4 py-3 border-b border-slate-100">
             <p className="text-sm font-semibold text-slate-800">{t("title")}</p>
           </div>
-          {rows.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-slate-400">{t("empty")}</p>
-          ) : (
-            <ul className="max-h-80 overflow-y-auto divide-y divide-slate-100">
-              {rows.map((r) => {
-                if (r.kind === "user") {
-                  const style = notifyStatusStyle("USER");
-                  const Icon = style.icon;
-                  return (
-                    <li key={`user-${r.id}`}>
-                      <Link
-                        href={`/secured/admin/users/${r.id}`}
-                        onClick={() => setOpen(false)}
-                        className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
-                      >
-                        <div className={cn("h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5", style.iconBg)}>
-                          <Icon className={cn("h-4 w-4", style.iconColor)} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-slate-800 truncate">{r.fullName}</p>
-                          <p className="text-xs text-slate-500 truncate">{r.companyName ?? "-"}</p>
-                          <p className={cn("text-xs mt-0.5", style.textColor)}>{t(NOTICE_KEYS.USER as Parameters<typeof t>[0])}</p>
-                        </div>
-                      </Link>
-                    </li>
-                  );
-                }
-
-                const style = notifyStatusStyle(r.status);
-                const Icon = style.icon;
-                return (
-                  <li key={`request-${r.id}`}>
-                    <Link
-                      href={`/secured/admin/requests/${r.id}`}
-                      onClick={() => setOpen(false)}
-                      className={cn(
-                        "flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
-                      )}
-                    >
-                      <div className={cn("h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5", style.iconBg)}>
-                        <Icon className={cn("h-4 w-4", style.iconColor)} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-800 truncate">{r.companyNameEn}</p>
-                        <p className="text-xs text-slate-500 font-mono">{r.requestNo}</p>
-                        <p className={cn("text-xs mt-0.5", style.textColor)}>{t((NOTICE_KEYS[r.status] ?? NOTICE_KEYS.PENDING) as Parameters<typeof t>[0])}</p>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <div className="max-h-80 overflow-y-auto">
+            <PendingRows rows={rows} emptyLabel={t("empty")} t={t} onNavigate={() => setOpen(false)} />
+          </div>
         </div>
       )}
+
+      {/* Mobile: slide-in drawer from the right */}
+      <div
+        className={cn(
+          "fixed inset-0 z-40 bg-black/40 transition-opacity sm:hidden",
+          open ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => setOpen(false)}
+      />
+      <div
+        className={cn(
+          "fixed inset-y-0 right-0 z-50 w-[85%] max-w-sm bg-white shadow-xl flex flex-col transition-transform duration-300 sm:hidden",
+          open ? "translate-x-0" : "translate-x-full"
+        )}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+          <p className="text-sm font-semibold text-slate-800">{t("title")}</p>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="h-8 w-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <PendingRows rows={rows} emptyLabel={t("empty")} t={t} onNavigate={() => setOpen(false)} />
+        </div>
+      </div>
     </div>
   );
 }
