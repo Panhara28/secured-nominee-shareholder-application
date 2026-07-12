@@ -18,17 +18,18 @@ export async function GET(_request: Request, { params }: Props) {
   if (!record || record.userId !== session.userId) {
     return Response.json({ error: "Request not found." }, { status: 404 });
   }
-  if (record.status !== "APPROVED") {
+  if (record.status !== "APPROVED" || !record.certificateNo || !record.approvedAt) {
     return Response.json({ error: "Only approved requests have a certificate." }, { status: 400 });
   }
 
   const pdf = await generateCertificatePdf({
     requestNo: record.requestNo,
+    certificateNo: record.certificateNo,
     companyNameEn: record.companyNameEn,
     companyNameKh: record.companyNameKh,
     registrationNo: record.registrationNo,
     registrationDate: record.registrationDate,
-    approvedAt: record.updatedAt,
+    approvedAt: record.approvedAt,
   });
 
   return new Response(new Uint8Array(pdf), {

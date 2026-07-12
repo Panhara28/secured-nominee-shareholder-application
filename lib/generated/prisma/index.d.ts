@@ -6407,6 +6407,8 @@ export namespace Prisma {
   export type BeneficiaryRequestMinAggregateOutputType = {
     id: number | null
     requestNo: string | null
+    certificateNo: string | null
+    approvedAt: Date | null
     userId: number | null
     status: $Enums.BeneficiaryRequestStatus | null
     type: string | null
@@ -6464,6 +6466,8 @@ export namespace Prisma {
   export type BeneficiaryRequestMaxAggregateOutputType = {
     id: number | null
     requestNo: string | null
+    certificateNo: string | null
+    approvedAt: Date | null
     userId: number | null
     status: $Enums.BeneficiaryRequestStatus | null
     type: string | null
@@ -6521,6 +6525,8 @@ export namespace Prisma {
   export type BeneficiaryRequestCountAggregateOutputType = {
     id: number
     requestNo: number
+    certificateNo: number
+    approvedAt: number
     userId: number
     status: number
     type: number
@@ -6590,6 +6596,8 @@ export namespace Prisma {
   export type BeneficiaryRequestMinAggregateInputType = {
     id?: true
     requestNo?: true
+    certificateNo?: true
+    approvedAt?: true
     userId?: true
     status?: true
     type?: true
@@ -6647,6 +6655,8 @@ export namespace Prisma {
   export type BeneficiaryRequestMaxAggregateInputType = {
     id?: true
     requestNo?: true
+    certificateNo?: true
+    approvedAt?: true
     userId?: true
     status?: true
     type?: true
@@ -6704,6 +6714,8 @@ export namespace Prisma {
   export type BeneficiaryRequestCountAggregateInputType = {
     id?: true
     requestNo?: true
+    certificateNo?: true
+    approvedAt?: true
     userId?: true
     status?: true
     type?: true
@@ -6848,6 +6860,8 @@ export namespace Prisma {
   export type BeneficiaryRequestGroupByOutputType = {
     id: number
     requestNo: string
+    certificateNo: string | null
+    approvedAt: Date | null
     userId: number
     status: $Enums.BeneficiaryRequestStatus
     type: string
@@ -6924,6 +6938,8 @@ export namespace Prisma {
   export type BeneficiaryRequestSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     requestNo?: boolean
+    certificateNo?: boolean
+    approvedAt?: boolean
     userId?: boolean
     status?: boolean
     type?: boolean
@@ -6985,6 +7001,8 @@ export namespace Prisma {
   export type BeneficiaryRequestSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     requestNo?: boolean
+    certificateNo?: boolean
+    approvedAt?: boolean
     userId?: boolean
     status?: boolean
     type?: boolean
@@ -7043,6 +7061,8 @@ export namespace Prisma {
   export type BeneficiaryRequestSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     requestNo?: boolean
+    certificateNo?: boolean
+    approvedAt?: boolean
     userId?: boolean
     status?: boolean
     type?: boolean
@@ -7101,6 +7121,8 @@ export namespace Prisma {
   export type BeneficiaryRequestSelectScalar = {
     id?: boolean
     requestNo?: boolean
+    certificateNo?: boolean
+    approvedAt?: boolean
     userId?: boolean
     status?: boolean
     type?: boolean
@@ -7155,7 +7177,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type BeneficiaryRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "requestNo" | "userId" | "status" | "type" | "companyNameKh" | "companyNameEn" | "registrationNo" | "registrationDate" | "companyProvince" | "companyDistrict" | "companyCommune" | "companyVillage" | "companyStreet" | "companyHouse" | "companyPhone" | "companyOfficePhone" | "companyEmail" | "shLastNameKh" | "shFirstNameKh" | "shLastNameEn" | "shFirstNameEn" | "shDob" | "shNationality" | "shGender" | "shIdCard" | "shIdIssuedDate" | "shIdExpiredDate" | "shEmail" | "shPhone" | "shPhotoName" | "shIdDocNames" | "ownerLastNameKh" | "ownerFirstNameKh" | "ownerLastNameEn" | "ownerFirstNameEn" | "ownerDob" | "ownerNationality" | "ownerGender" | "ownerIdCard" | "ownerIdIssuedDate" | "ownerIdExpiredDate" | "ownerEmail" | "ownerPhone" | "ownerPhotoName" | "ownerIdDocNames" | "shareAmount" | "shareholderContractDocNames" | "otherDocNames" | "consentAgreed" | "rejectionReason" | "submittedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["beneficiaryRequest"]>
+  export type BeneficiaryRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "requestNo" | "certificateNo" | "approvedAt" | "userId" | "status" | "type" | "companyNameKh" | "companyNameEn" | "registrationNo" | "registrationDate" | "companyProvince" | "companyDistrict" | "companyCommune" | "companyVillage" | "companyStreet" | "companyHouse" | "companyPhone" | "companyOfficePhone" | "companyEmail" | "shLastNameKh" | "shFirstNameKh" | "shLastNameEn" | "shFirstNameEn" | "shDob" | "shNationality" | "shGender" | "shIdCard" | "shIdIssuedDate" | "shIdExpiredDate" | "shEmail" | "shPhone" | "shPhotoName" | "shIdDocNames" | "ownerLastNameKh" | "ownerFirstNameKh" | "ownerLastNameEn" | "ownerFirstNameEn" | "ownerDob" | "ownerNationality" | "ownerGender" | "ownerIdCard" | "ownerIdIssuedDate" | "ownerIdExpiredDate" | "ownerEmail" | "ownerPhone" | "ownerPhotoName" | "ownerIdDocNames" | "shareAmount" | "shareholderContractDocNames" | "otherDocNames" | "consentAgreed" | "rejectionReason" | "submittedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["beneficiaryRequest"]>
   export type BeneficiaryRequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     logs?: boolean | BeneficiaryRequest$logsArgs<ExtArgs>
@@ -7179,6 +7201,8 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: number
       requestNo: string
+      certificateNo: string | null
+      approvedAt: Date | null
       userId: number
       status: $Enums.BeneficiaryRequestStatus
       type: string
@@ -7659,6 +7683,8 @@ export namespace Prisma {
   interface BeneficiaryRequestFieldRefs {
     readonly id: FieldRef<"BeneficiaryRequest", 'Int'>
     readonly requestNo: FieldRef<"BeneficiaryRequest", 'String'>
+    readonly certificateNo: FieldRef<"BeneficiaryRequest", 'String'>
+    readonly approvedAt: FieldRef<"BeneficiaryRequest", 'DateTime'>
     readonly userId: FieldRef<"BeneficiaryRequest", 'Int'>
     readonly status: FieldRef<"BeneficiaryRequest", 'BeneficiaryRequestStatus'>
     readonly type: FieldRef<"BeneficiaryRequest", 'String'>
@@ -11638,6 +11664,8 @@ export namespace Prisma {
   export const BeneficiaryRequestScalarFieldEnum: {
     id: 'id',
     requestNo: 'requestNo',
+    certificateNo: 'certificateNo',
+    approvedAt: 'approvedAt',
     userId: 'userId',
     status: 'status',
     type: 'type',
@@ -12138,6 +12166,8 @@ export namespace Prisma {
     NOT?: BeneficiaryRequestWhereInput | BeneficiaryRequestWhereInput[]
     id?: IntFilter<"BeneficiaryRequest"> | number
     requestNo?: StringFilter<"BeneficiaryRequest"> | string
+    certificateNo?: StringNullableFilter<"BeneficiaryRequest"> | string | null
+    approvedAt?: DateTimeNullableFilter<"BeneficiaryRequest"> | Date | string | null
     userId?: IntFilter<"BeneficiaryRequest"> | number
     status?: EnumBeneficiaryRequestStatusFilter<"BeneficiaryRequest"> | $Enums.BeneficiaryRequestStatus
     type?: StringFilter<"BeneficiaryRequest"> | string
@@ -12198,6 +12228,8 @@ export namespace Prisma {
   export type BeneficiaryRequestOrderByWithRelationInput = {
     id?: SortOrder
     requestNo?: SortOrder
+    certificateNo?: SortOrderInput | SortOrder
+    approvedAt?: SortOrderInput | SortOrder
     userId?: SortOrder
     status?: SortOrder
     type?: SortOrder
@@ -12258,9 +12290,11 @@ export namespace Prisma {
   export type BeneficiaryRequestWhereUniqueInput = Prisma.AtLeast<{
     id?: number
     requestNo?: string
+    certificateNo?: string
     AND?: BeneficiaryRequestWhereInput | BeneficiaryRequestWhereInput[]
     OR?: BeneficiaryRequestWhereInput[]
     NOT?: BeneficiaryRequestWhereInput | BeneficiaryRequestWhereInput[]
+    approvedAt?: DateTimeNullableFilter<"BeneficiaryRequest"> | Date | string | null
     userId?: IntFilter<"BeneficiaryRequest"> | number
     status?: EnumBeneficiaryRequestStatusFilter<"BeneficiaryRequest"> | $Enums.BeneficiaryRequestStatus
     type?: StringFilter<"BeneficiaryRequest"> | string
@@ -12316,11 +12350,13 @@ export namespace Prisma {
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     logs?: RequestLogListRelationFilter
     revisions?: RequestRevisionListRelationFilter
-  }, "id" | "requestNo">
+  }, "id" | "requestNo" | "certificateNo">
 
   export type BeneficiaryRequestOrderByWithAggregationInput = {
     id?: SortOrder
     requestNo?: SortOrder
+    certificateNo?: SortOrderInput | SortOrder
+    approvedAt?: SortOrderInput | SortOrder
     userId?: SortOrder
     status?: SortOrder
     type?: SortOrder
@@ -12386,6 +12422,8 @@ export namespace Prisma {
     NOT?: BeneficiaryRequestScalarWhereWithAggregatesInput | BeneficiaryRequestScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"BeneficiaryRequest"> | number
     requestNo?: StringWithAggregatesFilter<"BeneficiaryRequest"> | string
+    certificateNo?: StringNullableWithAggregatesFilter<"BeneficiaryRequest"> | string | null
+    approvedAt?: DateTimeNullableWithAggregatesFilter<"BeneficiaryRequest"> | Date | string | null
     userId?: IntWithAggregatesFilter<"BeneficiaryRequest"> | number
     status?: EnumBeneficiaryRequestStatusWithAggregatesFilter<"BeneficiaryRequest"> | $Enums.BeneficiaryRequestStatus
     type?: StringWithAggregatesFilter<"BeneficiaryRequest"> | string
@@ -12998,6 +13036,8 @@ export namespace Prisma {
 
   export type BeneficiaryRequestCreateInput = {
     requestNo: string
+    certificateNo?: string | null
+    approvedAt?: Date | string | null
     status?: $Enums.BeneficiaryRequestStatus
     type?: string
     companyNameKh?: string | null
@@ -13057,6 +13097,8 @@ export namespace Prisma {
   export type BeneficiaryRequestUncheckedCreateInput = {
     id?: number
     requestNo: string
+    certificateNo?: string | null
+    approvedAt?: Date | string | null
     userId: number
     status?: $Enums.BeneficiaryRequestStatus
     type?: string
@@ -13115,6 +13157,8 @@ export namespace Prisma {
 
   export type BeneficiaryRequestUpdateInput = {
     requestNo?: StringFieldUpdateOperationsInput | string
+    certificateNo?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
     type?: StringFieldUpdateOperationsInput | string
     companyNameKh?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13174,6 +13218,8 @@ export namespace Prisma {
   export type BeneficiaryRequestUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     requestNo?: StringFieldUpdateOperationsInput | string
+    certificateNo?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     userId?: IntFieldUpdateOperationsInput | number
     status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
     type?: StringFieldUpdateOperationsInput | string
@@ -13233,6 +13279,8 @@ export namespace Prisma {
   export type BeneficiaryRequestCreateManyInput = {
     id?: number
     requestNo: string
+    certificateNo?: string | null
+    approvedAt?: Date | string | null
     userId: number
     status?: $Enums.BeneficiaryRequestStatus
     type?: string
@@ -13289,6 +13337,8 @@ export namespace Prisma {
 
   export type BeneficiaryRequestUpdateManyMutationInput = {
     requestNo?: StringFieldUpdateOperationsInput | string
+    certificateNo?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
     type?: StringFieldUpdateOperationsInput | string
     companyNameKh?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13345,6 +13395,8 @@ export namespace Prisma {
   export type BeneficiaryRequestUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     requestNo?: StringFieldUpdateOperationsInput | string
+    certificateNo?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     userId?: IntFieldUpdateOperationsInput | number
     status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
     type?: StringFieldUpdateOperationsInput | string
@@ -14103,6 +14155,8 @@ export namespace Prisma {
   export type BeneficiaryRequestCountOrderByAggregateInput = {
     id?: SortOrder
     requestNo?: SortOrder
+    certificateNo?: SortOrder
+    approvedAt?: SortOrder
     userId?: SortOrder
     status?: SortOrder
     type?: SortOrder
@@ -14165,6 +14219,8 @@ export namespace Prisma {
   export type BeneficiaryRequestMaxOrderByAggregateInput = {
     id?: SortOrder
     requestNo?: SortOrder
+    certificateNo?: SortOrder
+    approvedAt?: SortOrder
     userId?: SortOrder
     status?: SortOrder
     type?: SortOrder
@@ -14222,6 +14278,8 @@ export namespace Prisma {
   export type BeneficiaryRequestMinOrderByAggregateInput = {
     id?: SortOrder
     requestNo?: SortOrder
+    certificateNo?: SortOrder
+    approvedAt?: SortOrder
     userId?: SortOrder
     status?: SortOrder
     type?: SortOrder
@@ -15125,6 +15183,8 @@ export namespace Prisma {
 
   export type BeneficiaryRequestCreateWithoutUserInput = {
     requestNo: string
+    certificateNo?: string | null
+    approvedAt?: Date | string | null
     status?: $Enums.BeneficiaryRequestStatus
     type?: string
     companyNameKh?: string | null
@@ -15183,6 +15243,8 @@ export namespace Prisma {
   export type BeneficiaryRequestUncheckedCreateWithoutUserInput = {
     id?: number
     requestNo: string
+    certificateNo?: string | null
+    approvedAt?: Date | string | null
     status?: $Enums.BeneficiaryRequestStatus
     type?: string
     companyNameKh?: string | null
@@ -15293,6 +15355,8 @@ export namespace Prisma {
     NOT?: BeneficiaryRequestScalarWhereInput | BeneficiaryRequestScalarWhereInput[]
     id?: IntFilter<"BeneficiaryRequest"> | number
     requestNo?: StringFilter<"BeneficiaryRequest"> | string
+    certificateNo?: StringNullableFilter<"BeneficiaryRequest"> | string | null
+    approvedAt?: DateTimeNullableFilter<"BeneficiaryRequest"> | Date | string | null
     userId?: IntFilter<"BeneficiaryRequest"> | number
     status?: EnumBeneficiaryRequestStatusFilter<"BeneficiaryRequest"> | $Enums.BeneficiaryRequestStatus
     type?: StringFilter<"BeneficiaryRequest"> | string
@@ -15883,6 +15947,8 @@ export namespace Prisma {
 
   export type BeneficiaryRequestCreateWithoutLogsInput = {
     requestNo: string
+    certificateNo?: string | null
+    approvedAt?: Date | string | null
     status?: $Enums.BeneficiaryRequestStatus
     type?: string
     companyNameKh?: string | null
@@ -15941,6 +16007,8 @@ export namespace Prisma {
   export type BeneficiaryRequestUncheckedCreateWithoutLogsInput = {
     id?: number
     requestNo: string
+    certificateNo?: string | null
+    approvedAt?: Date | string | null
     userId: number
     status?: $Enums.BeneficiaryRequestStatus
     type?: string
@@ -16014,6 +16082,8 @@ export namespace Prisma {
 
   export type BeneficiaryRequestUpdateWithoutLogsInput = {
     requestNo?: StringFieldUpdateOperationsInput | string
+    certificateNo?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
     type?: StringFieldUpdateOperationsInput | string
     companyNameKh?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16072,6 +16142,8 @@ export namespace Prisma {
   export type BeneficiaryRequestUncheckedUpdateWithoutLogsInput = {
     id?: IntFieldUpdateOperationsInput | number
     requestNo?: StringFieldUpdateOperationsInput | string
+    certificateNo?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     userId?: IntFieldUpdateOperationsInput | number
     status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
     type?: StringFieldUpdateOperationsInput | string
@@ -16129,6 +16201,8 @@ export namespace Prisma {
 
   export type BeneficiaryRequestCreateWithoutRevisionsInput = {
     requestNo: string
+    certificateNo?: string | null
+    approvedAt?: Date | string | null
     status?: $Enums.BeneficiaryRequestStatus
     type?: string
     companyNameKh?: string | null
@@ -16187,6 +16261,8 @@ export namespace Prisma {
   export type BeneficiaryRequestUncheckedCreateWithoutRevisionsInput = {
     id?: number
     requestNo: string
+    certificateNo?: string | null
+    approvedAt?: Date | string | null
     userId: number
     status?: $Enums.BeneficiaryRequestStatus
     type?: string
@@ -16260,6 +16336,8 @@ export namespace Prisma {
 
   export type BeneficiaryRequestUpdateWithoutRevisionsInput = {
     requestNo?: StringFieldUpdateOperationsInput | string
+    certificateNo?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
     type?: StringFieldUpdateOperationsInput | string
     companyNameKh?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16318,6 +16396,8 @@ export namespace Prisma {
   export type BeneficiaryRequestUncheckedUpdateWithoutRevisionsInput = {
     id?: IntFieldUpdateOperationsInput | number
     requestNo?: StringFieldUpdateOperationsInput | string
+    certificateNo?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     userId?: IntFieldUpdateOperationsInput | number
     status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
     type?: StringFieldUpdateOperationsInput | string
@@ -16376,6 +16456,8 @@ export namespace Prisma {
   export type BeneficiaryRequestCreateManyUserInput = {
     id?: number
     requestNo: string
+    certificateNo?: string | null
+    approvedAt?: Date | string | null
     status?: $Enums.BeneficiaryRequestStatus
     type?: string
     companyNameKh?: string | null
@@ -16431,6 +16513,8 @@ export namespace Prisma {
 
   export type BeneficiaryRequestUpdateWithoutUserInput = {
     requestNo?: StringFieldUpdateOperationsInput | string
+    certificateNo?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
     type?: StringFieldUpdateOperationsInput | string
     companyNameKh?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16489,6 +16573,8 @@ export namespace Prisma {
   export type BeneficiaryRequestUncheckedUpdateWithoutUserInput = {
     id?: IntFieldUpdateOperationsInput | number
     requestNo?: StringFieldUpdateOperationsInput | string
+    certificateNo?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
     type?: StringFieldUpdateOperationsInput | string
     companyNameKh?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16547,6 +16633,8 @@ export namespace Prisma {
   export type BeneficiaryRequestUncheckedUpdateManyWithoutUserInput = {
     id?: IntFieldUpdateOperationsInput | number
     requestNo?: StringFieldUpdateOperationsInput | string
+    certificateNo?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumBeneficiaryRequestStatusFieldUpdateOperationsInput | $Enums.BeneficiaryRequestStatus
     type?: StringFieldUpdateOperationsInput | string
     companyNameKh?: NullableStringFieldUpdateOperationsInput | string | null

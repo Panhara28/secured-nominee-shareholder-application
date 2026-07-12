@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma generate && prisma migrate deploy",
     "db:seed": "npx tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },
@@ -27,6 +28,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^3.9.2",
+    "skia-canvas": "^3.0.8",
     "sone": "^1.4.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",

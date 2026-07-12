@@ -34,17 +34,17 @@ function Header() {
     Photo(path.join(process.cwd(), "public/cert-logo.png")).width(150).height(150).scaleType("contain"),
     Column().flex(1),
     Column(
-      Text("ព្រះរាជាណាចក្រកម្ពុជា").font(HEAD).weight("bold").size(15).color(INK).align("center"),
-      Text("ជាតិ សាសនា ព្រះមហាក្សត្រ").font(HEAD).weight("bold").size(13).color(INK).align("center"),
+      Text("ព្រះរាជាណាចក្រកម្ពុជា").font(HEAD).weight("bold").size(16).color(INK).align("center"),
+      Text("ជាតិ សាសនា ព្រះមហាក្សត្រ").font(HEAD).weight("bold").size(16).color(INK).align("center"),
       Text("————— ✧ —————").size(9).color(INK).align("center")
     ).gap(5).alignItems("center").padding(6, 0, 0, 0)
   ).alignItems("flex-start");
 }
 
-function MinistryLabel() {
+function MinistryLabel(data: CertificateData) {
   return Column(
-    Text("លេខលិខិតបញ្ជាក់ ៖ .....................").font(BODY).size(11).color(INK),
-    Text("កាលបរិច្ឆេទ ៖ .............................").font(BODY).size(11).color(INK)
+    Text("លេខលិខិតបញ្ជាក់ ៖ ", Span(data.certificateNo).weight("bold")).font(BODY).size(16).color(INK),
+    Text("កាលបរិច្ឆេទ ៖ ", Span(formatDate(data.approvedAt)).weight("bold")).font(BODY).size(16).color(INK)
   ).gap(4);
 }
 
@@ -52,7 +52,7 @@ function Title() {
   return Column(
     Text("លិខិតបញ្ជាក់").font(HEAD).weight("bold").size(16).color(INK).align("center"),
     Text("ការទទួលការតម្កល់កិច្ចសន្យាតំណាងម្ចាស់ភាគហ៊ុន")
-      .font(HEAD).weight("bold").size(13).color(INK).align("center")
+      .font(HEAD).weight("bold").size(16).color(INK).align("center")
   ).gap(6).alignItems("center");
 }
 
@@ -60,38 +60,38 @@ function Body(data: CertificateData, companyLine: string) {
   const lh = 1.9;
   return Column(
     Text("ក្រុមហ៊ុន  ", Span(companyLine).weight("bold"))
-      .font(BODY).size(12).color(INK).lineHeight(lh),
+      .font(BODY).size(16).color(INK).lineHeight(lh),
 
     Text(
       "អត្តលេខចុះបញ្ជី : ",
       Span(data.registrationNo).weight("bold"),
       "     កាលបរិច្ឆេទចុះបញ្ជី : ",
       Span(formatDate(data.registrationDate)).weight("bold")
-    ).font(BODY).size(12).color(INK).lineHeight(lh),
+    ).font(BODY).size(16).color(INK).lineHeight(lh),
 
     Text(
       "ក្រសួងពាណិជ្ជកម្ម  សូមបញ្ជាក់ថា  ក្រុមហ៊ុនបានការតម្កល់ព័ត៌មាន  " +
       "និងកិច្ចសន្យារវាងម្ចាស់ភាគហ៊ុនដែលជាអត្ថគាហកចុងក្រោយ  " +
       "និងអ្នកតំណាងម្ចាស់ភាគហ៊ុនតាមប្រព័ន្ធស្វ័យប្រវត្តិកម្ម  ដែលមាន"
-    ).font(BODY).size(12).color(INK).lineHeight(lh).align("justify"),
+    ).font(BODY).size(16).color(INK).lineHeight(lh).align("justify"),
 
     Text("លេខតម្កល់ : ", Span(`${data.requestNo}  ( Number Generate by System )`))
-      .font(BODY).size(12).weight("bold").color(INK).lineHeight(lh),
+      .font(BODY).size(16).weight("bold").color(INK).lineHeight(lh),
 
     Text("កាលបរិច្ឆេទតម្កល់ : ", Span(formatDate(data.approvedAt)))
-      .font(BODY).size(12).weight("bold").color(INK).lineHeight(lh),
+      .font(BODY).size(16).weight("bold").color(INK).lineHeight(lh),
 
     Text(
       "ក្រុមហ៊ុនត្រូវរក្សាទុកនូវរាល់ព័ត៌មាន  " +
       "និងឯកសារពាក់ព័ន្ធនឹងម្ចាស់ភាគហ៊ុនដែលជាអត្ថគាហកចុងក្រោយ  " +
       "និងអ្នកតំណាងម្ចាស់ភាគហ៊ុននៅទីស្នាក់ការរបស់ក្រុមហ៊ុនស្របតាមច្បាប់ជាធរមាន" +
       "ចាប់កាលបរិច្ឆេទតម្កល់។"
-    ).font(BODY).size(12).color(INK).lineHeight(lh).align("justify"),
+    ).font(BODY).size(16).color(INK).lineHeight(lh).align("justify"),
 
     Text(
       "លិខិតបញ្ជាក់នេះ  ត្រូវបានចេញជូនសម្រាប់បញ្ជាក់ការទទួលតម្កល់ព័ត៌មាន  " +
       "និងតម្កល់កិច្ចសន្យាតំណាងម្ចាស់ភាគហ៊ុន នៅក្រសួងពាណិជ្ជកម្ម។"
-    ).font(BODY).size(12).color(INK).lineHeight(lh).align("justify")
+    ).font(BODY).size(16).color(INK).lineHeight(lh).align("justify")
   ).gap(12);
 }
 
@@ -109,6 +109,7 @@ function QrBox(qr: string) {
 
 export type CertificateData = {
   requestNo: string;
+  certificateNo: string;
   companyNameEn: string;
   companyNameKh: string | null;
   registrationNo: string;
@@ -119,7 +120,7 @@ export type CertificateData = {
 function Document(data: CertificateData, qr: string, companyLine: string) {
   return Column(
     Header(),
-    MinistryLabel(),
+    MinistryLabel(data),
     Column().height(8),
     Title(),
     Column().height(8),
@@ -129,6 +130,7 @@ function Document(data: CertificateData, qr: string, companyLine: string) {
   )
     .gap(14)
     .padding(96, 84) // top/bottom 2.54cm, left/right 2.22cm @ 96dpi
+    .height(1123) // A4 height @ 96dpi
     .bg("white")
     .width(794); // A4 @ 96dpi
 }

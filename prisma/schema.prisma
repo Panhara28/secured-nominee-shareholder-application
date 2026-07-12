@@ -88,8 +88,11 @@ model StaffRolePermission {
 }
 
 model BeneficiaryRequest {
-  id        Int    @id @default(autoincrement())
-  requestNo String @unique
+  id        Int     @id @default(autoincrement())
+  requestNo String  @unique
+
+  certificateNo String?   @unique
+  approvedAt    DateTime?
 
   userId Int
   user   User @relation(fields: [userId], references: [id])
