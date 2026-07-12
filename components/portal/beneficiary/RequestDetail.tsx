@@ -185,8 +185,15 @@ export default function RequestDetail({ id }: { id: string }) {
     }
 
     fetchDetail();
+
+    // Real-time: refetch (status, logs, certificate availability, etc.) the
+    // instant this request changes, instead of only on page load.
+    const source = new EventSource("/api/portal/notifications/stream");
+    source.onmessage = () => fetchDetail();
+
     return () => {
       cancelled = true;
+      source.close();
     };
   }, [id]);
 

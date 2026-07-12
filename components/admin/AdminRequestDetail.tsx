@@ -173,8 +173,15 @@ export default function AdminRequestDetail({ id }: { id: string }) {
     }
 
     fetchDetail();
+
+    // Real-time: refetch (status, logs, revisions, etc.) the instant this
+    // or any other request changes, instead of only on page load.
+    const source = new EventSource("/api/secured/admin/notifications/stream");
+    source.onmessage = () => fetchDetail();
+
     return () => {
       cancelled = true;
+      source.close();
     };
   }, [id]);
 
