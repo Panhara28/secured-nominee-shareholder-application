@@ -124,6 +124,7 @@ type RequestDetailData = {
   otherDocNames: string[];
   consentAgreed: boolean;
   submittedAt: string;
+  updatedAt: string;
   rejectionReason: string | null;
   logs: ActivityLogEntry[];
   revisions: RequestRevisionEntry[];
@@ -166,7 +167,18 @@ export default function AdminRequestDetail({ id }: { id: string }) {
           setError(true);
           return;
         }
-        setRequest(await res.json());
+        const data = await res.json();
+        // A verify result reflects the data as it was at the time of that
+        // check — if the request's data has changed since (e.g. the
+        // shareholder just resubmitted after a return), the old result is
+        // stale and must not keep showing until re-verified.
+        setRequest((prev) => {
+          if (prev && prev.updatedAt !== data.updatedAt) {
+            setVerifyResult(null);
+            setVerifyError(null);
+          }
+          return data;
+        });
       } catch {
         if (!cancelled) setError(true);
       }
