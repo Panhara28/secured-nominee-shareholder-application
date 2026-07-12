@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireShareholder } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
+import { emitAdminUsersNotification } from "@/lib/notification-events";
 
 export async function PATCH(request: Request) {
   const session = await requireShareholder();
@@ -56,5 +57,6 @@ export async function PATCH(request: Request) {
     actor: { id: updated.id, role: "SHAREHOLDER", fullName: updated.fullName },
   });
 
+  emitAdminUsersNotification();
   return Response.json({ id: updated.id, fullName: updated.fullName, isActive: updated.isActive });
 }

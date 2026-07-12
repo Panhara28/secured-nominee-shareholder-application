@@ -49,6 +49,22 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
   const [recentUsers, setRecentUsers] = useState<RecentUserRow[]>(initialRecentUsers);
   const [usersLoading, setUsersLoading] = useState(false);
 
+  const [stats, setStats] = useState({ totalShareholders, totalRequests, summary });
+
+  // Shared by both channels below so the dashboard only ever holds one
+  // connection per channel — opening a separate EventSource per consumer
+  // adds up fast and risks hitting the browser's per-origin connection cap.
+  async function fetchStats() {
+    try {
+      const res = await fetch("/api/secured/admin/dashboard/stats");
+      if (!res.ok) return;
+      const json = await res.json();
+      setStats({ totalShareholders: json.totalShareholders, totalRequests: json.totalRequests, summary: json.summary });
+    } catch {
+      // silently ignore — the previous values remain visible
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -75,13 +91,19 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
     fetchRecent();
 
     // Real-time: refetch the instant a shareholder submits/edits a request.
+    // Also refreshes the top stat cards, sharing this one connection instead
+    // of opening a second one just for that.
     const source = new EventSource("/api/secured/admin/notifications/stream");
-    source.onmessage = () => fetchRecent();
+    source.onmessage = () => {
+      fetchRecent();
+      fetchStats();
+    };
 
     return () => {
       cancelled = true;
       source.close();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   useEffect(() => {
@@ -108,23 +130,35 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
     }
 
     fetchRecentUsers();
+
+    // Real-time: refetch the instant a registration is approved/rejected/returned.
+    // Also refreshes the top stat cards, sharing this one connection instead
+    // of opening a second one just for that.
+    const source = new EventSource("/api/secured/admin/users/stream");
+    source.onmessage = () => {
+      fetchRecentUsers();
+      fetchStats();
+    };
+
     return () => {
       cancelled = true;
+      source.close();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userStatus]);
 
   const topCards = [
-    { label: t("totalShareholders"), value: totalShareholders, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: t("totalRequests"), value: totalRequests, icon: FileText, color: "text-slate-600", bg: "bg-slate-100" },
+    { label: t("totalShareholders"), value: stats.totalShareholders, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: t("totalRequests"), value: stats.totalRequests, icon: FileText, color: "text-slate-600", bg: "bg-slate-100" },
   ];
 
   const bottomCards = [
-    { label: t("drafted"), value: summary.drafted, icon: FileEdit, color: "text-slate-500", bg: "bg-slate-100" },
-    { label: t("request"), value: summary.request, icon: TimerReset, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: t("inReview"), value: summary.inReview, icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: t("approved"), value: summary.approved, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
-    { label: t("rejected"), value: summary.rejected, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
-    { label: t("returned"), value: summary.returned, icon: RotateCcw, color: "text-orange-600", bg: "bg-orange-50" },
+    { label: t("drafted"), value: stats.summary.drafted, icon: FileEdit, color: "text-slate-500", bg: "bg-slate-100" },
+    { label: t("request"), value: stats.summary.request, icon: TimerReset, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: t("inReview"), value: stats.summary.inReview, icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50" },
+    { label: t("approved"), value: stats.summary.approved, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
+    { label: t("rejected"), value: stats.summary.rejected, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
+    { label: t("returned"), value: stats.summary.returned, icon: RotateCcw, color: "text-orange-600", bg: "bg-orange-50" },
   ];
 
   return (

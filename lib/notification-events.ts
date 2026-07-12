@@ -30,3 +30,12 @@ export function subscribeActivity(listener: () => void): () => void {
   bus.on("activity", listener);
   return () => bus.off("activity", listener);
 }
+
+export function emitAdminUsersNotification(): void {
+  bus.emit("admin:users");
+}
+
+export function subscribeAdminUsers(listener: () => void): () => void {
+  bus.on("admin:users", listener);
+  return () => bus.off("admin:users", listener);
+}

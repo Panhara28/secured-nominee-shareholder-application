@@ -86,10 +86,20 @@ export default function AdminUsersList() {
     }
 
     fetchUsers();
+
+    // Real-time: refetch the instant a registration is approved/rejected/returned.
+    const source = new EventSource("/api/secured/admin/users/stream");
+    source.onmessage = () => fetchUsers();
+
     return () => {
       cancelled = true;
+      source.close();
     };
-  }, [appliedQuery, status, page, sortKey, sortDir, retryToken, t]);
+    // `t` intentionally excluded — see AdminActivitiesLogList.tsx for why
+    // including a translation function here would tear down/recreate the
+    // EventSource on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedQuery, status, page, sortKey, sortDir, retryToken]);
 
   const handleSearch = () => {
     setAppliedQuery(query);

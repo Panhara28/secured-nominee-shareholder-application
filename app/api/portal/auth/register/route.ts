@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { hashPassword, setSessionCookie } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
+import { emitAdminUsersNotification } from "@/lib/notification-events";
 
 const POSITION_VALUES = ["SHAREHOLDER", "DIRECTOR", "SECRETARY"] as const;
 
@@ -65,6 +66,7 @@ export async function POST(request: Request) {
     actor: { id: user.id, role: "SHAREHOLDER", fullName: user.fullName },
   });
 
+  emitAdminUsersNotification();
   await setSessionCookie(user.id, "SHAREHOLDER");
 
   return Response.json(user, { status: 201 });

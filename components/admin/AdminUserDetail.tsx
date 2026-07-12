@@ -95,10 +95,21 @@ export default function AdminUserDetail({ id }: { id: string }) {
       }
     }
     load();
+
+    // Real-time: refetch if this registration is acted on from elsewhere
+    // (e.g. another admin, or the same admin in another tab).
+    const source = new EventSource("/api/secured/admin/users/stream");
+    source.onmessage = () => load();
+
     return () => {
       cancelled = true;
+      source.close();
     };
-  }, [id, t]);
+    // `t` intentionally excluded — see AdminActivitiesLogList.tsx for why
+    // including a translation function here would tear down/recreate the
+    // EventSource on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleAction = async (action: "approve" | "reject" | "return", reason?: string) => {
     setActing(action);
