@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.claude
+*.db
+*.db-journal
+*.tsbuildinfo
+npm-debug.log*
+
+# Pongreay: keep local secrets out of Docker images
+.env
+.env.*
+!.env.example

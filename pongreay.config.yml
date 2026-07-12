@@ -1,0 +1,12 @@
+project: secured-nominee-shareholder
+healthPath: /en/portal/login
+
+environments:
+  uat:
+    server: sysapp01@172.20.15.41
+    branch: main
+    appName: secured-nominee-shareholder-uat
+    imageName: secured-nominee-shareholder
+    envFileOnServer: /etc/pongreay/secured-nominee-shareholder/uat.env
+    hostPort: 3030
+    containerPort: 3000
