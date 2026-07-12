@@ -86,10 +86,21 @@ export default function AllRequestsList() {
     }
 
     fetchRequests();
+
+    // Real-time: refetch the instant this shareholder's own requests change
+    // status, instead of waiting for a manual refresh.
+    const source = new EventSource("/api/portal/notifications/stream");
+    source.onmessage = () => fetchRequests();
+
     return () => {
       cancelled = true;
+      source.close();
     };
-  }, [appliedQuery, status, page, sortKey, sortDir, retryToken, t]);
+    // `t` intentionally excluded — see AdminActivitiesLogList.tsx for why
+    // including a translation function here would tear down/recreate the
+    // EventSource on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedQuery, status, page, sortKey, sortDir, retryToken]);
 
   const handleSearch = () => {
     setAppliedQuery(query);

@@ -73,8 +73,14 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
     }
 
     fetchRecent();
+
+    // Real-time: refetch the instant a shareholder submits/edits a request.
+    const source = new EventSource("/api/secured/admin/notifications/stream");
+    source.onmessage = () => fetchRecent();
+
     return () => {
       cancelled = true;
+      source.close();
     };
   }, [status]);
 

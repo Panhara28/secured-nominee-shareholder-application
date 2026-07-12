@@ -55,8 +55,14 @@ export default function DashboardRequestsTable({ initialRequests }: { initialReq
     }
 
     fetchRows();
+
+    // Real-time: refetch the instant one of this shareholder's requests changes status.
+    const source = new EventSource("/api/portal/notifications/stream");
+    source.onmessage = () => fetchRows();
+
     return () => {
       cancelled = true;
+      source.close();
     };
   }, [status]);
 
