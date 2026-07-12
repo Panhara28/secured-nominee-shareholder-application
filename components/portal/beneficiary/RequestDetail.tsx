@@ -21,9 +21,9 @@ function formatDate(iso: string | null): string {
 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
-    <div>
+    <div className="min-w-0">
       <p className="text-xs text-slate-500 mb-0.5">{label}</p>
-      <p className="text-sm font-medium text-slate-800">{value || "-"}</p>
+      <p className="text-sm font-medium text-slate-800 break-words">{value || "-"}</p>
     </div>
   );
 }
