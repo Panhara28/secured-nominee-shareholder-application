@@ -170,6 +170,29 @@ export function RegisterForm() {
         </div>
 
         <div>
+          <Label>{t("position")}</Label>
+          <div className="mt-1 grid grid-cols-3 gap-2">
+            {POSITION_VALUES.map((value) => (
+              <label
+                key={value}
+                className="flex items-center justify-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
+              >
+                <input
+                  type="radio"
+                  name="position"
+                  value={value}
+                  required
+                  checked={formData.position === value}
+                  onChange={() => setFormData((p) => ({ ...p, position: value }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                />
+                {t(`positionOptions.${value}`)}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
           <Label htmlFor="email">{t("email")}</Label>
           <div className="relative mt-1">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
@@ -237,29 +260,6 @@ export function RegisterForm() {
               value={formData.confirmPassword}
               onChange={field("confirmPassword")}
             />
-          </div>
-        </div>
-
-        <div>
-          <Label>{t("position")}</Label>
-          <div className="mt-1 grid grid-cols-3 gap-2">
-            {POSITION_VALUES.map((value) => (
-              <label
-                key={value}
-                className="flex items-center justify-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
-              >
-                <input
-                  type="radio"
-                  name="position"
-                  value={value}
-                  required
-                  checked={formData.position === value}
-                  onChange={() => setFormData((p) => ({ ...p, position: value }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                {t(`positionOptions.${value}`)}
-              </label>
-            ))}
           </div>
         </div>
 
