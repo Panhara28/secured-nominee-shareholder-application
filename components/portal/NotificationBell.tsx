@@ -4,18 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Link } from "@/lib/navigation";
-import { Bell, CheckCircle2, RotateCcw, ShieldCheck, XCircle } from "lucide-react";
+import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { notify, requestNotificationPermission } from "@/lib/browser-notifications";
+import { notifyStatusStyle } from "@/lib/notification-status";
 
 type NotifyRow = { id: number; requestNo: string; companyNameEn: string; companyNameKh: string | null; status: string; updatedAt: string; seen: boolean };
-
-const STATUS_STYLES: Record<string, { icon: React.ElementType; iconBg: string; iconColor: string; textColor: string }> = {
-  RETURNED: { icon: RotateCcw, iconBg: "bg-orange-50", iconColor: "text-orange-600", textColor: "text-orange-600" },
-  REJECTED: { icon: XCircle, iconBg: "bg-red-50", iconColor: "text-red-600", textColor: "text-red-600" },
-  IN_REVIEW: { icon: ShieldCheck, iconBg: "bg-purple-50", iconColor: "text-purple-600", textColor: "text-purple-600" },
-  APPROVED: { icon: CheckCircle2, iconBg: "bg-green-50", iconColor: "text-green-600", textColor: "text-green-600" },
-};
 
 export default function NotificationBell() {
   const t = useTranslations("portal.notifications");
@@ -51,8 +45,14 @@ export default function NotificationBell() {
               // OS-level popup (best-effort — depends on browser/OS permission state)
               notify(row.companyNameEn, { body, tag: `request-${row.id}` });
               // In-app toast (always visible while the tab is open, regardless of
-              // Notification permission)
-              toast(row.companyNameEn, { description: body });
+              // Notification permission), color-coded to match the status.
+              const style = notifyStatusStyle(row.status);
+              const Icon = style.icon;
+              toast(row.companyNameEn, {
+                description: body,
+                icon: <Icon className={cn("h-4 w-4", style.iconColor)} />,
+                style: { borderLeft: `4px solid ${style.accent}` },
+              });
             }
           }
         }
@@ -141,7 +141,7 @@ export default function NotificationBell() {
           ) : (
             <ul className="max-h-80 overflow-y-auto divide-y divide-slate-100">
               {rows.map((r) => {
-                const style = STATUS_STYLES[r.status] ?? STATUS_STYLES.RETURNED;
+                const style = notifyStatusStyle(r.status);
                 const Icon = style.icon;
                 return (
                   <li key={r.id}>

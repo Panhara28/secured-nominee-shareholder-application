@@ -75,8 +75,8 @@ export default function AdminActivitiesLogList() {
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchLogs() {
-      setLoading(true);
+    async function fetchLogs(showLoading = true) {
+      if (showLoading) setLoading(true);
       setError(null);
       try {
         const params = new URLSearchParams({
@@ -99,8 +99,16 @@ export default function AdminActivitiesLogList() {
     }
 
     fetchLogs();
+
+    // Real-time: refetch the instant any new activity is logged, instead of
+    // waiting for a manual refresh. Skip the loading spinner for these quiet
+    // background refreshes so the table doesn't flicker.
+    const source = new EventSource("/api/secured/admin/activities-logs/stream");
+    source.onmessage = () => fetchLogs(false);
+
     return () => {
       cancelled = true;
+      source.close();
     };
   }, [appliedQuery, action, page, retryToken, t]);
 

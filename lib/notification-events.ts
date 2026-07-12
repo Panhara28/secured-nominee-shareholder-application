@@ -21,3 +21,12 @@ export function subscribeUser(userId: number, listener: () => void): () => void 
   bus.on(channel, listener);
   return () => bus.off(channel, listener);
 }
+
+export function emitActivityLogged(): void {
+  bus.emit("activity");
+}
+
+export function subscribeActivity(listener: () => void): () => void {
+  bus.on("activity", listener);
+  return () => bus.off("activity", listener);
+}

@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Link } from "@/lib/navigation";
-import { Bell, GitCompare, TimerReset, UserPlus } from "lucide-react";
+import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { notify, requestNotificationPermission } from "@/lib/browser-notifications";
+import { notifyStatusStyle } from "@/lib/notification-status";
 
 type PendingRequestRow = {
   kind: "request";
@@ -26,10 +27,10 @@ type PendingRow = PendingRequestRow | PendingUserRow;
 
 const NOTIFY_STATUSES = ["PENDING", "UPDATE_REQUESTED"] as const;
 
-const STATUS_STYLES: Record<string, { icon: React.ElementType; iconBg: string; iconColor: string; textColor: string; noticeKey: string }> = {
-  PENDING: { icon: TimerReset, iconBg: "bg-blue-50", iconColor: "text-blue-600", textColor: "text-blue-600", noticeKey: "pendingNotice" },
-  UPDATE_REQUESTED: { icon: GitCompare, iconBg: "bg-teal-50", iconColor: "text-teal-600", textColor: "text-teal-600", noticeKey: "updateRequestedNotice" },
-  USER: { icon: UserPlus, iconBg: "bg-amber-50", iconColor: "text-amber-600", textColor: "text-amber-600", noticeKey: "userPendingNotice" },
+const NOTICE_KEYS: Record<string, string> = {
+  PENDING: "pendingNotice",
+  UPDATE_REQUESTED: "updateRequestedNotice",
+  USER: "userPendingNotice",
 };
 
 export default function AdminNotificationBell() {
@@ -81,13 +82,25 @@ export default function AdminNotificationBell() {
             if (!knownKeys.current.has(key)) {
               knownKeys.current.add(key);
               if (row.kind === "user") {
-                const body = t(STATUS_STYLES.USER.noticeKey as Parameters<typeof t>[0]);
+                const body = t(NOTICE_KEYS.USER as Parameters<typeof t>[0]);
+                const style = notifyStatusStyle("USER");
+                const Icon = style.icon;
                 notify(row.fullName, { body, tag: key });
-                toast(row.fullName, { description: body });
+                toast(row.fullName, {
+                  description: body,
+                  icon: <Icon className={cn("h-4 w-4", style.iconColor)} />,
+                  style: { borderLeft: `4px solid ${style.accent}` },
+                });
               } else {
                 const body = t2(`status.${row.status}` as Parameters<typeof t2>[0]);
+                const style = notifyStatusStyle(row.status);
+                const Icon = style.icon;
                 notify(row.companyNameEn, { body, tag: key });
-                toast(row.companyNameEn, { description: body });
+                toast(row.companyNameEn, {
+                  description: body,
+                  icon: <Icon className={cn("h-4 w-4", style.iconColor)} />,
+                  style: { borderLeft: `4px solid ${style.accent}` },
+                });
               }
             }
           }
@@ -168,7 +181,7 @@ export default function AdminNotificationBell() {
             <ul className="max-h-80 overflow-y-auto divide-y divide-slate-100">
               {rows.map((r) => {
                 if (r.kind === "user") {
-                  const style = STATUS_STYLES.USER;
+                  const style = notifyStatusStyle("USER");
                   const Icon = style.icon;
                   return (
                     <li key={`user-${r.id}`}>
@@ -183,14 +196,14 @@ export default function AdminNotificationBell() {
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-slate-800 truncate">{r.fullName}</p>
                           <p className="text-xs text-slate-500 truncate">{r.companyName ?? "-"}</p>
-                          <p className={cn("text-xs mt-0.5", style.textColor)}>{t(style.noticeKey as Parameters<typeof t>[0])}</p>
+                          <p className={cn("text-xs mt-0.5", style.textColor)}>{t(NOTICE_KEYS.USER as Parameters<typeof t>[0])}</p>
                         </div>
                       </Link>
                     </li>
                   );
                 }
 
-                const style = STATUS_STYLES[r.status] ?? STATUS_STYLES.PENDING;
+                const style = notifyStatusStyle(r.status);
                 const Icon = style.icon;
                 return (
                   <li key={`request-${r.id}`}>
@@ -207,7 +220,7 @@ export default function AdminNotificationBell() {
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-slate-800 truncate">{r.companyNameEn}</p>
                         <p className="text-xs text-slate-500 font-mono">{r.requestNo}</p>
-                        <p className={cn("text-xs mt-0.5", style.textColor)}>{t(style.noticeKey as Parameters<typeof t>[0])}</p>
+                        <p className={cn("text-xs mt-0.5", style.textColor)}>{t((NOTICE_KEYS[r.status] ?? NOTICE_KEYS.PENDING) as Parameters<typeof t>[0])}</p>
                       </div>
                     </Link>
                   </li>
