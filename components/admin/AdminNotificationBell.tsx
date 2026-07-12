@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
 import { Bell, GitCompare, TimerReset, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { notify, requestNotificationPermission } from "@/lib/browser-notifications";
 
 type PendingRequestRow = {
   kind: "request";
@@ -32,12 +33,15 @@ const STATUS_STYLES: Record<string, { icon: React.ElementType; iconBg: string; i
 
 export default function AdminNotificationBell() {
   const t = useTranslations("admin.notifications");
+  const t2 = useTranslations("beneficiary.allRequests");
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<PendingRow[]>([]);
   const [total, setTotal] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const knownKeys = useRef<Set<string> | null>(null);
 
   useEffect(() => {
+    requestNotificationPermission();
     let cancelled = false;
 
     async function fetchAwaitingReview() {
@@ -63,8 +67,26 @@ export default function AdminNotificationBell() {
         const userRows: PendingRow[] = (userResult?.data ?? []).map(
           (u: { id: number; fullName: string; companyName: string | null }) => ({ kind: "user" as const, ...u })
         );
+        const newRows = [...userRows, ...requestRows].slice(0, 10);
 
-        setRows([...userRows, ...requestRows].slice(0, 10));
+        if (knownKeys.current === null) {
+          // First load — seed silently so existing pending items don't all pop at once.
+          knownKeys.current = new Set(newRows.map((r) => `${r.kind}-${r.id}`));
+        } else {
+          for (const row of newRows) {
+            const key = `${row.kind}-${row.id}`;
+            if (!knownKeys.current.has(key)) {
+              knownKeys.current.add(key);
+              if (row.kind === "user") {
+                notify(row.fullName, { body: t(STATUS_STYLES.USER.noticeKey as Parameters<typeof t>[0]), tag: key });
+              } else {
+                notify(row.companyNameEn, { body: t2(`status.${row.status}` as Parameters<typeof t2>[0]), tag: key });
+              }
+            }
+          }
+        }
+
+        setRows(newRows);
         setTotal(
           requestResults.reduce((sum, r) => sum + (r?.total ?? 0), 0) + (userResult?.total ?? 0)
         );
@@ -79,6 +101,7 @@ export default function AdminNotificationBell() {
       cancelled = true;
       clearInterval(interval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
-import { Bell, RotateCcw, ShieldCheck, XCircle } from "lucide-react";
+import { Bell, CheckCircle2, RotateCcw, ShieldCheck, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { notify, requestNotificationPermission } from "@/lib/browser-notifications";
 
 type NotifyRow = { id: number; requestNo: string; companyNameEn: string; companyNameKh: string | null; status: string; updatedAt: string; seen: boolean };
 
@@ -12,6 +13,7 @@ const STATUS_STYLES: Record<string, { icon: React.ElementType; iconBg: string; i
   RETURNED: { icon: RotateCcw, iconBg: "bg-orange-50", iconColor: "text-orange-600", textColor: "text-orange-600" },
   REJECTED: { icon: XCircle, iconBg: "bg-red-50", iconColor: "text-red-600", textColor: "text-red-600" },
   IN_REVIEW: { icon: ShieldCheck, iconBg: "bg-purple-50", iconColor: "text-purple-600", textColor: "text-purple-600" },
+  APPROVED: { icon: CheckCircle2, iconBg: "bg-green-50", iconColor: "text-green-600", textColor: "text-green-600" },
 };
 
 export default function NotificationBell() {
@@ -21,8 +23,10 @@ export default function NotificationBell() {
   const [rows, setRows] = useState<NotifyRow[]>([]);
   const [unseenCount, setUnseenCount] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const knownIds = useRef<Set<number> | null>(null);
 
   useEffect(() => {
+    requestNotificationPermission();
     let cancelled = false;
 
     async function fetchNotifications() {
@@ -31,7 +35,24 @@ export default function NotificationBell() {
         if (!res.ok || cancelled) return;
         const json = await res.json();
         if (cancelled) return;
-        setRows(json.data);
+        const newRows: NotifyRow[] = json.data;
+
+        if (knownIds.current === null) {
+          // First load — seed silently so existing unseen items don't all pop at once.
+          knownIds.current = new Set(newRows.map((r) => r.id));
+        } else {
+          for (const row of newRows) {
+            if (!knownIds.current.has(row.id)) {
+              knownIds.current.add(row.id);
+              notify(row.companyNameEn, {
+                body: tr(`status.${row.status}` as Parameters<typeof tr>[0]),
+                tag: `request-${row.id}`,
+              });
+            }
+          }
+        }
+
+        setRows(newRows);
         setUnseenCount(json.unseenCount);
       } catch {
         // silently ignore — notifications are non-critical
@@ -44,6 +65,7 @@ export default function NotificationBell() {
       cancelled = true;
       clearInterval(interval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
