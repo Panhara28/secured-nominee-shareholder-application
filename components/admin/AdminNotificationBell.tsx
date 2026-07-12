@@ -68,13 +68,16 @@ export default function AdminNotificationBell() {
           (u: { id: number; fullName: string; companyName: string | null }) => ({ kind: "user" as const, ...u })
         );
         const newRows = [...userRows, ...requestRows].slice(0, 10);
+        // Keyed by id+status (not just id) for request rows so a request re-notifies
+        // when its status changes — e.g. seen once as PENDING, then again as UPDATE_REQUESTED.
+        const keyOf = (row: PendingRow) => (row.kind === "request" ? `request-${row.id}:${row.status}` : `user-${row.id}`);
 
         if (knownKeys.current === null) {
           // First load — seed silently so existing pending items don't all pop at once.
-          knownKeys.current = new Set(newRows.map((r) => `${r.kind}-${r.id}`));
+          knownKeys.current = new Set(newRows.map(keyOf));
         } else {
           for (const row of newRows) {
-            const key = `${row.kind}-${row.id}`;
+            const key = keyOf(row);
             if (!knownKeys.current.has(key)) {
               knownKeys.current.add(key);
               if (row.kind === "user") {

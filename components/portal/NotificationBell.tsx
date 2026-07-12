@@ -23,7 +23,7 @@ export default function NotificationBell() {
   const [rows, setRows] = useState<NotifyRow[]>([]);
   const [unseenCount, setUnseenCount] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const knownIds = useRef<Set<number> | null>(null);
+  const knownKeys = useRef<Set<string> | null>(null);
 
   useEffect(() => {
     requestNotificationPermission();
@@ -37,13 +37,16 @@ export default function NotificationBell() {
         if (cancelled) return;
         const newRows: NotifyRow[] = json.data;
 
-        if (knownIds.current === null) {
+        // Keyed by id+status (not just id) so a request re-notifies when its
+        // status changes — e.g. seen once as IN_REVIEW, then again as APPROVED.
+        if (knownKeys.current === null) {
           // First load — seed silently so existing unseen items don't all pop at once.
-          knownIds.current = new Set(newRows.map((r) => r.id));
+          knownKeys.current = new Set(newRows.map((r) => `${r.id}:${r.status}`));
         } else {
           for (const row of newRows) {
-            if (!knownIds.current.has(row.id)) {
-              knownIds.current.add(row.id);
+            const key = `${row.id}:${row.status}`;
+            if (!knownKeys.current.has(key)) {
+              knownKeys.current.add(key);
               notify(row.companyNameEn, {
                 body: tr(`status.${row.status}` as Parameters<typeof tr>[0]),
                 tag: `request-${row.id}`,
