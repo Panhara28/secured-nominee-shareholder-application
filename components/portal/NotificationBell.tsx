@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Link } from "@/lib/navigation";
 import { Bell, CheckCircle2, RotateCcw, ShieldCheck, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,10 +47,12 @@ export default function NotificationBell() {
             const key = `${row.id}:${row.status}`;
             if (!knownKeys.current.has(key)) {
               knownKeys.current.add(key);
-              notify(row.companyNameEn, {
-                body: tr(`status.${row.status}` as Parameters<typeof tr>[0]),
-                tag: `request-${row.id}`,
-              });
+              const body = tr(`status.${row.status}` as Parameters<typeof tr>[0]);
+              // OS-level popup (best-effort — depends on browser/OS permission state)
+              notify(row.companyNameEn, { body, tag: `request-${row.id}` });
+              // In-app toast (always visible while the tab is open, regardless of
+              // Notification permission)
+              toast(row.companyNameEn, { description: body });
             }
           }
         }

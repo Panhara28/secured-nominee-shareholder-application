@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Link } from "@/lib/navigation";
 import { Bell, GitCompare, TimerReset, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -80,9 +81,13 @@ export default function AdminNotificationBell() {
             if (!knownKeys.current.has(key)) {
               knownKeys.current.add(key);
               if (row.kind === "user") {
-                notify(row.fullName, { body: t(STATUS_STYLES.USER.noticeKey as Parameters<typeof t>[0]), tag: key });
+                const body = t(STATUS_STYLES.USER.noticeKey as Parameters<typeof t>[0]);
+                notify(row.fullName, { body, tag: key });
+                toast(row.fullName, { description: body });
               } else {
-                notify(row.companyNameEn, { body: t2(`status.${row.status}` as Parameters<typeof t2>[0]), tag: key });
+                const body = t2(`status.${row.status}` as Parameters<typeof t2>[0]);
+                notify(row.companyNameEn, { body, tag: key });
+                toast(row.companyNameEn, { description: body });
               }
             }
           }
