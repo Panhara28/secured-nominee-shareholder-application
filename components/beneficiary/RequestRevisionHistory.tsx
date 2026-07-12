@@ -38,14 +38,14 @@ const FIELD_SECTIONS: { section: "company" | "shareholder" | "owner" | "agreemen
   {
     section: "shareholder",
     fields: [
-      "shLastNameKh", "shFirstNameKh", "shLastNameEn", "shFirstNameEn", "shDob", "shNationality", "shGender",
+      "shLastNameKh", "shFirstNameKh", "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
       "shIdCard", "shIdIssuedDate", "shIdExpiredDate", "shEmail", "shPhone", "shPhotoName", "shIdDocNames",
     ],
   },
   {
     section: "owner",
     fields: [
-      "ownerLastNameKh", "ownerFirstNameKh", "ownerLastNameEn", "ownerFirstNameEn", "ownerDob", "ownerNationality", "ownerGender",
+      "ownerLastNameKh", "ownerFirstNameKh", "ownerLastNameEn", "ownerFirstNameEn", "ownerDob", "ownerBecameDate", "ownerNationality", "ownerGender",
       "ownerIdCard", "ownerIdIssuedDate", "ownerIdExpiredDate", "ownerEmail", "ownerPhone", "ownerPhotoName", "ownerIdDocNames",
       "shareAmount",
     ],
@@ -62,11 +62,11 @@ const FIELD_LABEL_KEYS: Record<RevisionFieldName, string> = {
   companyCommune: "commune", companyVillage: "village", companyStreet: "street", companyHouse: "houseNo",
   companyPhone: "companyPhone", companyOfficePhone: "companyOfficePhone", companyEmail: "companyEmail",
   shLastNameKh: "lastNameKh", shFirstNameKh: "firstNameKh", shLastNameEn: "lastNameEn", shFirstNameEn: "firstNameEn",
-  shDob: "dob", shNationality: "nationality", shGender: "gender", shIdCard: "idCard",
+  shDob: "dob", shBecameDate: "shBecameDate", shNationality: "nationality", shGender: "gender", shIdCard: "idCard",
   shIdIssuedDate: "issueDate", shIdExpiredDate: "expiryDate", shEmail: "email", shPhone: "phone",
   shPhotoName: "photo", shIdDocNames: "idDocuments",
   ownerLastNameKh: "lastNameKh", ownerFirstNameKh: "firstNameKh", ownerLastNameEn: "lastNameEn", ownerFirstNameEn: "firstNameEn",
-  ownerDob: "dob", ownerNationality: "nationality", ownerGender: "gender", ownerIdCard: "idCard",
+  ownerDob: "dob", ownerBecameDate: "becameDate", ownerNationality: "nationality", ownerGender: "gender", ownerIdCard: "idCard",
   ownerIdIssuedDate: "issueDate", ownerIdExpiredDate: "expiryDate", ownerEmail: "email", ownerPhone: "phone",
   ownerPhotoName: "photo", ownerIdDocNames: "idDocuments", shareAmount: "shareAmount",
   shareholderContractDocNames: "contractDocuments", otherDocNames: "otherDocuments", consentAgreed: "consentAgreed",
@@ -77,7 +77,7 @@ const FIELD_LABEL_NAMESPACE: Record<string, "request" | "revisions"> = {
   province: "request", district: "request", commune: "request", village: "request", street: "request", houseNo: "request",
   companyPhone: "request", companyOfficePhone: "request", companyEmail: "request",
   lastNameKh: "request", firstNameKh: "request", lastNameEn: "request", firstNameEn: "request",
-  dob: "request", nationality: "request", gender: "request", idCard: "request",
+  dob: "request", becameDate: "request", shBecameDate: "request", nationality: "request", gender: "request", idCard: "request",
   issueDate: "request", expiryDate: "request", email: "request", phone: "request", shareAmount: "request",
   photo: "revisions", idDocuments: "revisions", contractDocuments: "revisions", otherDocuments: "revisions", consentAgreed: "revisions",
 };

@@ -161,6 +161,8 @@
       "lastNameEn": "Last Name (English)",
       "firstNameEn": "First Name (English)",
       "dob": "Date of Birth",
+      "shBecameDate": "Date of Becoming the Nominee Shareholder",
+      "becameDate": "Date of Becoming the Beneficial Owner",
       "nationality": "Nationality",
       "nationalityKH": "Cambodian",
       "nationalityCN": "Chinese",

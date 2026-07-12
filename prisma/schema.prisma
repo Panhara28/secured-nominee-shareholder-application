@@ -128,6 +128,7 @@ model BeneficiaryRequest {
   shLastNameEn    String
   shFirstNameEn   String
   shDob           DateTime
+  shBecameDate    DateTime
   shNationality   String
   shGender        Gender
   shIdCard        String?
@@ -144,6 +145,7 @@ model BeneficiaryRequest {
   ownerLastNameEn    String
   ownerFirstNameEn   String
   ownerDob           DateTime
+  ownerBecameDate    DateTime
   ownerNationality   String
   ownerGender        Gender
   ownerIdCard        String?

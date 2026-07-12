@@ -94,6 +94,7 @@ type RequestDetailData = {
   shLastNameEn: string;
   shFirstNameEn: string;
   shDob: string;
+  shBecameDate: string;
   shNationality: string;
   shGender: "M" | "F";
   shIdCard: string | null;
@@ -108,6 +109,7 @@ type RequestDetailData = {
   ownerLastNameEn: string;
   ownerFirstNameEn: string;
   ownerDob: string;
+  ownerBecameDate: string;
   ownerNationality: string;
   ownerGender: "M" | "F";
   ownerIdCard: string | null;
@@ -471,6 +473,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                 <Field label={t("shareholderName")} value={`${request.shLastNameEn} ${request.shFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.shLastNameKh ?? ""} ${request.shFirstNameKh ?? ""}`.trim()} />
                 <Field label={tf("dob")} value={formatDate(request.shDob)} />
+                <Field label={tf("shBecameDate")} value={formatDate(request.shBecameDate)} />
                 <Field label={tf("nationality")} value={request.shNationality} />
                 <Field label={tf("gender")} value={genderLabel(request.shGender)} />
                 <Field label={tf("idCard")} value={request.shIdCard} />
@@ -494,6 +497,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                 <Field label={t("ownerNameEn")} value={`${request.ownerLastNameEn} ${request.ownerFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.ownerLastNameKh ?? ""} ${request.ownerFirstNameKh ?? ""}`.trim()} />
                 <Field label={tf("dob")} value={formatDate(request.ownerDob)} />
+                <Field label={tf("becameDate")} value={formatDate(request.ownerBecameDate)} />
                 <Field label={tf("nationality")} value={request.ownerNationality} />
                 <Field label={tf("gender")} value={genderLabel(request.ownerGender)} />
                 <Field label={tf("idCard")} value={request.ownerIdCard} />

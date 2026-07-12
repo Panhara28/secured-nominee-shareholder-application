@@ -6456,6 +6456,7 @@ export namespace Prisma {
     shLastNameEn: string | null
     shFirstNameEn: string | null
     shDob: Date | null
+    shBecameDate: Date | null
     shNationality: string | null
     shGender: $Enums.Gender | null
     shIdCard: string | null
@@ -6470,6 +6471,7 @@ export namespace Prisma {
     ownerLastNameEn: string | null
     ownerFirstNameEn: string | null
     ownerDob: Date | null
+    ownerBecameDate: Date | null
     ownerNationality: string | null
     ownerGender: $Enums.Gender | null
     ownerIdCard: string | null
@@ -6515,6 +6517,7 @@ export namespace Prisma {
     shLastNameEn: string | null
     shFirstNameEn: string | null
     shDob: Date | null
+    shBecameDate: Date | null
     shNationality: string | null
     shGender: $Enums.Gender | null
     shIdCard: string | null
@@ -6529,6 +6532,7 @@ export namespace Prisma {
     ownerLastNameEn: string | null
     ownerFirstNameEn: string | null
     ownerDob: Date | null
+    ownerBecameDate: Date | null
     ownerNationality: string | null
     ownerGender: $Enums.Gender | null
     ownerIdCard: string | null
@@ -6574,6 +6578,7 @@ export namespace Prisma {
     shLastNameEn: number
     shFirstNameEn: number
     shDob: number
+    shBecameDate: number
     shNationality: number
     shGender: number
     shIdCard: number
@@ -6588,6 +6593,7 @@ export namespace Prisma {
     ownerLastNameEn: number
     ownerFirstNameEn: number
     ownerDob: number
+    ownerBecameDate: number
     ownerNationality: number
     ownerGender: number
     ownerIdCard: number
@@ -6645,6 +6651,7 @@ export namespace Prisma {
     shLastNameEn?: true
     shFirstNameEn?: true
     shDob?: true
+    shBecameDate?: true
     shNationality?: true
     shGender?: true
     shIdCard?: true
@@ -6659,6 +6666,7 @@ export namespace Prisma {
     ownerLastNameEn?: true
     ownerFirstNameEn?: true
     ownerDob?: true
+    ownerBecameDate?: true
     ownerNationality?: true
     ownerGender?: true
     ownerIdCard?: true
@@ -6704,6 +6712,7 @@ export namespace Prisma {
     shLastNameEn?: true
     shFirstNameEn?: true
     shDob?: true
+    shBecameDate?: true
     shNationality?: true
     shGender?: true
     shIdCard?: true
@@ -6718,6 +6727,7 @@ export namespace Prisma {
     ownerLastNameEn?: true
     ownerFirstNameEn?: true
     ownerDob?: true
+    ownerBecameDate?: true
     ownerNationality?: true
     ownerGender?: true
     ownerIdCard?: true
@@ -6763,6 +6773,7 @@ export namespace Prisma {
     shLastNameEn?: true
     shFirstNameEn?: true
     shDob?: true
+    shBecameDate?: true
     shNationality?: true
     shGender?: true
     shIdCard?: true
@@ -6777,6 +6788,7 @@ export namespace Prisma {
     ownerLastNameEn?: true
     ownerFirstNameEn?: true
     ownerDob?: true
+    ownerBecameDate?: true
     ownerNationality?: true
     ownerGender?: true
     ownerIdCard?: true
@@ -6909,6 +6921,7 @@ export namespace Prisma {
     shLastNameEn: string
     shFirstNameEn: string
     shDob: Date
+    shBecameDate: Date
     shNationality: string
     shGender: $Enums.Gender
     shIdCard: string | null
@@ -6923,6 +6936,7 @@ export namespace Prisma {
     ownerLastNameEn: string
     ownerFirstNameEn: string
     ownerDob: Date
+    ownerBecameDate: Date
     ownerNationality: string
     ownerGender: $Enums.Gender
     ownerIdCard: string | null
@@ -6987,6 +7001,7 @@ export namespace Prisma {
     shLastNameEn?: boolean
     shFirstNameEn?: boolean
     shDob?: boolean
+    shBecameDate?: boolean
     shNationality?: boolean
     shGender?: boolean
     shIdCard?: boolean
@@ -7001,6 +7016,7 @@ export namespace Prisma {
     ownerLastNameEn?: boolean
     ownerFirstNameEn?: boolean
     ownerDob?: boolean
+    ownerBecameDate?: boolean
     ownerNationality?: boolean
     ownerGender?: boolean
     ownerIdCard?: boolean
@@ -7050,6 +7066,7 @@ export namespace Prisma {
     shLastNameEn?: boolean
     shFirstNameEn?: boolean
     shDob?: boolean
+    shBecameDate?: boolean
     shNationality?: boolean
     shGender?: boolean
     shIdCard?: boolean
@@ -7064,6 +7081,7 @@ export namespace Prisma {
     ownerLastNameEn?: boolean
     ownerFirstNameEn?: boolean
     ownerDob?: boolean
+    ownerBecameDate?: boolean
     ownerNationality?: boolean
     ownerGender?: boolean
     ownerIdCard?: boolean
@@ -7110,6 +7128,7 @@ export namespace Prisma {
     shLastNameEn?: boolean
     shFirstNameEn?: boolean
     shDob?: boolean
+    shBecameDate?: boolean
     shNationality?: boolean
     shGender?: boolean
     shIdCard?: boolean
@@ -7124,6 +7143,7 @@ export namespace Prisma {
     ownerLastNameEn?: boolean
     ownerFirstNameEn?: boolean
     ownerDob?: boolean
+    ownerBecameDate?: boolean
     ownerNationality?: boolean
     ownerGender?: boolean
     ownerIdCard?: boolean
@@ -7170,6 +7190,7 @@ export namespace Prisma {
     shLastNameEn?: boolean
     shFirstNameEn?: boolean
     shDob?: boolean
+    shBecameDate?: boolean
     shNationality?: boolean
     shGender?: boolean
     shIdCard?: boolean
@@ -7184,6 +7205,7 @@ export namespace Prisma {
     ownerLastNameEn?: boolean
     ownerFirstNameEn?: boolean
     ownerDob?: boolean
+    ownerBecameDate?: boolean
     ownerNationality?: boolean
     ownerGender?: boolean
     ownerIdCard?: boolean
@@ -7203,7 +7225,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type BeneficiaryRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "requestNo" | "certificateNo" | "approvedAt" | "userId" | "status" | "type" | "companyNameKh" | "companyNameEn" | "registrationNo" | "registrationDate" | "companyProvince" | "companyDistrict" | "companyCommune" | "companyVillage" | "companyStreet" | "companyHouse" | "companyPhone" | "companyOfficePhone" | "companyEmail" | "shLastNameKh" | "shFirstNameKh" | "shLastNameEn" | "shFirstNameEn" | "shDob" | "shNationality" | "shGender" | "shIdCard" | "shIdIssuedDate" | "shIdExpiredDate" | "shEmail" | "shPhone" | "shPhotoName" | "shIdDocNames" | "ownerLastNameKh" | "ownerFirstNameKh" | "ownerLastNameEn" | "ownerFirstNameEn" | "ownerDob" | "ownerNationality" | "ownerGender" | "ownerIdCard" | "ownerIdIssuedDate" | "ownerIdExpiredDate" | "ownerEmail" | "ownerPhone" | "ownerPhotoName" | "ownerIdDocNames" | "shareAmount" | "shareholderContractDocNames" | "otherDocNames" | "consentAgreed" | "rejectionReason" | "submittedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["beneficiaryRequest"]>
+  export type BeneficiaryRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "requestNo" | "certificateNo" | "approvedAt" | "userId" | "status" | "type" | "companyNameKh" | "companyNameEn" | "registrationNo" | "registrationDate" | "companyProvince" | "companyDistrict" | "companyCommune" | "companyVillage" | "companyStreet" | "companyHouse" | "companyPhone" | "companyOfficePhone" | "companyEmail" | "shLastNameKh" | "shFirstNameKh" | "shLastNameEn" | "shFirstNameEn" | "shDob" | "shBecameDate" | "shNationality" | "shGender" | "shIdCard" | "shIdIssuedDate" | "shIdExpiredDate" | "shEmail" | "shPhone" | "shPhotoName" | "shIdDocNames" | "ownerLastNameKh" | "ownerFirstNameKh" | "ownerLastNameEn" | "ownerFirstNameEn" | "ownerDob" | "ownerBecameDate" | "ownerNationality" | "ownerGender" | "ownerIdCard" | "ownerIdIssuedDate" | "ownerIdExpiredDate" | "ownerEmail" | "ownerPhone" | "ownerPhotoName" | "ownerIdDocNames" | "shareAmount" | "shareholderContractDocNames" | "otherDocNames" | "consentAgreed" | "rejectionReason" | "submittedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["beneficiaryRequest"]>
   export type BeneficiaryRequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     logs?: boolean | BeneficiaryRequest$logsArgs<ExtArgs>
@@ -7250,6 +7272,7 @@ export namespace Prisma {
       shLastNameEn: string
       shFirstNameEn: string
       shDob: Date
+      shBecameDate: Date
       shNationality: string
       shGender: $Enums.Gender
       shIdCard: string | null
@@ -7264,6 +7287,7 @@ export namespace Prisma {
       ownerLastNameEn: string
       ownerFirstNameEn: string
       ownerDob: Date
+      ownerBecameDate: Date
       ownerNationality: string
       ownerGender: $Enums.Gender
       ownerIdCard: string | null
@@ -7732,6 +7756,7 @@ export namespace Prisma {
     readonly shLastNameEn: FieldRef<"BeneficiaryRequest", 'String'>
     readonly shFirstNameEn: FieldRef<"BeneficiaryRequest", 'String'>
     readonly shDob: FieldRef<"BeneficiaryRequest", 'DateTime'>
+    readonly shBecameDate: FieldRef<"BeneficiaryRequest", 'DateTime'>
     readonly shNationality: FieldRef<"BeneficiaryRequest", 'String'>
     readonly shGender: FieldRef<"BeneficiaryRequest", 'Gender'>
     readonly shIdCard: FieldRef<"BeneficiaryRequest", 'String'>
@@ -7746,6 +7771,7 @@ export namespace Prisma {
     readonly ownerLastNameEn: FieldRef<"BeneficiaryRequest", 'String'>
     readonly ownerFirstNameEn: FieldRef<"BeneficiaryRequest", 'String'>
     readonly ownerDob: FieldRef<"BeneficiaryRequest", 'DateTime'>
+    readonly ownerBecameDate: FieldRef<"BeneficiaryRequest", 'DateTime'>
     readonly ownerNationality: FieldRef<"BeneficiaryRequest", 'String'>
     readonly ownerGender: FieldRef<"BeneficiaryRequest", 'Gender'>
     readonly ownerIdCard: FieldRef<"BeneficiaryRequest", 'String'>
@@ -11714,6 +11740,7 @@ export namespace Prisma {
     shLastNameEn: 'shLastNameEn',
     shFirstNameEn: 'shFirstNameEn',
     shDob: 'shDob',
+    shBecameDate: 'shBecameDate',
     shNationality: 'shNationality',
     shGender: 'shGender',
     shIdCard: 'shIdCard',
@@ -11728,6 +11755,7 @@ export namespace Prisma {
     ownerLastNameEn: 'ownerLastNameEn',
     ownerFirstNameEn: 'ownerFirstNameEn',
     ownerDob: 'ownerDob',
+    ownerBecameDate: 'ownerBecameDate',
     ownerNationality: 'ownerNationality',
     ownerGender: 'ownerGender',
     ownerIdCard: 'ownerIdCard',
@@ -12228,6 +12256,7 @@ export namespace Prisma {
     shLastNameEn?: StringFilter<"BeneficiaryRequest"> | string
     shFirstNameEn?: StringFilter<"BeneficiaryRequest"> | string
     shDob?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
+    shBecameDate?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
     shNationality?: StringFilter<"BeneficiaryRequest"> | string
     shGender?: EnumGenderFilter<"BeneficiaryRequest"> | $Enums.Gender
     shIdCard?: StringNullableFilter<"BeneficiaryRequest"> | string | null
@@ -12242,6 +12271,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFilter<"BeneficiaryRequest"> | string
     ownerFirstNameEn?: StringFilter<"BeneficiaryRequest"> | string
     ownerDob?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
+    ownerBecameDate?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
     ownerNationality?: StringFilter<"BeneficiaryRequest"> | string
     ownerGender?: EnumGenderFilter<"BeneficiaryRequest"> | $Enums.Gender
     ownerIdCard?: StringNullableFilter<"BeneficiaryRequest"> | string | null
@@ -12290,6 +12320,7 @@ export namespace Prisma {
     shLastNameEn?: SortOrder
     shFirstNameEn?: SortOrder
     shDob?: SortOrder
+    shBecameDate?: SortOrder
     shNationality?: SortOrder
     shGender?: SortOrder
     shIdCard?: SortOrderInput | SortOrder
@@ -12304,6 +12335,7 @@ export namespace Prisma {
     ownerLastNameEn?: SortOrder
     ownerFirstNameEn?: SortOrder
     ownerDob?: SortOrder
+    ownerBecameDate?: SortOrder
     ownerNationality?: SortOrder
     ownerGender?: SortOrder
     ownerIdCard?: SortOrderInput | SortOrder
@@ -12355,6 +12387,7 @@ export namespace Prisma {
     shLastNameEn?: StringFilter<"BeneficiaryRequest"> | string
     shFirstNameEn?: StringFilter<"BeneficiaryRequest"> | string
     shDob?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
+    shBecameDate?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
     shNationality?: StringFilter<"BeneficiaryRequest"> | string
     shGender?: EnumGenderFilter<"BeneficiaryRequest"> | $Enums.Gender
     shIdCard?: StringNullableFilter<"BeneficiaryRequest"> | string | null
@@ -12369,6 +12402,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFilter<"BeneficiaryRequest"> | string
     ownerFirstNameEn?: StringFilter<"BeneficiaryRequest"> | string
     ownerDob?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
+    ownerBecameDate?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
     ownerNationality?: StringFilter<"BeneficiaryRequest"> | string
     ownerGender?: EnumGenderFilter<"BeneficiaryRequest"> | $Enums.Gender
     ownerIdCard?: StringNullableFilter<"BeneficiaryRequest"> | string | null
@@ -12417,6 +12451,7 @@ export namespace Prisma {
     shLastNameEn?: SortOrder
     shFirstNameEn?: SortOrder
     shDob?: SortOrder
+    shBecameDate?: SortOrder
     shNationality?: SortOrder
     shGender?: SortOrder
     shIdCard?: SortOrderInput | SortOrder
@@ -12431,6 +12466,7 @@ export namespace Prisma {
     ownerLastNameEn?: SortOrder
     ownerFirstNameEn?: SortOrder
     ownerDob?: SortOrder
+    ownerBecameDate?: SortOrder
     ownerNationality?: SortOrder
     ownerGender?: SortOrder
     ownerIdCard?: SortOrderInput | SortOrder
@@ -12484,6 +12520,7 @@ export namespace Prisma {
     shLastNameEn?: StringWithAggregatesFilter<"BeneficiaryRequest"> | string
     shFirstNameEn?: StringWithAggregatesFilter<"BeneficiaryRequest"> | string
     shDob?: DateTimeWithAggregatesFilter<"BeneficiaryRequest"> | Date | string
+    shBecameDate?: DateTimeWithAggregatesFilter<"BeneficiaryRequest"> | Date | string
     shNationality?: StringWithAggregatesFilter<"BeneficiaryRequest"> | string
     shGender?: EnumGenderWithAggregatesFilter<"BeneficiaryRequest"> | $Enums.Gender
     shIdCard?: StringNullableWithAggregatesFilter<"BeneficiaryRequest"> | string | null
@@ -12498,6 +12535,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringWithAggregatesFilter<"BeneficiaryRequest"> | string
     ownerFirstNameEn?: StringWithAggregatesFilter<"BeneficiaryRequest"> | string
     ownerDob?: DateTimeWithAggregatesFilter<"BeneficiaryRequest"> | Date | string
+    ownerBecameDate?: DateTimeWithAggregatesFilter<"BeneficiaryRequest"> | Date | string
     ownerNationality?: StringWithAggregatesFilter<"BeneficiaryRequest"> | string
     ownerGender?: EnumGenderWithAggregatesFilter<"BeneficiaryRequest"> | $Enums.Gender
     ownerIdCard?: StringNullableWithAggregatesFilter<"BeneficiaryRequest"> | string | null
@@ -13104,6 +13142,7 @@ export namespace Prisma {
     shLastNameEn: string
     shFirstNameEn: string
     shDob: Date | string
+    shBecameDate: Date | string
     shNationality: string
     shGender: $Enums.Gender
     shIdCard?: string | null
@@ -13118,6 +13157,7 @@ export namespace Prisma {
     ownerLastNameEn: string
     ownerFirstNameEn: string
     ownerDob: Date | string
+    ownerBecameDate: Date | string
     ownerNationality: string
     ownerGender: $Enums.Gender
     ownerIdCard?: string | null
@@ -13166,6 +13206,7 @@ export namespace Prisma {
     shLastNameEn: string
     shFirstNameEn: string
     shDob: Date | string
+    shBecameDate: Date | string
     shNationality: string
     shGender: $Enums.Gender
     shIdCard?: string | null
@@ -13180,6 +13221,7 @@ export namespace Prisma {
     ownerLastNameEn: string
     ownerFirstNameEn: string
     ownerDob: Date | string
+    ownerBecameDate: Date | string
     ownerNationality: string
     ownerGender: $Enums.Gender
     ownerIdCard?: string | null
@@ -13225,6 +13267,7 @@ export namespace Prisma {
     shLastNameEn?: StringFieldUpdateOperationsInput | string
     shFirstNameEn?: StringFieldUpdateOperationsInput | string
     shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     shNationality?: StringFieldUpdateOperationsInput | string
     shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13239,6 +13282,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFieldUpdateOperationsInput | string
     ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
     ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     ownerNationality?: StringFieldUpdateOperationsInput | string
     ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13287,6 +13331,7 @@ export namespace Prisma {
     shLastNameEn?: StringFieldUpdateOperationsInput | string
     shFirstNameEn?: StringFieldUpdateOperationsInput | string
     shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     shNationality?: StringFieldUpdateOperationsInput | string
     shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13301,6 +13346,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFieldUpdateOperationsInput | string
     ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
     ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     ownerNationality?: StringFieldUpdateOperationsInput | string
     ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13348,6 +13394,7 @@ export namespace Prisma {
     shLastNameEn: string
     shFirstNameEn: string
     shDob: Date | string
+    shBecameDate: Date | string
     shNationality: string
     shGender: $Enums.Gender
     shIdCard?: string | null
@@ -13362,6 +13409,7 @@ export namespace Prisma {
     ownerLastNameEn: string
     ownerFirstNameEn: string
     ownerDob: Date | string
+    ownerBecameDate: Date | string
     ownerNationality: string
     ownerGender: $Enums.Gender
     ownerIdCard?: string | null
@@ -13405,6 +13453,7 @@ export namespace Prisma {
     shLastNameEn?: StringFieldUpdateOperationsInput | string
     shFirstNameEn?: StringFieldUpdateOperationsInput | string
     shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     shNationality?: StringFieldUpdateOperationsInput | string
     shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13419,6 +13468,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFieldUpdateOperationsInput | string
     ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
     ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     ownerNationality?: StringFieldUpdateOperationsInput | string
     ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13464,6 +13514,7 @@ export namespace Prisma {
     shLastNameEn?: StringFieldUpdateOperationsInput | string
     shFirstNameEn?: StringFieldUpdateOperationsInput | string
     shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     shNationality?: StringFieldUpdateOperationsInput | string
     shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13478,6 +13529,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFieldUpdateOperationsInput | string
     ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
     ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     ownerNationality?: StringFieldUpdateOperationsInput | string
     ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14244,6 +14296,7 @@ export namespace Prisma {
     shLastNameEn?: SortOrder
     shFirstNameEn?: SortOrder
     shDob?: SortOrder
+    shBecameDate?: SortOrder
     shNationality?: SortOrder
     shGender?: SortOrder
     shIdCard?: SortOrder
@@ -14258,6 +14311,7 @@ export namespace Prisma {
     ownerLastNameEn?: SortOrder
     ownerFirstNameEn?: SortOrder
     ownerDob?: SortOrder
+    ownerBecameDate?: SortOrder
     ownerNationality?: SortOrder
     ownerGender?: SortOrder
     ownerIdCard?: SortOrder
@@ -14308,6 +14362,7 @@ export namespace Prisma {
     shLastNameEn?: SortOrder
     shFirstNameEn?: SortOrder
     shDob?: SortOrder
+    shBecameDate?: SortOrder
     shNationality?: SortOrder
     shGender?: SortOrder
     shIdCard?: SortOrder
@@ -14322,6 +14377,7 @@ export namespace Prisma {
     ownerLastNameEn?: SortOrder
     ownerFirstNameEn?: SortOrder
     ownerDob?: SortOrder
+    ownerBecameDate?: SortOrder
     ownerNationality?: SortOrder
     ownerGender?: SortOrder
     ownerIdCard?: SortOrder
@@ -14367,6 +14423,7 @@ export namespace Prisma {
     shLastNameEn?: SortOrder
     shFirstNameEn?: SortOrder
     shDob?: SortOrder
+    shBecameDate?: SortOrder
     shNationality?: SortOrder
     shGender?: SortOrder
     shIdCard?: SortOrder
@@ -14381,6 +14438,7 @@ export namespace Prisma {
     ownerLastNameEn?: SortOrder
     ownerFirstNameEn?: SortOrder
     ownerDob?: SortOrder
+    ownerBecameDate?: SortOrder
     ownerNationality?: SortOrder
     ownerGender?: SortOrder
     ownerIdCard?: SortOrder
@@ -15292,6 +15350,7 @@ export namespace Prisma {
     shLastNameEn: string
     shFirstNameEn: string
     shDob: Date | string
+    shBecameDate: Date | string
     shNationality: string
     shGender: $Enums.Gender
     shIdCard?: string | null
@@ -15306,6 +15365,7 @@ export namespace Prisma {
     ownerLastNameEn: string
     ownerFirstNameEn: string
     ownerDob: Date | string
+    ownerBecameDate: Date | string
     ownerNationality: string
     ownerGender: $Enums.Gender
     ownerIdCard?: string | null
@@ -15352,6 +15412,7 @@ export namespace Prisma {
     shLastNameEn: string
     shFirstNameEn: string
     shDob: Date | string
+    shBecameDate: Date | string
     shNationality: string
     shGender: $Enums.Gender
     shIdCard?: string | null
@@ -15366,6 +15427,7 @@ export namespace Prisma {
     ownerLastNameEn: string
     ownerFirstNameEn: string
     ownerDob: Date | string
+    ownerBecameDate: Date | string
     ownerNationality: string
     ownerGender: $Enums.Gender
     ownerIdCard?: string | null
@@ -15465,6 +15527,7 @@ export namespace Prisma {
     shLastNameEn?: StringFilter<"BeneficiaryRequest"> | string
     shFirstNameEn?: StringFilter<"BeneficiaryRequest"> | string
     shDob?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
+    shBecameDate?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
     shNationality?: StringFilter<"BeneficiaryRequest"> | string
     shGender?: EnumGenderFilter<"BeneficiaryRequest"> | $Enums.Gender
     shIdCard?: StringNullableFilter<"BeneficiaryRequest"> | string | null
@@ -15479,6 +15542,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFilter<"BeneficiaryRequest"> | string
     ownerFirstNameEn?: StringFilter<"BeneficiaryRequest"> | string
     ownerDob?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
+    ownerBecameDate?: DateTimeFilter<"BeneficiaryRequest"> | Date | string
     ownerNationality?: StringFilter<"BeneficiaryRequest"> | string
     ownerGender?: EnumGenderFilter<"BeneficiaryRequest"> | $Enums.Gender
     ownerIdCard?: StringNullableFilter<"BeneficiaryRequest"> | string | null
@@ -16063,6 +16127,7 @@ export namespace Prisma {
     shLastNameEn: string
     shFirstNameEn: string
     shDob: Date | string
+    shBecameDate: Date | string
     shNationality: string
     shGender: $Enums.Gender
     shIdCard?: string | null
@@ -16077,6 +16142,7 @@ export namespace Prisma {
     ownerLastNameEn: string
     ownerFirstNameEn: string
     ownerDob: Date | string
+    ownerBecameDate: Date | string
     ownerNationality: string
     ownerGender: $Enums.Gender
     ownerIdCard?: string | null
@@ -16124,6 +16190,7 @@ export namespace Prisma {
     shLastNameEn: string
     shFirstNameEn: string
     shDob: Date | string
+    shBecameDate: Date | string
     shNationality: string
     shGender: $Enums.Gender
     shIdCard?: string | null
@@ -16138,6 +16205,7 @@ export namespace Prisma {
     ownerLastNameEn: string
     ownerFirstNameEn: string
     ownerDob: Date | string
+    ownerBecameDate: Date | string
     ownerNationality: string
     ownerGender: $Enums.Gender
     ownerIdCard?: string | null
@@ -16198,6 +16266,7 @@ export namespace Prisma {
     shLastNameEn?: StringFieldUpdateOperationsInput | string
     shFirstNameEn?: StringFieldUpdateOperationsInput | string
     shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     shNationality?: StringFieldUpdateOperationsInput | string
     shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16212,6 +16281,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFieldUpdateOperationsInput | string
     ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
     ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     ownerNationality?: StringFieldUpdateOperationsInput | string
     ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16259,6 +16329,7 @@ export namespace Prisma {
     shLastNameEn?: StringFieldUpdateOperationsInput | string
     shFirstNameEn?: StringFieldUpdateOperationsInput | string
     shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     shNationality?: StringFieldUpdateOperationsInput | string
     shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16273,6 +16344,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFieldUpdateOperationsInput | string
     ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
     ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     ownerNationality?: StringFieldUpdateOperationsInput | string
     ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16317,6 +16389,7 @@ export namespace Prisma {
     shLastNameEn: string
     shFirstNameEn: string
     shDob: Date | string
+    shBecameDate: Date | string
     shNationality: string
     shGender: $Enums.Gender
     shIdCard?: string | null
@@ -16331,6 +16404,7 @@ export namespace Prisma {
     ownerLastNameEn: string
     ownerFirstNameEn: string
     ownerDob: Date | string
+    ownerBecameDate: Date | string
     ownerNationality: string
     ownerGender: $Enums.Gender
     ownerIdCard?: string | null
@@ -16378,6 +16452,7 @@ export namespace Prisma {
     shLastNameEn: string
     shFirstNameEn: string
     shDob: Date | string
+    shBecameDate: Date | string
     shNationality: string
     shGender: $Enums.Gender
     shIdCard?: string | null
@@ -16392,6 +16467,7 @@ export namespace Prisma {
     ownerLastNameEn: string
     ownerFirstNameEn: string
     ownerDob: Date | string
+    ownerBecameDate: Date | string
     ownerNationality: string
     ownerGender: $Enums.Gender
     ownerIdCard?: string | null
@@ -16452,6 +16528,7 @@ export namespace Prisma {
     shLastNameEn?: StringFieldUpdateOperationsInput | string
     shFirstNameEn?: StringFieldUpdateOperationsInput | string
     shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     shNationality?: StringFieldUpdateOperationsInput | string
     shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16466,6 +16543,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFieldUpdateOperationsInput | string
     ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
     ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     ownerNationality?: StringFieldUpdateOperationsInput | string
     ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16513,6 +16591,7 @@ export namespace Prisma {
     shLastNameEn?: StringFieldUpdateOperationsInput | string
     shFirstNameEn?: StringFieldUpdateOperationsInput | string
     shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     shNationality?: StringFieldUpdateOperationsInput | string
     shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16527,6 +16606,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFieldUpdateOperationsInput | string
     ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
     ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     ownerNationality?: StringFieldUpdateOperationsInput | string
     ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16572,6 +16652,7 @@ export namespace Prisma {
     shLastNameEn: string
     shFirstNameEn: string
     shDob: Date | string
+    shBecameDate: Date | string
     shNationality: string
     shGender: $Enums.Gender
     shIdCard?: string | null
@@ -16586,6 +16667,7 @@ export namespace Prisma {
     ownerLastNameEn: string
     ownerFirstNameEn: string
     ownerDob: Date | string
+    ownerBecameDate: Date | string
     ownerNationality: string
     ownerGender: $Enums.Gender
     ownerIdCard?: string | null
@@ -16629,6 +16711,7 @@ export namespace Prisma {
     shLastNameEn?: StringFieldUpdateOperationsInput | string
     shFirstNameEn?: StringFieldUpdateOperationsInput | string
     shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     shNationality?: StringFieldUpdateOperationsInput | string
     shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16643,6 +16726,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFieldUpdateOperationsInput | string
     ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
     ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     ownerNationality?: StringFieldUpdateOperationsInput | string
     ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16689,6 +16773,7 @@ export namespace Prisma {
     shLastNameEn?: StringFieldUpdateOperationsInput | string
     shFirstNameEn?: StringFieldUpdateOperationsInput | string
     shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     shNationality?: StringFieldUpdateOperationsInput | string
     shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16703,6 +16788,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFieldUpdateOperationsInput | string
     ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
     ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     ownerNationality?: StringFieldUpdateOperationsInput | string
     ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16749,6 +16835,7 @@ export namespace Prisma {
     shLastNameEn?: StringFieldUpdateOperationsInput | string
     shFirstNameEn?: StringFieldUpdateOperationsInput | string
     shDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    shBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     shNationality?: StringFieldUpdateOperationsInput | string
     shGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     shIdCard?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16763,6 +16850,7 @@ export namespace Prisma {
     ownerLastNameEn?: StringFieldUpdateOperationsInput | string
     ownerFirstNameEn?: StringFieldUpdateOperationsInput | string
     ownerDob?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownerBecameDate?: DateTimeFieldUpdateOperationsInput | Date | string
     ownerNationality?: StringFieldUpdateOperationsInput | string
     ownerGender?: EnumGenderFieldUpdateOperationsInput | $Enums.Gender
     ownerIdCard?: NullableStringFieldUpdateOperationsInput | string | null

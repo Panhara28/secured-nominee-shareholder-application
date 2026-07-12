@@ -133,12 +133,12 @@ type FormData = {
   companyStreet: string; companyHouse: string; companyPhone: string; companyOfficePhone: string; companyEmail: string;
   /* Step 2 — Beneficiary Owner */
   lastNameKh: string; firstNameKh: string; lastNameEn: string; firstNameEn: string;
-  dob: string; nationality: string; gender: string;
+  dob: string; becameDate: string; nationality: string; gender: string;
   idCard: string; idIssuedDate: string; idExpiredDate: string;
   email: string; phone: string; shareAmount: string;
   /* Step 3 — Shareholder */
   shLastNameKh: string; shFirstNameKh: string; shLastNameEn: string; shFirstNameEn: string;
-  shDob: string; shNationality: string; shGender: string;
+  shDob: string; shBecameDate: string; shNationality: string; shGender: string;
   shIdCard: string; shIdIssuedDate: string; shIdExpiredDate: string;
   shEmail: string; shPhone: string;
 };
@@ -148,10 +148,10 @@ const EMPTY: FormData = {
   companyProvince: "", companyDistrict: "", companyCommune: "", companyVillage: "",
   companyStreet: "", companyHouse: "", companyPhone: "", companyOfficePhone: "", companyEmail: "",
   lastNameKh: "", firstNameKh: "", lastNameEn: "", firstNameEn: "",
-  dob: "", nationality: "", gender: "", idCard: "", idIssuedDate: "", idExpiredDate: "",
+  dob: "", becameDate: "", nationality: "", gender: "", idCard: "", idIssuedDate: "", idExpiredDate: "",
   email: "", phone: "", shareAmount: "",
   shLastNameKh: "", shFirstNameKh: "", shLastNameEn: "", shFirstNameEn: "",
-  shDob: "", shNationality: "", shGender: "", shIdCard: "", shIdIssuedDate: "", shIdExpiredDate: "",
+  shDob: "", shBecameDate: "", shNationality: "", shGender: "", shIdCard: "", shIdIssuedDate: "", shIdExpiredDate: "",
   shEmail: "", shPhone: "",
 };
 
@@ -189,6 +189,7 @@ function generateFakePerson(prefix: "sh" | "") {
     [key("LastNameEn")]: randomOf(FAKE_LAST_EN),
     [key("FirstNameEn")]: randomOf(FAKE_FIRST_EN),
     [key("Dob")]: randomDateBetween(1970, 2000),
+    [key("BecameDate")]: randomDateBetween(2018, 2026),
     [key("Nationality")]: randomOf(NATIONALITIES),
     [key("Gender")]: randomOf(GENDERS),
     [key("IdCard")]: randomDigits(9),
@@ -320,13 +321,23 @@ function PersonFields({
         </div>
       </div>
 
-      {/* DOB / Nationality / Gender */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* DOB / Became Date / Nationality / Gender */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("dob")} <span className="text-red-500">*</span></label>
           <input type="date" value={form[key("Dob")] ?? ""} onChange={(e) => set({ [key("Dob")]: e.target.value })} onBlur={() => setTouched({ [key("Dob")]: true })} className={inputCls("Dob")} />
           {fieldError("Dob") && <p className="mt-1 text-xs text-red-600">{fieldError("Dob")}</p>}
         </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            {t(prefix === "sh" ? "shBecameDate" : "becameDate")} <span className="text-red-500">*</span>
+          </label>
+          <input type="date" value={form[key("BecameDate")] ?? ""} onChange={(e) => set({ [key("BecameDate")]: e.target.value })} onBlur={() => setTouched({ [key("BecameDate")]: true })} className={inputCls("BecameDate")} />
+          {fieldError("BecameDate") && <p className="mt-1 text-xs text-red-600">{fieldError("BecameDate")}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("nationality")} <span className="text-red-500">*</span></label>
           <select value={form[key("Nationality")] ?? ""} onChange={(e) => set({ [key("Nationality")]: e.target.value })} onBlur={() => setTouched({ [key("Nationality")]: true })} className={cn(inputCls("Nationality"), "bg-white")}>
@@ -473,12 +484,12 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           companyEmail: data.companyEmail ?? "",
           lastNameKh: data.ownerLastNameKh ?? "", firstNameKh: data.ownerFirstNameKh ?? "",
           lastNameEn: data.ownerLastNameEn ?? "", firstNameEn: data.ownerFirstNameEn ?? "",
-          dob: dateOnly(data.ownerDob), nationality: data.ownerNationality ?? "", gender: data.ownerGender ?? "",
+          dob: dateOnly(data.ownerDob), becameDate: dateOnly(data.ownerBecameDate), nationality: data.ownerNationality ?? "", gender: data.ownerGender ?? "",
           idCard: data.ownerIdCard ?? "", idIssuedDate: dateOnly(data.ownerIdIssuedDate), idExpiredDate: dateOnly(data.ownerIdExpiredDate),
           email: data.ownerEmail ?? "", phone: data.ownerPhone ?? "", shareAmount: data.shareAmount ?? "",
           shLastNameKh: data.shLastNameKh ?? "", shFirstNameKh: data.shFirstNameKh ?? "",
           shLastNameEn: data.shLastNameEn ?? "", shFirstNameEn: data.shFirstNameEn ?? "",
-          shDob: dateOnly(data.shDob), shNationality: data.shNationality ?? "", shGender: data.shGender ?? "",
+          shDob: dateOnly(data.shDob), shBecameDate: dateOnly(data.shBecameDate), shNationality: data.shNationality ?? "", shGender: data.shGender ?? "",
           shIdCard: data.shIdCard ?? "", shIdIssuedDate: dateOnly(data.shIdIssuedDate), shIdExpiredDate: dateOnly(data.shIdExpiredDate),
           shEmail: data.shEmail ?? "", shPhone: data.shPhone ?? "",
         };
@@ -549,8 +560,8 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     companyNameEn: 1, registrationNo: 1, registrationDate: 1,
     companyProvince: 1, companyDistrict: 1, companyCommune: 1, companyVillage: 1, companyStreet: 1, companyHouse: 1,
     companyPhone: 1, companyEmail: 1,
-    shLastNameEn: 2, shFirstNameEn: 2, shDob: 2, shNationality: 2, shGender: 2,
-    lastNameEn: 3, firstNameEn: 3, dob: 3, nationality: 3, gender: 3, shareAmount: 3,
+    shLastNameEn: 2, shFirstNameEn: 2, shDob: 2, shBecameDate: 2, shNationality: 2, shGender: 2,
+    lastNameEn: 3, firstNameEn: 3, dob: 3, becameDate: 3, nationality: 3, gender: 3, shareAmount: 3,
   };
 
   const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = Object.entries(STEP_OF_FIELD).reduce(
@@ -570,8 +581,8 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
       "companyNameEn", "registrationNo", "registrationDate",
       "companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse",
       "companyPhone", "companyEmail",
-      "lastNameEn", "firstNameEn", "dob", "nationality", "gender", "shareAmount",
-      "shLastNameEn", "shFirstNameEn", "shDob", "shNationality", "shGender",
+      "lastNameEn", "firstNameEn", "dob", "becameDate", "nationality", "gender", "shareAmount",
+      "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
     ];
     const t2: Record<string, boolean> = {};
     required.forEach((k) => (t2[k] = true));
@@ -876,7 +887,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             setPhotoName={setShPhotoName}
             idDocs={shIdDocs}
             setIdDocs={setShIdDocs}
-            requiredFields={["shLastNameEn", "shFirstNameEn", "shDob", "shNationality", "shGender"]}
+            requiredFields={["shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender"]}
             flaggedFields={flaggedFields}
             unchangedFields={unchangedFields}
           />
@@ -896,7 +907,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             setPhotoName={setOwnerPhotoName}
             idDocs={ownerIdDocs}
             setIdDocs={setOwnerIdDocs}
-            requiredFields={["lastNameEn", "firstNameEn", "dob", "nationality", "gender"]}
+            requiredFields={["lastNameEn", "firstNameEn", "dob", "becameDate", "nationality", "gender"]}
             flaggedFields={flaggedFields}
             unchangedFields={unchangedFields}
             extraContent={
