@@ -53,5 +53,5 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: ["/((?!api|_next|.*\\..*).*)"],
-  allowedDevOrigins: ["192.168.0.223"],
+  allowedDevOrigins: ["192.168.0.109"],
 };
