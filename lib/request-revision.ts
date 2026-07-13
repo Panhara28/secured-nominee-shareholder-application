@@ -4,9 +4,9 @@ export const REVISION_FIELDS = [
   "companyNameKh", "companyNameEn", "registrationNo", "registrationDate",
   "companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse",
   "companyPhone", "companyOfficePhone", "companyEmail",
-  "shLastNameKh", "shFirstNameKh", "shLastNameEn", "shFirstNameEn", "shDob", "shNationality", "shGender",
+  "shLastNameKh", "shFirstNameKh", "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
   "shIdCard", "shIdIssuedDate", "shIdExpiredDate", "shEmail", "shPhone", "shPhotoName", "shIdDocNames",
-  "ownerLastNameKh", "ownerFirstNameKh", "ownerLastNameEn", "ownerFirstNameEn", "ownerDob", "ownerNationality", "ownerGender",
+  "ownerLastNameKh", "ownerFirstNameKh", "ownerLastNameEn", "ownerFirstNameEn", "ownerDob", "ownerBecameDate", "ownerNationality", "ownerGender",
   "ownerIdCard", "ownerIdIssuedDate", "ownerIdExpiredDate", "ownerEmail", "ownerPhone", "ownerPhotoName", "ownerIdDocNames",
   "shareAmount",
   "shareholderContractDocNames", "otherDocNames", "consentAgreed",
@@ -16,8 +16,8 @@ export type RevisionFieldName = (typeof REVISION_FIELDS)[number];
 export type RequestSnapshot = Record<RevisionFieldName, string | boolean | string[] | null>;
 
 const DATE_FIELDS = new Set<RevisionFieldName>([
-  "registrationDate", "shDob", "shIdIssuedDate", "shIdExpiredDate",
-  "ownerDob", "ownerIdIssuedDate", "ownerIdExpiredDate",
+  "registrationDate", "shDob", "shBecameDate", "shIdIssuedDate", "shIdExpiredDate",
+  "ownerDob", "ownerBecameDate", "ownerIdIssuedDate", "ownerIdExpiredDate",
 ]);
 
 const DOC_NAME_FIELDS = new Set<RevisionFieldName>([

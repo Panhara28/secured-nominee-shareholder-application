@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/lib/navigation";
-import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Eye, FileEdit, Loader2, Plus, RefreshCw, RotateCcw, Search, ShieldCheck, TimerReset, XCircle } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Eye, FileEdit, GitCompare, Loader2, Pencil, Plus, RefreshCw, RotateCcw, Search, ShieldCheck, TimerReset, XCircle } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import StatusBadge from "@/components/ui/StatusBadge";
 import TablePagination from "@/components/ui/TablePagination";
@@ -33,7 +33,7 @@ type RequestRow = {
   status: string;
 };
 
-type Summary = { drafted: number; inReview: number; verifying: number; approved: number; rejected: number; returned: number };
+type Summary = { drafted: number; inReview: number; verifying: number; approved: number; rejected: number; returned: number; updateRequested: number };
 
 export default function AllRequestsList() {
   const t = useTranslations("beneficiary.allRequests");
@@ -51,7 +51,7 @@ export default function AllRequestsList() {
 
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [total, setTotal] = useState(0);
-  const [summary, setSummary] = useState<Summary>({ drafted: 0, inReview: 0, verifying: 0, approved: 0, rejected: 0, returned: 0 });
+  const [summary, setSummary] = useState<Summary>({ drafted: 0, inReview: 0, verifying: 0, approved: 0, rejected: 0, returned: 0, updateRequested: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -86,10 +86,21 @@ export default function AllRequestsList() {
     }
 
     fetchRequests();
+
+    // Real-time: refetch the instant this shareholder's own requests change
+    // status, instead of waiting for a manual refresh.
+    const source = new EventSource("/api/portal/notifications/stream");
+    source.onmessage = () => fetchRequests();
+
     return () => {
       cancelled = true;
+      source.close();
     };
-  }, [appliedQuery, status, page, sortKey, sortDir, retryToken, t]);
+    // `t` intentionally excluded — see AdminActivitiesLogList.tsx for why
+    // including a translation function here would tear down/recreate the
+    // EventSource on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedQuery, status, page, sortKey, sortDir, retryToken]);
 
   const handleSearch = () => {
     setAppliedQuery(query);
@@ -147,13 +158,13 @@ export default function AllRequestsList() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-7 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
             <FileEdit className="h-5 w-5 text-slate-500" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{t("summary.drafted")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{t("summary.drafted")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.drafted}</p>
           </div>
         </div>
@@ -162,7 +173,7 @@ export default function AllRequestsList() {
             <TimerReset className="h-5 w-5 text-blue-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{t("summary.inReview")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{t("summary.inReview")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.inReview}</p>
           </div>
         </div>
@@ -171,7 +182,7 @@ export default function AllRequestsList() {
             <ShieldCheck className="h-5 w-5 text-purple-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{t("summary.verifying")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{t("summary.verifying")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.verifying}</p>
           </div>
         </div>
@@ -180,7 +191,7 @@ export default function AllRequestsList() {
             <CheckCircle2 className="h-5 w-5 text-green-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{t("summary.approved")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{t("summary.approved")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.approved}</p>
           </div>
         </div>
@@ -189,7 +200,7 @@ export default function AllRequestsList() {
             <XCircle className="h-5 w-5 text-red-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{t("summary.rejected")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{t("summary.rejected")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.rejected}</p>
           </div>
         </div>
@@ -198,8 +209,17 @@ export default function AllRequestsList() {
             <RotateCcw className="h-5 w-5 text-orange-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{t("summary.returned")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{t("summary.returned")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.returned}</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+            <GitCompare className="h-5 w-5 text-teal-600" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-slate-500 leading-tight">{t("summary.updateRequested")}</p>
+            <p className="text-xl font-semibold text-slate-800">{summary.updateRequested}</p>
           </div>
         </div>
       </div>
@@ -315,16 +335,27 @@ export default function AllRequestsList() {
                     <td className="px-4 py-3">
                       <StatusBadge status={req.status} label={t(`status.${req.status}` as Parameters<typeof t>[0])} />
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => router.push(`/portal/beneficiary/all-requests/${req.id}`)}
-                        className={cn(
-                          "inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => router.push(`/portal/beneficiary/all-requests/${req.id}`)}
+                          className={cn(
+                            "inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                          )}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          {t("view")}
+                        </button>
+                        {req.status === "APPROVED" && (
+                          <button
+                            onClick={() => router.push(`/portal/beneficiary/all-requests/${req.id}/edit`)}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 transition-colors"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            {t("requestUpdate")}
+                          </button>
                         )}
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        {t("view")}
-                      </button>
+                      </div>
                     </td>
                   </tr>
                 ))

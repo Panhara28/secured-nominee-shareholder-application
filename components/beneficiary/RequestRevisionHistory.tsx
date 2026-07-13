@@ -38,14 +38,14 @@ const FIELD_SECTIONS: { section: "company" | "shareholder" | "owner" | "agreemen
   {
     section: "shareholder",
     fields: [
-      "shLastNameKh", "shFirstNameKh", "shLastNameEn", "shFirstNameEn", "shDob", "shNationality", "shGender",
+      "shLastNameKh", "shFirstNameKh", "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
       "shIdCard", "shIdIssuedDate", "shIdExpiredDate", "shEmail", "shPhone", "shPhotoName", "shIdDocNames",
     ],
   },
   {
     section: "owner",
     fields: [
-      "ownerLastNameKh", "ownerFirstNameKh", "ownerLastNameEn", "ownerFirstNameEn", "ownerDob", "ownerNationality", "ownerGender",
+      "ownerLastNameKh", "ownerFirstNameKh", "ownerLastNameEn", "ownerFirstNameEn", "ownerDob", "ownerBecameDate", "ownerNationality", "ownerGender",
       "ownerIdCard", "ownerIdIssuedDate", "ownerIdExpiredDate", "ownerEmail", "ownerPhone", "ownerPhotoName", "ownerIdDocNames",
       "shareAmount",
     ],
@@ -62,11 +62,11 @@ const FIELD_LABEL_KEYS: Record<RevisionFieldName, string> = {
   companyCommune: "commune", companyVillage: "village", companyStreet: "street", companyHouse: "houseNo",
   companyPhone: "companyPhone", companyOfficePhone: "companyOfficePhone", companyEmail: "companyEmail",
   shLastNameKh: "lastNameKh", shFirstNameKh: "firstNameKh", shLastNameEn: "lastNameEn", shFirstNameEn: "firstNameEn",
-  shDob: "dob", shNationality: "nationality", shGender: "gender", shIdCard: "idCard",
+  shDob: "dob", shBecameDate: "shBecameDate", shNationality: "nationality", shGender: "gender", shIdCard: "idCard",
   shIdIssuedDate: "issueDate", shIdExpiredDate: "expiryDate", shEmail: "email", shPhone: "phone",
   shPhotoName: "photo", shIdDocNames: "idDocuments",
   ownerLastNameKh: "lastNameKh", ownerFirstNameKh: "firstNameKh", ownerLastNameEn: "lastNameEn", ownerFirstNameEn: "firstNameEn",
-  ownerDob: "dob", ownerNationality: "nationality", ownerGender: "gender", ownerIdCard: "idCard",
+  ownerDob: "dob", ownerBecameDate: "becameDate", ownerNationality: "nationality", ownerGender: "gender", ownerIdCard: "idCard",
   ownerIdIssuedDate: "issueDate", ownerIdExpiredDate: "expiryDate", ownerEmail: "email", ownerPhone: "phone",
   ownerPhotoName: "photo", ownerIdDocNames: "idDocuments", shareAmount: "shareAmount",
   shareholderContractDocNames: "contractDocuments", otherDocNames: "otherDocuments", consentAgreed: "consentAgreed",
@@ -77,7 +77,7 @@ const FIELD_LABEL_NAMESPACE: Record<string, "request" | "revisions"> = {
   province: "request", district: "request", commune: "request", village: "request", street: "request", houseNo: "request",
   companyPhone: "request", companyOfficePhone: "request", companyEmail: "request",
   lastNameKh: "request", firstNameKh: "request", lastNameEn: "request", firstNameEn: "request",
-  dob: "request", nationality: "request", gender: "request", idCard: "request",
+  dob: "request", becameDate: "request", shBecameDate: "request", nationality: "request", gender: "request", idCard: "request",
   issueDate: "request", expiryDate: "request", email: "request", phone: "request", shareAmount: "request",
   photo: "revisions", idDocuments: "revisions", contractDocuments: "revisions", otherDocuments: "revisions", consentAgreed: "revisions",
 };
@@ -85,7 +85,7 @@ const FIELD_LABEL_NAMESPACE: Record<string, "request" | "revisions"> = {
 function DiffValue({ value, tr }: { value: FieldDiff["previous"]; tr: ReturnType<typeof useTranslations> }) {
   if (value === null || value === "") return <span className="text-slate-400">-</span>;
   if (typeof value === "boolean") return <span>{value ? tr("yes") : tr("no")}</span>;
-  return <span>{value}</span>;
+  return <span className="break-words">{value}</span>;
 }
 
 function DocDiffValue({ names, sign }: { names: string[]; sign: "+" | "-" }) {
@@ -119,49 +119,51 @@ export function RevisionDiffTable({ diffs, tf, tr }: { diffs: FieldDiff[]; tf: R
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
             {tr(`sections.${section}` as Parameters<typeof tr>[0])}
           </p>
-          <table className="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-3 py-1.5 text-left text-xs font-semibold text-slate-600">{tr("field")}</th>
-                <th className="px-3 py-1.5 text-left text-xs font-semibold text-slate-600">{tr("columnPrevious")}</th>
-                <th className="px-3 py-1.5 text-left text-xs font-semibold text-slate-600">{tr("columnNew")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((d) => {
-                const labelKey = FIELD_LABEL_KEYS[d.field];
-                const ns = FIELD_LABEL_NAMESPACE[labelKey] ?? "revisions";
-                const label = ns === "request" ? tf(labelKey as Parameters<typeof tf>[0]) : tr(`fields.${labelKey}` as Parameters<typeof tr>[0]);
-                const docField = isDocNameField(d.field);
-                return (
-                  <tr key={d.field} className="border-b border-slate-100 last:border-b-0">
-                    <td className="px-3 py-2 text-slate-700 font-medium whitespace-nowrap align-top">{label}</td>
-                    {docField ? (
-                      <>
-                        <td className="px-3 py-2 align-top">
-                          <DocDiffValue
-                            names={(d.previous as string[]).filter((n) => !(d.next as string[]).includes(n))}
-                            sign="-"
-                          />
-                        </td>
-                        <td className="px-3 py-2 align-top">
-                          <DocDiffValue
-                            names={(d.next as string[]).filter((n) => !(d.previous as string[]).includes(n))}
-                            sign="+"
-                          />
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-3 py-2 text-slate-600 align-top"><DiffValue value={d.previous} tr={tr} /></td>
-                        <td className="px-3 py-2 text-slate-800 align-top"><DiffValue value={d.next} tr={tr} /></td>
-                      </>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto border border-slate-200 rounded-lg">
+            <table className="w-full min-w-[480px] text-sm">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="px-3 py-1.5 text-left text-xs font-semibold text-slate-600 whitespace-nowrap">{tr("field")}</th>
+                  <th className="px-3 py-1.5 text-left text-xs font-semibold text-slate-600">{tr("columnPrevious")}</th>
+                  <th className="px-3 py-1.5 text-left text-xs font-semibold text-slate-600">{tr("columnNew")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((d) => {
+                  const labelKey = FIELD_LABEL_KEYS[d.field];
+                  const ns = FIELD_LABEL_NAMESPACE[labelKey] ?? "revisions";
+                  const label = ns === "request" ? tf(labelKey as Parameters<typeof tf>[0]) : tr(`fields.${labelKey}` as Parameters<typeof tr>[0]);
+                  const docField = isDocNameField(d.field);
+                  return (
+                    <tr key={d.field} className="border-b border-slate-100 last:border-b-0">
+                      <td className="px-3 py-2 text-slate-700 font-medium whitespace-nowrap align-top">{label}</td>
+                      {docField ? (
+                        <>
+                          <td className="px-3 py-2 align-top max-w-[200px]">
+                            <DocDiffValue
+                              names={(d.previous as string[]).filter((n) => !(d.next as string[]).includes(n))}
+                              sign="-"
+                            />
+                          </td>
+                          <td className="px-3 py-2 align-top max-w-[200px]">
+                            <DocDiffValue
+                              names={(d.next as string[]).filter((n) => !(d.previous as string[]).includes(n))}
+                              sign="+"
+                            />
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-3 py-2 text-slate-600 align-top max-w-[200px]"><DiffValue value={d.previous} tr={tr} /></td>
+                          <td className="px-3 py-2 text-slate-800 align-top max-w-[200px]"><DiffValue value={d.next} tr={tr} /></td>
+                        </>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       ))}
     </div>

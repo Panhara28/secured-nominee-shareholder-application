@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/lib/generated/prisma";
+import { emitActivityLogged } from "@/lib/notification-events";
 
 export type ActivityAction =
   | "LOGIN"
@@ -14,7 +15,12 @@ export type ActivityAction =
   | "REQUEST_REJECTED"
   | "REQUEST_RETURNED"
   | "REQUEST_VERIFIED"
-  | "NOTIFICATIONS_SEEN";
+  | "NOTIFICATIONS_SEEN"
+  | "USER_APPROVED"
+  | "USER_REJECTED"
+  | "USER_VERIFIED"
+  | "USER_RETURNED"
+  | "REGISTRATION_RESUBMITTED";
 
 export async function logActivity(params: {
   action: ActivityAction;
@@ -35,6 +41,7 @@ export async function logActivity(params: {
         note: params.note ?? null,
       },
     });
+    emitActivityLogged();
   } catch {
     // logging must never break the calling mutation
   }

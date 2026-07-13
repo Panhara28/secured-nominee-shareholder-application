@@ -14,8 +14,8 @@ const REQUIRED_FIELDS = [
   "companyNameEn", "registrationNo", "registrationDate",
   "companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse",
   "companyPhone", "companyEmail",
-  "lastNameEn", "firstNameEn", "dob", "nationality", "gender", "shareAmount",
-  "shLastNameEn", "shFirstNameEn", "shDob", "shNationality", "shGender",
+  "lastNameEn", "firstNameEn", "dob", "becameDate", "nationality", "gender", "shareAmount",
+  "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
 ] as const;
 
 type CreateBody = {
@@ -23,11 +23,11 @@ type CreateBody = {
   companyProvince?: string; companyDistrict?: string; companyCommune?: string; companyVillage?: string;
   companyStreet?: string; companyHouse?: string; companyPhone?: string; companyOfficePhone?: string; companyEmail?: string;
   lastNameKh?: string; firstNameKh?: string; lastNameEn?: string; firstNameEn?: string;
-  dob?: string; nationality?: string; gender?: string;
+  dob?: string; becameDate?: string; nationality?: string; gender?: string;
   idCard?: string; idIssuedDate?: string; idExpiredDate?: string; email?: string; phone?: string;
   shareAmount?: string;
   shLastNameKh?: string; shFirstNameKh?: string; shLastNameEn?: string; shFirstNameEn?: string;
-  shDob?: string; shNationality?: string; shGender?: string;
+  shDob?: string; shBecameDate?: string; shNationality?: string; shGender?: string;
   shIdCard?: string; shIdIssuedDate?: string; shIdExpiredDate?: string; shEmail?: string; shPhone?: string;
   ownerPhotoName?: string; ownerIdDocNames?: string[];
   shPhotoName?: string; shIdDocNames?: string[];
@@ -163,6 +163,7 @@ export async function POST(request: Request) {
       shLastNameEn: body.shLastNameEn!,
       shFirstNameEn: body.shFirstNameEn!,
       shDob: new Date(body.shDob!),
+      shBecameDate: new Date(body.shBecameDate!),
       shNationality: body.shNationality!,
       shGender: body.shGender as "M" | "F",
       shIdCard: body.shIdCard || null,
@@ -178,6 +179,7 @@ export async function POST(request: Request) {
       ownerLastNameEn: body.lastNameEn!,
       ownerFirstNameEn: body.firstNameEn!,
       ownerDob: new Date(body.dob!),
+      ownerBecameDate: new Date(body.becameDate!),
       ownerNationality: body.nationality!,
       ownerGender: body.gender as "M" | "F",
       ownerIdCard: body.idCard || null,

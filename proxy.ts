@@ -42,7 +42,9 @@ export function proxy(request: NextRequest) {
     const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
     const session = verifySessionToken(token);
     if (!session || session.role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/en/secured/admin/login", request.url));
+      return NextResponse.redirect(
+        new URL("/en/secured/admin/login", request.url),
+      );
     }
   }
 
@@ -51,4 +53,5 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: ["/((?!api|_next|.*\\..*).*)"],
+  allowedDevOrigins: ["192.168.0.109"],
 };

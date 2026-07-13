@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireShareholder } from "@/lib/auth";
 import type { Prisma } from "@/lib/generated/prisma";
 
-const NOTIFY_STATUSES = ["RETURNED", "REJECTED", "IN_REVIEW"] as const;
+const NOTIFY_STATUSES = ["RETURNED", "REJECTED", "IN_REVIEW", "APPROVED"] as const;
 
 export async function GET() {
   const session = await requireShareholder();

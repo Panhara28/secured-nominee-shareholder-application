@@ -1,22 +1,35 @@
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/auth";
+import { hashPassword, setSessionCookie } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
+import { emitAdminUsersNotification } from "@/lib/notification-events";
+
+const POSITION_VALUES = ["SHAREHOLDER", "DIRECTOR", "SECRETARY"] as const;
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as {
-    fullName?: string;
+    companyName?: string;
+    lastName?: string;
+    firstName?: string;
     email?: string;
     username?: string;
     password?: string;
+    position?: string;
   } | null;
 
-  const fullName = body?.fullName?.trim();
+  const companyName = body?.companyName?.trim();
+  const lastName = body?.lastName?.trim();
+  const firstName = body?.firstName?.trim();
   const email = body?.email?.trim().toLowerCase();
   const username = body?.username?.trim();
   const password = body?.password;
+  const position = body?.position;
 
-  if (!fullName || !email || !username || !password) {
+  if (!companyName || !lastName || !firstName || !email || !username || !password || !position) {
     return Response.json({ error: "All fields are required." }, { status: 400 });
+  }
+
+  if (!POSITION_VALUES.includes(position as (typeof POSITION_VALUES)[number])) {
+    return Response.json({ error: "Invalid position." }, { status: 400 });
   }
 
   if (password.length < 6) {
@@ -35,9 +48,14 @@ export async function POST(request: Request) {
   }
 
   const passwordHash = hashPassword(password);
+  const fullName = `${lastName} ${firstName}`.trim();
 
   const user = await prisma.user.create({
-    data: { fullName, email, username, passwordHash, role: "SHAREHOLDER" },
+    data: {
+      fullName, companyName, lastName, firstName, email, username, passwordHash,
+      position: position as (typeof POSITION_VALUES)[number],
+      role: "SHAREHOLDER", isActive: false,
+    },
     select: { id: true, username: true, fullName: true, email: true },
   });
 
@@ -47,6 +65,9 @@ export async function POST(request: Request) {
     entityId: user.id,
     actor: { id: user.id, role: "SHAREHOLDER", fullName: user.fullName },
   });
+
+  emitAdminUsersNotification();
+  await setSessionCookie(user.id, "SHAREHOLDER");
 
   return Response.json(user, { status: 201 });
 }

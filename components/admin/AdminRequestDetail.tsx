@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/lib/navigation";
 import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, FileText, GitCompare, History, Loader2, MessageSquare, Pencil, RotateCcw, ShieldCheck, Users, X, XCircle } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { splitReasonItems } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -20,9 +21,9 @@ function formatDate(iso: string | null): string {
 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
-    <div>
+    <div className="min-w-0">
       <p className="text-xs text-slate-500 mb-0.5">{label}</p>
-      <p className="text-sm font-medium text-slate-800">{value || "-"}</p>
+      <p className="text-sm font-medium text-slate-800 break-words">{value || "-"}</p>
     </div>
   );
 }
@@ -93,6 +94,7 @@ type RequestDetailData = {
   shLastNameEn: string;
   shFirstNameEn: string;
   shDob: string;
+  shBecameDate: string;
   shNationality: string;
   shGender: "M" | "F";
   shIdCard: string | null;
@@ -107,6 +109,7 @@ type RequestDetailData = {
   ownerLastNameEn: string;
   ownerFirstNameEn: string;
   ownerDob: string;
+  ownerBecameDate: string;
   ownerNationality: string;
   ownerGender: "M" | "F";
   ownerIdCard: string | null;
@@ -121,6 +124,7 @@ type RequestDetailData = {
   otherDocNames: string[];
   consentAgreed: boolean;
   submittedAt: string;
+  updatedAt: string;
   rejectionReason: string | null;
   logs: ActivityLogEntry[];
   revisions: RequestRevisionEntry[];
@@ -163,15 +167,33 @@ export default function AdminRequestDetail({ id }: { id: string }) {
           setError(true);
           return;
         }
-        setRequest(await res.json());
+        const data = await res.json();
+        // A verify result reflects the data as it was at the time of that
+        // check — if the request's data has changed since (e.g. the
+        // shareholder just resubmitted after a return), the old result is
+        // stale and must not keep showing until re-verified.
+        setRequest((prev) => {
+          if (prev && prev.updatedAt !== data.updatedAt) {
+            setVerifyResult(null);
+            setVerifyError(null);
+          }
+          return data;
+        });
       } catch {
         if (!cancelled) setError(true);
       }
     }
 
     fetchDetail();
+
+    // Real-time: refetch (status, logs, revisions, etc.) the instant this
+    // or any other request changes, instead of only on page load.
+    const source = new EventSource("/api/secured/admin/notifications/stream");
+    source.onmessage = () => fetchDetail();
+
     return () => {
       cancelled = true;
+      source.close();
     };
   }, [id]);
 
@@ -368,7 +390,11 @@ export default function AdminRequestDetail({ id }: { id: string }) {
             <p className="text-sm font-medium text-amber-800">
               {request.status === "RETURNED" ? ta("returnReason") : ta("rejectionReason")}
             </p>
-            <p className="mt-0.5 text-sm text-amber-700">{request.rejectionReason}</p>
+            <ol className="mt-0.5 text-sm text-amber-700 list-decimal list-inside space-y-0.5">
+              {splitReasonItems(request.rejectionReason).map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ol>
           </div>
         </div>
       )}
@@ -466,6 +492,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                 <Field label={t("shareholderName")} value={`${request.shLastNameEn} ${request.shFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.shLastNameKh ?? ""} ${request.shFirstNameKh ?? ""}`.trim()} />
                 <Field label={tf("dob")} value={formatDate(request.shDob)} />
+                <Field label={tf("shBecameDate")} value={formatDate(request.shBecameDate)} />
                 <Field label={tf("nationality")} value={request.shNationality} />
                 <Field label={tf("gender")} value={genderLabel(request.shGender)} />
                 <Field label={tf("idCard")} value={request.shIdCard} />
@@ -489,6 +516,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                 <Field label={t("ownerNameEn")} value={`${request.ownerLastNameEn} ${request.ownerFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.ownerLastNameKh ?? ""} ${request.ownerFirstNameKh ?? ""}`.trim()} />
                 <Field label={tf("dob")} value={formatDate(request.ownerDob)} />
+                <Field label={tf("becameDate")} value={formatDate(request.ownerBecameDate)} />
                 <Field label={tf("nationality")} value={request.ownerNationality} />
                 <Field label={tf("gender")} value={genderLabel(request.ownerGender)} />
                 <Field label={tf("idCard")} value={request.ownerIdCard} />

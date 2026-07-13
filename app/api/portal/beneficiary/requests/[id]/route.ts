@@ -3,6 +3,7 @@ import { requireShareholder } from "@/lib/auth";
 import { logRequestEvent } from "@/lib/request-log";
 import { logActivity } from "@/lib/activity-log";
 import { toRequestSnapshot } from "@/lib/request-revision";
+import { emitAdminNotification } from "@/lib/notification-events";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -10,8 +11,8 @@ const EDIT_REQUIRED_FIELDS = [
   "companyNameEn", "registrationNo", "registrationDate",
   "companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse",
   "companyPhone", "companyEmail",
-  "lastNameEn", "firstNameEn", "dob", "nationality", "gender", "shareAmount",
-  "shLastNameEn", "shFirstNameEn", "shDob", "shNationality", "shGender",
+  "lastNameEn", "firstNameEn", "dob", "becameDate", "nationality", "gender", "shareAmount",
+  "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
 ] as const;
 
 type EditBody = {
@@ -20,11 +21,11 @@ type EditBody = {
   companyProvince?: string; companyDistrict?: string; companyCommune?: string; companyVillage?: string;
   companyStreet?: string; companyHouse?: string; companyPhone?: string; companyOfficePhone?: string; companyEmail?: string;
   lastNameKh?: string; firstNameKh?: string; lastNameEn?: string; firstNameEn?: string;
-  dob?: string; nationality?: string; gender?: string;
+  dob?: string; becameDate?: string; nationality?: string; gender?: string;
   idCard?: string; idIssuedDate?: string; idExpiredDate?: string; email?: string; phone?: string;
   shareAmount?: string;
   shLastNameKh?: string; shFirstNameKh?: string; shLastNameEn?: string; shFirstNameEn?: string;
-  shDob?: string; shNationality?: string; shGender?: string;
+  shDob?: string; shBecameDate?: string; shNationality?: string; shGender?: string;
   shIdCard?: string; shIdIssuedDate?: string; shIdExpiredDate?: string; shEmail?: string; shPhone?: string;
   ownerPhotoName?: string; ownerIdDocNames?: string[];
   shPhotoName?: string; shIdDocNames?: string[];
@@ -71,8 +72,8 @@ const SUBMIT_REQUIRED_FIELDS = [
   "companyNameEn", "registrationNo", "registrationDate",
   "companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse",
   "companyPhone", "companyEmail",
-  "ownerLastNameEn", "ownerFirstNameEn", "ownerDob", "ownerNationality", "ownerGender", "shareAmount",
-  "shLastNameEn", "shFirstNameEn", "shDob", "shNationality", "shGender",
+  "ownerLastNameEn", "ownerFirstNameEn", "ownerDob", "ownerBecameDate", "ownerNationality", "ownerGender", "shareAmount",
+  "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
 ] as const;
 
 export async function PATCH(request: Request, { params }: Props) {
@@ -119,6 +120,7 @@ export async function PATCH(request: Request, { params }: Props) {
       await logRequestEvent(id, "SUBMITTED", actor);
       await logActivity({ action: "REQUEST_SUBMITTED", entityType: "BeneficiaryRequest", entityId: id, actor, note: record.requestNo });
     }
+    emitAdminNotification();
 
     const updated = await prisma.beneficiaryRequest.findUnique({
       where: { id },
@@ -187,6 +189,7 @@ export async function PATCH(request: Request, { params }: Props) {
       shLastNameEn: body.shLastNameEn!,
       shFirstNameEn: body.shFirstNameEn!,
       shDob: new Date(body.shDob!),
+      shBecameDate: new Date(body.shBecameDate!),
       shNationality: body.shNationality!,
       shGender: body.shGender as "M" | "F",
       shIdCard: body.shIdCard || null,
@@ -202,6 +205,7 @@ export async function PATCH(request: Request, { params }: Props) {
       ownerLastNameEn: body.lastNameEn!,
       ownerFirstNameEn: body.firstNameEn!,
       ownerDob: new Date(body.dob!),
+      ownerBecameDate: new Date(body.becameDate!),
       ownerNationality: body.nationality!,
       ownerGender: body.gender as "M" | "F",
       ownerIdCard: body.idCard || null,
@@ -222,6 +226,7 @@ export async function PATCH(request: Request, { params }: Props) {
     await logRequestEvent(id, "EDITED", actor);
     await logActivity({ action: "REQUEST_EDITED", entityType: "BeneficiaryRequest", entityId: id, actor, note: record.requestNo });
   }
+  emitAdminNotification();
 
   const updated = await prisma.beneficiaryRequest.findUnique({
     where: { id },

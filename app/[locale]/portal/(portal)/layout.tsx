@@ -2,6 +2,7 @@ import { redirect } from "@/lib/navigation";
 import { requireShareholder } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import PortalShell from "@/components/portal/PortalShell";
+import PendingApprovalGate from "@/components/portal/PendingApprovalGate";
 
 type Props = {
   children: React.ReactNode;
@@ -15,9 +16,30 @@ export default async function PortalGroupLayout({ children, params }: Props) {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { fullName: true },
+    select: {
+      fullName: true,
+      companyName: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      isActive: true,
+      registrationReturnReason: true,
+    },
   });
   if (!user) return redirect({ href: "/portal/login", locale });
 
-  return <PortalShell fullName={user.fullName}>{children}</PortalShell>;
+  return (
+    <PortalShell fullName={user.fullName} navDisabled={!user.isActive}>
+      {user.isActive ? children : (
+        <PendingApprovalGate
+          fullName={user.fullName}
+          companyName={user.companyName}
+          firstName={user.firstName}
+          lastName={user.lastName}
+          email={user.email}
+          returnReason={user.registrationReturnReason}
+        />
+      )}
+    </PortalShell>
+  );
 }

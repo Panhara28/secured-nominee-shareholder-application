@@ -32,7 +32,8 @@ export async function POST(request: Request) {
   });
 
   // Simulation: return the reset link directly (no email sent)
-  const resetLink = `http://localhost:3000/en/portal/reset-password?token=${token}`;
+  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const resetLink = `${appUrl}/en/portal/reset-password?token=${token}`;
 
   return Response.json({ resetLink });
 }

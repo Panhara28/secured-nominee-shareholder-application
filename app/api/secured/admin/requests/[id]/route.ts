@@ -2,8 +2,22 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { logRequestEvent } from "@/lib/request-log";
 import { logActivity, type ActivityAction } from "@/lib/activity-log";
+import { emitUserNotification } from "@/lib/notification-events";
 
 type Props = { params: Promise<{ id: string }> };
+
+function generateCertificateNo(): string {
+  const num = Math.floor(10000 + Math.random() * 90000);
+  return `BO-${num}`;
+}
+
+async function generateUniqueCertificateNo(): Promise<string> {
+  let certificateNo = generateCertificateNo();
+  while (await prisma.beneficiaryRequest.findUnique({ where: { certificateNo } })) {
+    certificateNo = generateCertificateNo();
+  }
+  return certificateNo;
+}
 
 function serialize(record: NonNullable<Awaited<ReturnType<typeof loadRecord>>>) {
   return {
@@ -88,11 +102,14 @@ export async function PATCH(request: Request, { params }: Props) {
     return: "REQUEST_RETURNED",
   };
 
+  const certificateNo = body.action === "approve" ? await generateUniqueCertificateNo() : undefined;
+
   await prisma.beneficiaryRequest.update({
     where: { id },
     data: {
       status: statusByAction[body.action],
       rejectionReason: body.action === "reject" || body.action === "return" ? reason : null,
+      ...(body.action === "approve" ? { certificateNo, approvedAt: new Date() } : {}),
     },
   });
 
@@ -102,6 +119,7 @@ export async function PATCH(request: Request, { params }: Props) {
       data: { approvedAt: new Date() },
     });
   }
+  emitUserNotification(record.userId);
 
   const actorUser = await prisma.user.findUnique({ where: { id: session.userId }, select: { fullName: true, role: true } });
   if (actorUser) {

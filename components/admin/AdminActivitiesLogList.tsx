@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   LogIn, LogOut, UserPlus, KeyRound, KeyRoundIcon, FileEdit, Send, Pencil,
-  CheckCircle2, XCircle, RotateCcw, ShieldCheck, Loader2, RefreshCw, Search,
+  CheckCircle2, XCircle, RotateCcw, ShieldCheck, Loader2, RefreshCw, Search, UserCheck, UserX,
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import TablePagination from "@/components/ui/TablePagination";
@@ -14,6 +14,7 @@ const ACTION_OPTIONS = [
   "LOGIN", "LOGOUT", "REGISTER", "PASSWORD_RESET_REQUESTED", "PASSWORD_RESET",
   "REQUEST_CREATED", "REQUEST_SUBMITTED", "REQUEST_EDITED",
   "REQUEST_APPROVED", "REQUEST_REJECTED", "REQUEST_RETURNED", "REQUEST_VERIFIED",
+  "USER_APPROVED", "USER_REJECTED", "USER_VERIFIED", "USER_RETURNED", "REGISTRATION_RESUBMITTED",
 ];
 
 const ACTION_META: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
@@ -29,6 +30,11 @@ const ACTION_META: Record<string, { icon: React.ElementType; color: string; bg: 
   REQUEST_REJECTED: { icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
   REQUEST_RETURNED: { icon: RotateCcw, color: "text-orange-600", bg: "bg-orange-50" },
   REQUEST_VERIFIED: { icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50" },
+  USER_APPROVED: { icon: UserCheck, color: "text-green-600", bg: "bg-green-50" },
+  USER_REJECTED: { icon: UserX, color: "text-red-600", bg: "bg-red-50" },
+  USER_VERIFIED: { icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50" },
+  USER_RETURNED: { icon: RotateCcw, color: "text-orange-600", bg: "bg-orange-50" },
+  REGISTRATION_RESUBMITTED: { icon: Send, color: "text-blue-600", bg: "bg-blue-50" },
 };
 
 type LogRow = {
@@ -69,8 +75,8 @@ export default function AdminActivitiesLogList() {
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchLogs() {
-      setLoading(true);
+    async function fetchLogs(showLoading = true) {
+      if (showLoading) setLoading(true);
       setError(null);
       try {
         const params = new URLSearchParams({
@@ -93,10 +99,22 @@ export default function AdminActivitiesLogList() {
     }
 
     fetchLogs();
+
+    // Real-time: refetch the instant any new activity is logged, instead of
+    // waiting for a manual refresh. Skip the loading spinner for these quiet
+    // background refreshes so the table doesn't flicker.
+    const source = new EventSource("/api/secured/admin/activities-logs/stream");
+    source.onmessage = () => fetchLogs(false);
+
     return () => {
       cancelled = true;
+      source.close();
     };
-  }, [appliedQuery, action, page, retryToken, t]);
+    // `t` is intentionally excluded — including it would tear down and
+    // recreate the EventSource on every render if its reference isn't
+    // perfectly stable, making the real-time connection unreliable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedQuery, action, page, retryToken]);
 
   const handleSearch = () => {
     setAppliedQuery(query);

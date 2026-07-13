@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/lib/navigation";
-import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Eye, FileEdit, Loader2, RotateCcw, Search, RefreshCw, ShieldCheck, TimerReset, XCircle } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Eye, FileEdit, GitCompare, Loader2, RotateCcw, Search, RefreshCw, ShieldCheck, TimerReset, XCircle } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import StatusBadge from "@/components/ui/StatusBadge";
 import TablePagination from "@/components/ui/TablePagination";
@@ -35,7 +35,7 @@ type RequestRow = {
   status: string;
 };
 
-type Summary = { drafted: number; request: number; inReview: number; approved: number; rejected: number; returned: number };
+type Summary = { drafted: number; request: number; inReview: number; approved: number; rejected: number; returned: number; updateRequested: number };
 
 export default function AdminRequestsList() {
   const t = useTranslations("admin.requests");
@@ -52,7 +52,7 @@ export default function AdminRequestsList() {
 
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [total, setTotal] = useState(0);
-  const [summary, setSummary] = useState<Summary>({ drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0, returned: 0 });
+  const [summary, setSummary] = useState<Summary>({ drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0, returned: 0, updateRequested: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -87,10 +87,21 @@ export default function AdminRequestsList() {
     }
 
     fetchRequests();
+
+    // Real-time: refetch the instant a shareholder submits/edits a request,
+    // instead of waiting for a manual refresh.
+    const source = new EventSource("/api/secured/admin/notifications/stream");
+    source.onmessage = () => fetchRequests();
+
     return () => {
       cancelled = true;
+      source.close();
     };
-  }, [appliedQuery, status, page, sortKey, sortDir, retryToken, ta]);
+    // `ta` intentionally excluded — see AdminActivitiesLogList.tsx for why
+    // including a translation function here would tear down/recreate the
+    // EventSource on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedQuery, status, page, sortKey, sortDir, retryToken]);
 
   const handleSearch = () => {
     setAppliedQuery(query);
@@ -139,13 +150,13 @@ export default function AdminRequestsList() {
     <div className="space-y-4">
       <h1 className="text-xl font-semibold text-slate-800">{t("pageTitle")}</h1>
 
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-7 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
             <FileEdit className="h-5 w-5 text-slate-500" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{ta("summary.drafted")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{ta("summary.drafted")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.drafted}</p>
           </div>
         </div>
@@ -154,7 +165,7 @@ export default function AdminRequestsList() {
             <TimerReset className="h-5 w-5 text-blue-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{ta("summary.inReview")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{ta("summary.inReview")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.request}</p>
           </div>
         </div>
@@ -163,7 +174,7 @@ export default function AdminRequestsList() {
             <ShieldCheck className="h-5 w-5 text-purple-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{ta("summary.verifying")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{ta("summary.verifying")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.inReview}</p>
           </div>
         </div>
@@ -172,7 +183,7 @@ export default function AdminRequestsList() {
             <CheckCircle2 className="h-5 w-5 text-green-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{ta("summary.approved")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{ta("summary.approved")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.approved}</p>
           </div>
         </div>
@@ -181,7 +192,7 @@ export default function AdminRequestsList() {
             <XCircle className="h-5 w-5 text-red-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{ta("summary.rejected")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{ta("summary.rejected")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.rejected}</p>
           </div>
         </div>
@@ -190,8 +201,17 @@ export default function AdminRequestsList() {
             <RotateCcw className="h-5 w-5 text-orange-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-slate-500 truncate">{ta("summary.returned")}</p>
+            <p className="text-xs text-slate-500 leading-tight">{ta("summary.returned")}</p>
             <p className="text-xl font-semibold text-slate-800">{summary.returned}</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+            <GitCompare className="h-5 w-5 text-teal-600" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-slate-500 leading-tight">{ta("summary.updateRequested")}</p>
+            <p className="text-xl font-semibold text-slate-800">{summary.updateRequested}</p>
           </div>
         </div>
       </div>

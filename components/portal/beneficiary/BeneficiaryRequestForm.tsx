@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, FileText, Loader2, Paperclip, RotateCcw, Save, Send, Sparkles, Upload, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, splitReasonItems } from "@/lib/utils";
 
 function StepTabs({
   steps,
@@ -133,12 +133,12 @@ type FormData = {
   companyStreet: string; companyHouse: string; companyPhone: string; companyOfficePhone: string; companyEmail: string;
   /* Step 2 — Beneficiary Owner */
   lastNameKh: string; firstNameKh: string; lastNameEn: string; firstNameEn: string;
-  dob: string; nationality: string; gender: string;
+  dob: string; becameDate: string; nationality: string; gender: string;
   idCard: string; idIssuedDate: string; idExpiredDate: string;
   email: string; phone: string; shareAmount: string;
   /* Step 3 — Shareholder */
   shLastNameKh: string; shFirstNameKh: string; shLastNameEn: string; shFirstNameEn: string;
-  shDob: string; shNationality: string; shGender: string;
+  shDob: string; shBecameDate: string; shNationality: string; shGender: string;
   shIdCard: string; shIdIssuedDate: string; shIdExpiredDate: string;
   shEmail: string; shPhone: string;
 };
@@ -148,10 +148,10 @@ const EMPTY: FormData = {
   companyProvince: "", companyDistrict: "", companyCommune: "", companyVillage: "",
   companyStreet: "", companyHouse: "", companyPhone: "", companyOfficePhone: "", companyEmail: "",
   lastNameKh: "", firstNameKh: "", lastNameEn: "", firstNameEn: "",
-  dob: "", nationality: "", gender: "", idCard: "", idIssuedDate: "", idExpiredDate: "",
+  dob: "", becameDate: "", nationality: "", gender: "", idCard: "", idIssuedDate: "", idExpiredDate: "",
   email: "", phone: "", shareAmount: "",
   shLastNameKh: "", shFirstNameKh: "", shLastNameEn: "", shFirstNameEn: "",
-  shDob: "", shNationality: "", shGender: "", shIdCard: "", shIdIssuedDate: "", shIdExpiredDate: "",
+  shDob: "", shBecameDate: "", shNationality: "", shGender: "", shIdCard: "", shIdIssuedDate: "", shIdExpiredDate: "",
   shEmail: "", shPhone: "",
 };
 
@@ -163,6 +163,17 @@ const FAKE_FIRST_EN = ["Sokha", "Dara", "Sophea", "Vichet", "Chantha"];
 const FAKE_LAST_EN = ["Chan", "San", "Kim", "Ly", "Ouch"];
 const NATIONALITIES = ["KH", "CN", "TH", "VN"];
 const GENDERS = ["M", "F"];
+
+const FAKE_COMPANIES: { en: string; kh: string }[] = [
+  { en: "Mekong Trading Co., Ltd.", kh: "ក្រុមហ៊ុន ពាណិជ្ជកម្មមេគង្គ ម.ក" },
+  { en: "Angkor Star Enterprise Co., Ltd.", kh: "ក្រុមហ៊ុន សហគ្រាសផ្កាយអង្គរ ម.ក" },
+  { en: "Golden Delta Holdings Co., Ltd.", kh: "ក្រុមហ៊ុន ហូលឌីងសុវណ្ណដែលតា ម.ក" },
+  { en: "Chenla Import Export Co., Ltd.", kh: "ក្រុមហ៊ុន នាំចេញនាំចូលចេនឡា ម.ក" },
+  { en: "Sokha Business Group Co., Ltd.", kh: "ក្រុមហ៊ុន សុខាប៊ីស្សនេសក្រុប ម.ក" },
+  { en: "Bayon Construction Materials Co., Ltd.", kh: "ក្រុមហ៊ុន សំណង់បាយ័ន ម.ក" },
+  { en: "Battambang Rice Milling Co., Ltd.", kh: "ក្រុមហ៊ុន កិនស្រូវបាត់ដំបង ម.ក" },
+  { en: "Kampong Cham Rubber Plantation Co., Ltd.", kh: "ក្រុមហ៊ុន ដាំកៅស៊ូកំពង់ចាម ម.ក" },
+];
 
 function randomOf<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -189,6 +200,7 @@ function generateFakePerson(prefix: "sh" | "") {
     [key("LastNameEn")]: randomOf(FAKE_LAST_EN),
     [key("FirstNameEn")]: randomOf(FAKE_FIRST_EN),
     [key("Dob")]: randomDateBetween(1970, 2000),
+    [key("BecameDate")]: randomDateBetween(2018, 2026),
     [key("Nationality")]: randomOf(NATIONALITIES),
     [key("Gender")]: randomOf(GENDERS),
     [key("IdCard")]: randomDigits(9),
@@ -205,10 +217,11 @@ const FAKE_CONTRACT_DOC_NAME = "Nominee shareholder agreement KHM.pdf";
 const FAKE_OTHER_DOC_NAME = "This is  other documents.pdf";
 
 function generateFakeFormData(): FormData {
-  const companyName = `Sample Trading ${randomDigits(3)}`;
+  const company = randomOf(FAKE_COMPANIES);
+  const emailSlug = company.en.toLowerCase().replace(/[^a-z0-9]/g, "");
   return {
-    companyNameKh: "ក្រុមហ៊ុន សំណាកគំរូ",
-    companyNameEn: companyName,
+    companyNameKh: company.kh,
+    companyNameEn: company.en,
     registrationNo: `CO-${randomDigits(5)}`,
     registrationDate: randomDateBetween(2015, 2024),
     companyProvince: randomOf(PROVINCES_KH),
@@ -219,7 +232,7 @@ function generateFakeFormData(): FormData {
     companyHouse: `#${randomDigits(3)}`,
     companyPhone: `${Math.floor(Math.random() * 90) + 10} ${randomDigits(3)} ${randomDigits(3)}`,
     companyOfficePhone: `${Math.floor(Math.random() * 90) + 10} ${randomDigits(3)} ${randomDigits(3)}`,
-    companyEmail: `${companyName.toLowerCase().replace(/\s/g, "")}@example.com`,
+    companyEmail: `${emailSlug}@example.com`,
     shareAmount: String(Math.floor(Math.random() * 9000) + 1000),
     ...generateFakePerson(""),
     ...generateFakePerson("sh"),
@@ -320,13 +333,23 @@ function PersonFields({
         </div>
       </div>
 
-      {/* DOB / Nationality / Gender */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* DOB / Became Date / Nationality / Gender */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("dob")} <span className="text-red-500">*</span></label>
           <input type="date" value={form[key("Dob")] ?? ""} onChange={(e) => set({ [key("Dob")]: e.target.value })} onBlur={() => setTouched({ [key("Dob")]: true })} className={inputCls("Dob")} />
           {fieldError("Dob") && <p className="mt-1 text-xs text-red-600">{fieldError("Dob")}</p>}
         </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            {t(prefix === "sh" ? "shBecameDate" : "becameDate")} <span className="text-red-500">*</span>
+          </label>
+          <input type="date" value={form[key("BecameDate")] ?? ""} onChange={(e) => set({ [key("BecameDate")]: e.target.value })} onBlur={() => setTouched({ [key("BecameDate")]: true })} className={inputCls("BecameDate")} />
+          {fieldError("BecameDate") && <p className="mt-1 text-xs text-red-600">{fieldError("BecameDate")}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("nationality")} <span className="text-red-500">*</span></label>
           <select value={form[key("Nationality")] ?? ""} onChange={(e) => set({ [key("Nationality")]: e.target.value })} onBlur={() => setTouched({ [key("Nationality")]: true })} className={cn(inputCls("Nationality"), "bg-white")}>
@@ -473,12 +496,12 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           companyEmail: data.companyEmail ?? "",
           lastNameKh: data.ownerLastNameKh ?? "", firstNameKh: data.ownerFirstNameKh ?? "",
           lastNameEn: data.ownerLastNameEn ?? "", firstNameEn: data.ownerFirstNameEn ?? "",
-          dob: dateOnly(data.ownerDob), nationality: data.ownerNationality ?? "", gender: data.ownerGender ?? "",
+          dob: dateOnly(data.ownerDob), becameDate: dateOnly(data.ownerBecameDate), nationality: data.ownerNationality ?? "", gender: data.ownerGender ?? "",
           idCard: data.ownerIdCard ?? "", idIssuedDate: dateOnly(data.ownerIdIssuedDate), idExpiredDate: dateOnly(data.ownerIdExpiredDate),
           email: data.ownerEmail ?? "", phone: data.ownerPhone ?? "", shareAmount: data.shareAmount ?? "",
           shLastNameKh: data.shLastNameKh ?? "", shFirstNameKh: data.shFirstNameKh ?? "",
           shLastNameEn: data.shLastNameEn ?? "", shFirstNameEn: data.shFirstNameEn ?? "",
-          shDob: dateOnly(data.shDob), shNationality: data.shNationality ?? "", shGender: data.shGender ?? "",
+          shDob: dateOnly(data.shDob), shBecameDate: dateOnly(data.shBecameDate), shNationality: data.shNationality ?? "", shGender: data.shGender ?? "",
           shIdCard: data.shIdCard ?? "", shIdIssuedDate: dateOnly(data.shIdIssuedDate), shIdExpiredDate: dateOnly(data.shIdExpiredDate),
           shEmail: data.shEmail ?? "", shPhone: data.shPhone ?? "",
         };
@@ -549,8 +572,8 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     companyNameEn: 1, registrationNo: 1, registrationDate: 1,
     companyProvince: 1, companyDistrict: 1, companyCommune: 1, companyVillage: 1, companyStreet: 1, companyHouse: 1,
     companyPhone: 1, companyEmail: 1,
-    shLastNameEn: 2, shFirstNameEn: 2, shDob: 2, shNationality: 2, shGender: 2,
-    lastNameEn: 3, firstNameEn: 3, dob: 3, nationality: 3, gender: 3, shareAmount: 3,
+    shLastNameEn: 2, shFirstNameEn: 2, shDob: 2, shBecameDate: 2, shNationality: 2, shGender: 2,
+    lastNameEn: 3, firstNameEn: 3, dob: 3, becameDate: 3, nationality: 3, gender: 3, shareAmount: 3,
   };
 
   const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = Object.entries(STEP_OF_FIELD).reduce(
@@ -570,8 +593,8 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
       "companyNameEn", "registrationNo", "registrationDate",
       "companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse",
       "companyPhone", "companyEmail",
-      "lastNameEn", "firstNameEn", "dob", "nationality", "gender", "shareAmount",
-      "shLastNameEn", "shFirstNameEn", "shDob", "shNationality", "shGender",
+      "lastNameEn", "firstNameEn", "dob", "becameDate", "nationality", "gender", "shareAmount",
+      "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
     ];
     const t2: Record<string, boolean> = {};
     required.forEach((k) => (t2[k] = true));
@@ -640,7 +663,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
       const id = await saveRequest();
       if (!id) return;
       toast.success(editId ? t("draftUpdated") : t("draftSaved"));
-      router.push(`/${locale}/portal/beneficiary/all-requests`);
+      router.push(editId ? `/${locale}/portal/beneficiary/all-requests/${id}` : `/${locale}/portal/beneficiary/all-requests`);
     } catch {
       setSubmitError(t("submitError"));
       toast.error(t("submitError"));
@@ -744,7 +767,11 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           <RotateCcw className="h-4.5 w-4.5 text-orange-600 flex-shrink-0 mt-0.5" />
           <div className="min-w-0">
             <p className="text-sm font-medium text-orange-800">{t("returnReasonBannerTitle")}</p>
-            <p className="mt-0.5 text-sm text-orange-700">{returnReason}</p>
+            <ol className="mt-0.5 text-sm text-orange-700 list-decimal list-inside space-y-0.5">
+              {splitReasonItems(returnReason).map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ol>
             {returnSteps.length > 0 && (
               <p className="mt-1.5 text-xs text-orange-600">
                 {t("returnReasonStepHint", {
@@ -872,7 +899,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             setPhotoName={setShPhotoName}
             idDocs={shIdDocs}
             setIdDocs={setShIdDocs}
-            requiredFields={["shLastNameEn", "shFirstNameEn", "shDob", "shNationality", "shGender"]}
+            requiredFields={["shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender"]}
             flaggedFields={flaggedFields}
             unchangedFields={unchangedFields}
           />
@@ -892,7 +919,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             setPhotoName={setOwnerPhotoName}
             idDocs={ownerIdDocs}
             setIdDocs={setOwnerIdDocs}
-            requiredFields={["lastNameEn", "firstNameEn", "dob", "nationality", "gender"]}
+            requiredFields={["lastNameEn", "firstNameEn", "dob", "becameDate", "nationality", "gender"]}
             flaggedFields={flaggedFields}
             unchangedFields={unchangedFields}
             extraContent={
@@ -990,49 +1017,49 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
         </div>
 
         {/* Step navigation / Actions */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <button
             type="button"
             onClick={() => setActiveStep((s) => Math.max(1, s - 1))}
             disabled={activeStep === 1}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="order-1 sm:order-1 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t("previous")}
           </button>
 
-          {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+          {submitError && <p className="order-2 sm:order-2 text-sm text-red-600">{submitError}</p>}
 
           {activeStep < 4 ? (
             <button
               type="button"
               onClick={() => setActiveStep((s) => Math.min(4, s + 1))}
               disabled={!isStepComplete(activeStep)}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="order-3 sm:order-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {t("next")}
             </button>
           ) : (
-            <div className="flex items-center gap-3">
-              <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                <XCircle className="h-4 w-4" />
-                {t("cancel")}
-              </button>
-              <button
-                type="submit"
-                disabled={submitting || !consentAgreed}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 bg-white px-5 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <Save className="h-4 w-4" />
-                {submitting ? t("submitting") : t("submit")}
-              </button>
+            <div className="order-3 sm:order-3 flex flex-col sm:flex-row items-stretch gap-3">
               <button
                 type="button"
                 onClick={handleSubmitRequest}
                 disabled={submitting || !consentAgreed}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="order-1 sm:order-3 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Send className="h-4 w-4" />
                 {submitting ? t("submittingRequest") : t("submitRequest")}
+              </button>
+              <button
+                type="submit"
+                disabled={submitting || !consentAgreed}
+                className="order-2 sm:order-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-600 bg-white px-5 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Save className="h-4 w-4" />
+                {submitting ? t("submitting") : t("submit")}
+              </button>
+              <button type="button" onClick={() => router.back()} className="order-3 sm:order-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                <XCircle className="h-4 w-4" />
+                {t("cancel")}
               </button>
             </div>
           )}

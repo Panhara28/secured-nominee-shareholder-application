@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { requireShareholder } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, Link } from "@/lib/navigation";
-import { AlertTriangle, CheckCircle2, FileEdit, RotateCcw, ShieldCheck, TimerReset, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileEdit, GitCompare, RotateCcw, ShieldCheck, TimerReset, XCircle } from "lucide-react";
 import DashboardRequestsTable from "@/components/portal/DashboardRequestsTable";
 
 export const metadata: Metadata = {
@@ -47,7 +47,7 @@ export default async function DashboardPage({ params }: Props) {
     _count: true,
   });
 
-  const summary = { drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0, returned: 0 };
+  const summary = { drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0, returned: 0, updateRequested: 0 };
   for (const g of statusGroups) {
     if (g.status === "DRAFT") summary.drafted = g._count;
     else if (g.status === "PENDING") summary.request = g._count;
@@ -55,6 +55,7 @@ export default async function DashboardPage({ params }: Props) {
     else if (g.status === "APPROVED") summary.approved = g._count;
     else if (g.status === "REJECTED") summary.rejected = g._count;
     else if (g.status === "RETURNED") summary.returned = g._count;
+    else if (g.status === "UPDATE_REQUESTED") summary.updateRequested = g._count;
   }
 
   const stats = [
@@ -100,6 +101,13 @@ export default async function DashboardPage({ params }: Props) {
       color: "text-orange-600",
       bg: "bg-orange-50",
     },
+    {
+      label: t("updateRequestedLabel"),
+      value: summary.updateRequested,
+      icon: GitCompare,
+      color: "text-teal-600",
+      bg: "bg-teal-50",
+    },
   ];
 
   return (
@@ -137,7 +145,7 @@ export default async function DashboardPage({ params }: Props) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (

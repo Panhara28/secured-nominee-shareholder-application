@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
   const user = await prisma.user.findUnique({ where: { username } });
 
-  if (!user || user.role !== "SHAREHOLDER" || !user.isActive || !verifyPassword(password, user.passwordHash)) {
+  if (!user || user.role !== "SHAREHOLDER" || !verifyPassword(password, user.passwordHash)) {
     return Response.json({ error: "Invalid username or password." }, { status: 401 });
   }
 

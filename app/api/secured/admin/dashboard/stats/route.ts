@@ -22,13 +22,15 @@ export async function GET() {
     }),
   ]);
 
-  const summary = { drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0 };
+  const summary = { drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0, returned: 0, updateRequested: 0 };
   for (const g of statusGroups) {
     if (g.status === "DRAFT") summary.drafted = g._count;
     else if (g.status === "PENDING") summary.request = g._count;
     else if (g.status === "IN_REVIEW") summary.inReview = g._count;
     else if (g.status === "APPROVED") summary.approved = g._count;
     else if (g.status === "REJECTED") summary.rejected = g._count;
+    else if (g.status === "RETURNED") summary.returned = g._count;
+    else if (g.status === "UPDATE_REQUESTED") summary.updateRequested = g._count;
   }
 
   return Response.json({ totalShareholders, totalRequests, summary, recent });

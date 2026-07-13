@@ -27,21 +27,33 @@ enum Gender {
   F
 }
 
+enum RegistrantPosition {
+  SHAREHOLDER
+  DIRECTOR
+  SECRETARY
+}
+
 model User {
-  id                  Int                  @id @default(autoincrement())
-  username            String               @unique
-  email               String               @unique
-  passwordHash        String
-  fullName            String
-  phoneNumber         String?
-  role                Role                 @default(SHAREHOLDER)
-  isActive            Boolean              @default(true)
-  resetToken          String?
-  resetTokenExpiry    DateTime?
-  notificationsSeenAt DateTime?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  beneficiaryRequests BeneficiaryRequest[]
+  id                       Int                  @id @default(autoincrement())
+  username                 String               @unique
+  email                    String               @unique
+  passwordHash             String
+  fullName                 String
+  companyName              String?
+  firstName                String?
+  lastName                 String?
+  phoneNumber              String?
+  position                 RegistrantPosition?
+  role                     Role                 @default(SHAREHOLDER)
+  isActive                 Boolean              @default(true)
+  registrationReturnReason String?
+  registrationReturnedAt   DateTime?
+  resetToken               String?
+  resetTokenExpiry         DateTime?
+  notificationsSeenAt      DateTime?
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  beneficiaryRequests      BeneficiaryRequest[]
 
   staffRoleId Int?
   staffRole   StaffRole? @relation(fields: [staffRoleId], references: [id])
@@ -86,6 +98,9 @@ model BeneficiaryRequest {
   id        Int    @id @default(autoincrement())
   requestNo String @unique
 
+  certificateNo String?   @unique
+  approvedAt    DateTime?
+
   userId Int
   user   User @relation(fields: [userId], references: [id])
 
@@ -113,6 +128,7 @@ model BeneficiaryRequest {
   shLastNameEn    String
   shFirstNameEn   String
   shDob           DateTime
+  shBecameDate    DateTime
   shNationality   String
   shGender        Gender
   shIdCard        String?
@@ -129,6 +145,7 @@ model BeneficiaryRequest {
   ownerLastNameEn    String
   ownerFirstNameEn   String
   ownerDob           DateTime
+  ownerBecameDate    DateTime
   ownerNationality   String
   ownerGender        Gender
   ownerIdCard        String?
