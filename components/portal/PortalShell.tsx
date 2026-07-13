@@ -35,7 +35,7 @@ export default function PortalShell({ fullName, children }: Props) {
   const SidebarContent = (
     <>
       <div className="flex items-center gap-3 px-4 h-24 py-3 border-b border-blue-600/40 flex-shrink-0">
-        <Image src="/moc-logo.png" alt="ក្រសួងពាណិជ្ជកម្ម" width={64} height={64} className="object-contain flex-shrink-0" />
+        <Image src="/moc-logo.png" alt="ក្រសួងពាណិជ្ជកម្ម" width={64} height={64} className="object-contain flex-shrink-0" style={{ height: "auto" }} />
         <div className="min-w-0 overflow-hidden">
           <p className="text-base font-bold text-white leading-tight truncate">ក្រសួងពាណិជ្ជកម្ម</p>
           <p className="text-[11px] font-semibold text-blue-100 leading-tight mt-0.5 truncate">Ministry Of Commerce</p>

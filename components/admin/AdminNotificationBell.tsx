@@ -44,8 +44,10 @@ export default function AdminNotificationBell() {
     }
 
     fetchAwaitingReview();
+    const interval = setInterval(fetchAwaitingReview, 30_000);
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
   }, []);
 
