@@ -1,6 +1,5 @@
+import { cookies } from "next/headers";
 import { redirect } from "@/lib/navigation";
-import { requireAdmin } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import AdminShell from "@/components/admin/AdminShell";
 
 type Props = {
@@ -8,16 +7,27 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
+type AdminMe = {
+  id: number;
+  username: string;
+  fullName: string;
+  email: string;
+  role: string;
+  staffRoleName: string | null;
+  permissions: Record<string, { create: boolean; read: boolean; update: boolean; delete: boolean }>;
+};
+
 export default async function AdminGroupLayout({ children, params }: Props) {
   const { locale } = await params;
-  const session = await requireAdmin();
-  if (!session) return redirect({ href: "/secured/admin/login", locale });
+  const cookieHeader = (await cookies()).toString();
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { fullName: true },
+  const res = await fetch(`${process.env.API_BASE_URL}/secured/admin/auth/me`, {
+    headers: { cookie: cookieHeader },
+    cache: "no-store",
   });
-  if (!user) return redirect({ href: "/secured/admin/login", locale });
+  if (!res.ok) return redirect({ href: "/secured/admin/login", locale });
+
+  const user = (await res.json()) as AdminMe;
 
   return <AdminShell fullName={user.fullName}>{children}</AdminShell>;
 }

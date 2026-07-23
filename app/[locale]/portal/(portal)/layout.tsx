@@ -1,6 +1,5 @@
+import { cookies } from "next/headers";
 import { redirect } from "@/lib/navigation";
-import { requireShareholder } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import PortalShell from "@/components/portal/PortalShell";
 import PendingApprovalGate from "@/components/portal/PendingApprovalGate";
 
@@ -9,28 +8,34 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
+type PortalMe = {
+  id: number;
+  username: string;
+  fullName: string;
+  email: string;
+  role: string;
+  companyName: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  isActive: boolean;
+  registrationReturnReason: string | null;
+};
+
 export default async function PortalGroupLayout({ children, params }: Props) {
   const { locale } = await params;
-  const session = await requireShareholder();
-  if (!session) return redirect({ href: "/portal/login", locale });
+  const cookieHeader = (await cookies()).toString();
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: {
-      fullName: true,
-      companyName: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      isActive: true,
-      registrationReturnReason: true,
-    },
+  const res = await fetch(`${process.env.API_BASE_URL}/portal/auth/me`, {
+    headers: { cookie: cookieHeader },
+    cache: "no-store",
   });
-  if (!user) return redirect({ href: "/portal/login", locale });
+  if (!res.ok) return redirect({ href: "/portal/login", locale });
 
-  return (
-    <PortalShell fullName={user.fullName} navDisabled={!user.isActive}>
-      {user.isActive ? children : (
+  const user = (await res.json()) as PortalMe;
+
+  if (!user.isActive) {
+    return (
+      <PortalShell fullName={user.fullName} navDisabled>
         <PendingApprovalGate
           fullName={user.fullName}
           companyName={user.companyName}
@@ -39,7 +44,9 @@ export default async function PortalGroupLayout({ children, params }: Props) {
           email={user.email}
           returnReason={user.registrationReturnReason}
         />
-      )}
-    </PortalShell>
-  );
+      </PortalShell>
+    );
+  }
+
+  return <PortalShell fullName={user.fullName}>{children}</PortalShell>;
 }

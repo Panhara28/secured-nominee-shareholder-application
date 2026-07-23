@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
-import { requireShareholder } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { redirect, Link } from "@/lib/navigation";
 import { AlertTriangle, CheckCircle2, FileEdit, GitCompare, RotateCcw, ShieldCheck, TimerReset, XCircle } from "lucide-react";
 import DashboardRequestsTable from "@/components/portal/DashboardRequestsTable";
@@ -11,52 +10,91 @@ export const metadata: Metadata = {
   title: "Dashboard — Secured Nominee Shareholder",
 };
 
+export const dynamic = "force-dynamic";
+
+const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8080";
+
 type Props = { params: Promise<{ locale: string }> };
+
+type PortalMe = {
+  id: number;
+  username: string;
+  fullName: string;
+  email: string;
+  role: string;
+};
+
+type RequestRow = {
+  id: number;
+  requestNo: string;
+  companyNameKh: string | null;
+  companyNameEn: string;
+  status: string;
+  submittedAt: string;
+};
+
+// Matches BeneficiaryRequestsService.buildListSummary in the NestJS API —
+// the PENDING count is keyed `inReview` and the IN_REVIEW count is keyed
+// `verifying` (there is no `request` key, unlike the admin dashboard-stats
+// endpoint's summary shape).
+type Summary = {
+  drafted: number;
+  inReview: number;
+  verifying: number;
+  approved: number;
+  rejected: number;
+  returned: number;
+  updateRequested: number;
+};
+
+type PortalRequestsListResponse = {
+  data: RequestRow[];
+  total: number;
+  page: number;
+  limit: number;
+  summary: Summary;
+};
+
+async function fetchJson<T>(path: string, cookieHeader: string): Promise<T | null> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    headers: cookieHeader ? { cookie: cookieHeader } : undefined,
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  return (await res.json()) as T;
+}
 
 export default async function DashboardPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const session = await requireShareholder();
-  if (!session) return redirect({ href: "/portal/login", locale });
+  const cookieHeader = (await cookies()).toString();
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { fullName: true, email: true, createdAt: true },
-  });
-  if (!user) return redirect({ href: "/portal/login", locale });
+  const [me, approvedRequests] = await Promise.all([
+    fetchJson<PortalMe>("/portal/auth/me", cookieHeader),
+    // The summary object returned here reflects this shareholder's totals
+    // across ALL statuses (not just the APPROVED filter applied to `data`),
+    // so it doubles as the source for both the stat tiles and the returned-
+    // request warning banner below — no separate call is needed for those.
+    fetchJson<PortalRequestsListResponse>(
+      "/portal/beneficiary/requests?status=APPROVED&sortKey=submittedAt&sortDir=desc&page=1&limit=10",
+      cookieHeader,
+    ),
+  ]);
+  if (!me) return redirect({ href: "/portal/login", locale });
 
   const t = await getTranslations("portal.dashboard");
 
-  const approvedRequests = await prisma.beneficiaryRequest.findMany({
-    where: { userId: session.userId, status: "APPROVED" },
-    orderBy: { submittedAt: "desc" },
-    select: { id: true, requestNo: true, companyNameEn: true, companyNameKh: true, status: true, submittedAt: true },
-  });
-  const approvedRequestsSerialized = approvedRequests.map((r) => ({ ...r, submittedAt: r.submittedAt.toISOString() }));
-
-  const returnedRequests = await prisma.beneficiaryRequest.findMany({
-    where: { userId: session.userId, status: "RETURNED" },
-    orderBy: { submittedAt: "desc" },
-    select: { id: true, requestNo: true, companyNameEn: true },
-  });
-
-  const statusGroups = await prisma.beneficiaryRequest.groupBy({
-    by: ["status"],
-    where: { userId: session.userId },
-    _count: true,
-  });
-
-  const summary = { drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0, returned: 0, updateRequested: 0 };
-  for (const g of statusGroups) {
-    if (g.status === "DRAFT") summary.drafted = g._count;
-    else if (g.status === "PENDING") summary.request = g._count;
-    else if (g.status === "IN_REVIEW") summary.inReview = g._count;
-    else if (g.status === "APPROVED") summary.approved = g._count;
-    else if (g.status === "REJECTED") summary.rejected = g._count;
-    else if (g.status === "RETURNED") summary.returned = g._count;
-    else if (g.status === "UPDATE_REQUESTED") summary.updateRequested = g._count;
-  }
+  const approvedRequestsSerialized = approvedRequests?.data ?? [];
+  const summary: Summary = approvedRequests?.summary ?? {
+    drafted: 0,
+    inReview: 0,
+    verifying: 0,
+    approved: 0,
+    rejected: 0,
+    returned: 0,
+    updateRequested: 0,
+  };
 
   const stats = [
     {
@@ -68,14 +106,14 @@ export default async function DashboardPage({ params }: Props) {
     },
     {
       label: t("requestLabel"),
-      value: summary.request,
+      value: summary.inReview,
       icon: TimerReset,
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
     {
       label: t("inReviewLabel"),
-      value: summary.inReview,
+      value: summary.verifying,
       icon: ShieldCheck,
       color: "text-purple-600",
       bg: "bg-purple-50",
@@ -113,11 +151,11 @@ export default async function DashboardPage({ params }: Props) {
   return (
     <div className="space-y-6">
       {/* Returned request warning */}
-      {returnedRequests.length > 0 && (
+      {summary.returned > 0 && (
         <div className="flex items-center gap-3 rounded-xl border border-orange-200 bg-orange-50 px-5 py-4">
           <AlertTriangle className="h-4.5 w-4.5 text-orange-600 flex-shrink-0" />
           <p className="text-sm font-medium text-orange-800 flex-1">
-            {t("returnedWarningTitle", { count: returnedRequests.length })}
+            {t("returnedWarningTitle", { count: summary.returned })}
           </p>
           <Link
             href={{ pathname: "/portal/beneficiary/all-requests", query: { status: "RETURNED" } }}
@@ -136,7 +174,7 @@ export default async function DashboardPage({ params }: Props) {
           </div>
           <div>
             <p className="text-blue-200 text-sm">{t("welcome")}</p>
-            <h1 className="text-xl font-bold">{user.fullName}</h1>
+            <h1 className="text-xl font-bold">{me.fullName}</h1>
           </div>
         </div>
         <p className="text-blue-200/80 text-sm">

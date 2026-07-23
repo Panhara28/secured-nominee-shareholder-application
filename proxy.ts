@@ -2,9 +2,15 @@ import createMiddleware from "next-intl/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "./lib/auth";
 
 const intlMiddleware = createMiddleware(routing);
+
+// Cookie name issued by the NestJS API (see src/lib/auth.ts in
+// secured-nominee-shareholder-api). Middleware only checks for presence -
+// real verification (signature, expiry, role) happens on every API call via
+// JwtAuthGuard/PermissionsGuard; an invalid/expired token still 401s there
+// and the affected page should redirect to login.
+const API_SESSION_COOKIE_NAME = "session";
 
 const PUBLIC_PORTAL_PATHS = new Set([
   "/portal/login",
@@ -23,14 +29,13 @@ function stripLocale(pathname: string): string {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const pathWithoutLocale = stripLocale(pathname);
+  const hasSession = Boolean(request.cookies.get(API_SESSION_COOKIE_NAME)?.value);
 
   if (
     pathWithoutLocale.startsWith("/portal") &&
     !PUBLIC_PORTAL_PATHS.has(pathWithoutLocale)
   ) {
-    const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-    const session = verifySessionToken(token);
-    if (!session || session.role !== "SHAREHOLDER") {
+    if (!hasSession) {
       return NextResponse.redirect(new URL("/en/portal/login", request.url));
     }
   }
@@ -39,9 +44,7 @@ export function proxy(request: NextRequest) {
     pathWithoutLocale.startsWith("/secured/admin") &&
     !PUBLIC_ADMIN_PATHS.has(pathWithoutLocale)
   ) {
-    const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-    const session = verifySessionToken(token);
-    if (!session || session.role !== "ADMIN") {
+    if (!hasSession) {
       return NextResponse.redirect(
         new URL("/en/secured/admin/login", request.url),
       );

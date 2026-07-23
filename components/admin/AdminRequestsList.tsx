@@ -35,7 +35,11 @@ type RequestRow = {
   status: string;
 };
 
-type Summary = { drafted: number; request: number; inReview: number; approved: number; rejected: number; returned: number; updateRequested: number };
+// Matches BeneficiaryRequestsService.buildListSummary in the NestJS API:
+// PENDING count is keyed `inReview`, IN_REVIEW count is keyed `verifying`
+// (the old Next.js Prisma route used `request`/`inReview` for those two —
+// different names for the same underlying counts).
+type Summary = { drafted: number; inReview: number; verifying: number; approved: number; rejected: number; returned: number; updateRequested: number };
 
 export default function AdminRequestsList() {
   const t = useTranslations("admin.requests");
@@ -52,7 +56,7 @@ export default function AdminRequestsList() {
 
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [total, setTotal] = useState(0);
-  const [summary, setSummary] = useState<Summary>({ drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0, returned: 0, updateRequested: 0 });
+  const [summary, setSummary] = useState<Summary>({ drafted: 0, inReview: 0, verifying: 0, approved: 0, rejected: 0, returned: 0, updateRequested: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -166,7 +170,7 @@ export default function AdminRequestsList() {
           </div>
           <div className="min-w-0">
             <p className="text-xs text-slate-500 leading-tight">{ta("summary.inReview")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.request}</p>
+            <p className="text-xl font-semibold text-slate-800">{summary.inReview}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
@@ -175,7 +179,7 @@ export default function AdminRequestsList() {
           </div>
           <div className="min-w-0">
             <p className="text-xs text-slate-500 leading-tight">{ta("summary.verifying")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.inReview}</p>
+            <p className="text-xl font-semibold text-slate-800">{summary.verifying}</p>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">

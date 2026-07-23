@@ -1,20 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import { requireShareholder } from "@/lib/auth";
+import { proxyRequest } from "@/lib/api-proxy";
 
-export async function GET() {
-  const session = await requireShareholder();
-  if (!session) {
-    return Response.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { id: true, username: true, fullName: true, email: true, role: true },
-  });
-
-  if (!user) {
-    return Response.json({ error: "User not found." }, { status: 404 });
-  }
-
-  return Response.json(user);
+export async function GET(request: Request) {
+  return proxyRequest(request, "/portal/auth/me");
 }

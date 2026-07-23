@@ -55,7 +55,7 @@ type InternalUserDetailData = {
   phoneNumber: string | null;
   isActive: boolean;
   createdAt: string;
-  staffRole: { name: string; description: string | null; permissions: PermissionRow[] } | null;
+  role: { name: string; description: string | null; permissions: PermissionRow[] } | null;
 };
 
 export default function AdminInternalUserDetail({ id }: { id: string }) {
@@ -132,7 +132,7 @@ export default function AdminInternalUserDetail({ id }: { id: string }) {
       <SectionCard icon={<User className="h-4 w-4" />} title={t("col.name")}>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
           <Field label={t("col.name")} value={data.fullName} />
-          <Field label={t("col.role")} value={data.staffRole?.name} icon={<ShieldCheck className="h-3.5 w-3.5 text-slate-400" />} />
+          <Field label={t("col.role")} value={data.role?.name} icon={<ShieldCheck className="h-3.5 w-3.5 text-slate-400" />} />
           <Field label={t("col.createdAt")} value={formatDateTime(data.createdAt)} />
           <Field label="Email" value={data.email} icon={<Mail className="h-3.5 w-3.5 text-slate-400" />} />
           <Field label="Username" value={`@${data.username}`} />
@@ -140,12 +140,12 @@ export default function AdminInternalUserDetail({ id }: { id: string }) {
         </div>
       </SectionCard>
 
-      {data.staffRole && (
-        <SectionCard icon={<ShieldCheck className="h-4 w-4" />} title={data.staffRole.name}>
-          {data.staffRole.description && (
-            <p className="text-sm text-slate-500 mb-4">{data.staffRole.description}</p>
+      {data.role && (
+        <SectionCard icon={<ShieldCheck className="h-4 w-4" />} title={data.role.name}>
+          {data.role.description && (
+            <p className="text-sm text-slate-500 mb-4">{data.role.description}</p>
           )}
-          {data.staffRole.permissions.length === 0 ? (
+          {data.role.permissions.length === 0 ? (
             <p className="text-sm text-slate-400">-</p>
           ) : (
             <div className="overflow-x-auto">
@@ -160,7 +160,7 @@ export default function AdminInternalUserDetail({ id }: { id: string }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.staffRole.permissions.map((p) => (
+                  {data.role.permissions.map((p) => (
                     <tr key={p.module.name} className="border-b border-slate-100">
                       <td className="px-3 py-2.5 text-slate-800">{p.module.label}</td>
                       {[p.create, p.read, p.update, p.delete].map((v, i) => (

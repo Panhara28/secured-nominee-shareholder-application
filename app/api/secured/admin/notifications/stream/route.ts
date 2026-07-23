@@ -1,12 +1,7 @@
-import { requireAdmin } from "@/lib/auth";
-import { subscribeAdmin } from "@/lib/notification-events";
-import { createSseResponse } from "@/lib/sse";
+import { proxyStream } from "@/lib/api-proxy";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const session = await requireAdmin();
-  if (!session) return new Response("Unauthorized", { status: 401 });
-
-  return createSseResponse(request, subscribeAdmin);
+  return proxyStream(request, "/secured/admin/notifications/stream");
 }

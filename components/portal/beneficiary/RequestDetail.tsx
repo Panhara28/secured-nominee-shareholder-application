@@ -102,8 +102,11 @@ type RequestDetailData = {
   shIdExpiredDate: string | null;
   shEmail: string | null;
   shPhone: string | null;
-  shPhotoName: string | null;
-  shIdDocNames: string[];
+  // The NestJS API's schema has no doc-filename columns, so these are never
+  // present in the response — optional here, defaulted to null/[] at the
+  // call sites below.
+  shPhotoName?: string | null;
+  shIdDocNames?: string[];
   ownerLastNameKh: string | null;
   ownerFirstNameKh: string | null;
   ownerLastNameEn: string;
@@ -117,11 +120,11 @@ type RequestDetailData = {
   ownerIdExpiredDate: string | null;
   ownerEmail: string | null;
   ownerPhone: string | null;
-  ownerPhotoName: string | null;
-  ownerIdDocNames: string[];
+  ownerPhotoName?: string | null;
+  ownerIdDocNames?: string[];
   shareAmount: string;
-  shareholderContractDocNames: string[];
-  otherDocNames: string[];
+  shareholderContractDocNames?: string[];
+  otherDocNames?: string[];
   consentAgreed: boolean;
   submittedAt: string;
   rejectionReason: string | null;
@@ -357,7 +360,7 @@ export default function RequestDetail({ id }: { id: string }) {
           {/* 2. Nominee Shareholder Information */}
           <SectionCard icon={<Users className="h-4 w-4" />} title={`2. ${tf("step2Title")}`}>
             <div className="flex items-start gap-6 mb-4">
-              <PersonPhoto name={request.shPhotoName} />
+              <PersonPhoto name={request.shPhotoName ?? null} />
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label={t("shareholderName")} value={`${request.shLastNameEn} ${request.shFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.shLastNameKh ?? ""} ${request.shFirstNameKh ?? ""}`.trim()} />
@@ -374,14 +377,14 @@ export default function RequestDetail({ id }: { id: string }) {
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
-              <DocList names={request.shIdDocNames} />
+              <DocList names={request.shIdDocNames ?? []} />
             </div>
           </SectionCard>
 
           {/* 3. Beneficial Owner Information */}
           <SectionCard icon={<Users className="h-4 w-4" />} title={`3. ${tf("step3Title")}`}>
             <div className="flex items-start gap-6 mb-4">
-              <PersonPhoto name={request.ownerPhotoName} />
+              <PersonPhoto name={request.ownerPhotoName ?? null} />
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label={t("ownerNameEn")} value={`${request.ownerLastNameEn} ${request.ownerFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.ownerLastNameKh ?? ""} ${request.ownerFirstNameKh ?? ""}`.trim()} />
@@ -399,7 +402,7 @@ export default function RequestDetail({ id }: { id: string }) {
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
-              <DocList names={request.ownerIdDocNames} />
+              <DocList names={request.ownerIdDocNames ?? []} />
             </div>
           </SectionCard>
 
@@ -408,11 +411,11 @@ export default function RequestDetail({ id }: { id: string }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
                 <p className="text-xs text-slate-500 mb-1">{tf("shareholderContractLabel")}</p>
-                <DocList names={request.shareholderContractDocNames} />
+                <DocList names={request.shareholderContractDocNames ?? []} />
               </div>
               <div>
                 <p className="text-xs text-slate-500 mb-1">{tf("otherDocsLabel")}</p>
-                <DocList names={request.otherDocNames} />
+                <DocList names={request.otherDocNames ?? []} />
               </div>
             </div>
             <div className="pt-4 border-t border-slate-100">

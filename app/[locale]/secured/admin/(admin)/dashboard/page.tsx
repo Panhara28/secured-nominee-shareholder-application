@@ -1,53 +1,96 @@
+import { cookies } from "next/headers";
 import { setRequestLocale } from "next-intl/server";
-import { prisma } from "@/lib/prisma";
 import DashboardClient from "@/components/admin/DashboardClient";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export const dynamic = "force-dynamic";
 
+const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8080";
+
+type DashboardStats = {
+  totalShareholders: number;
+  totalRequests: number;
+  summary: {
+    drafted: number;
+    request: number;
+    inReview: number;
+    approved: number;
+    rejected: number;
+    returned: number;
+    updateRequested: number;
+  };
+  recent: { id: number; requestNo: string; companyNameEn: string; status: string; submittedAt: string }[];
+};
+
+type UsersListResponse = {
+  data: {
+    id: number;
+    fullName: string;
+    companyName: string | null;
+    email: string;
+    username: string;
+    isActive: boolean;
+    status: "PENDING" | "RETURNED" | "ACTIVE";
+    createdAt: string;
+  }[];
+};
+
+async function fetchJson<T>(path: string, cookieHeader: string): Promise<T | null> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    headers: cookieHeader ? { cookie: cookieHeader } : undefined,
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  return (await res.json()) as T;
+}
+
 export default async function AdminDashboardPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const [totalShareholders, totalRequests, statusGroups, recent, recentUsers] = await Promise.all([
-    prisma.user.count({ where: { role: "SHAREHOLDER" } }),
-    prisma.beneficiaryRequest.count(),
-    prisma.beneficiaryRequest.groupBy({ by: ["status"], _count: true }),
-    prisma.beneficiaryRequest.findMany({
-      orderBy: { submittedAt: "desc" },
-      take: 5,
-      select: { id: true, requestNo: true, companyNameEn: true, status: true, submittedAt: true },
-    }),
-    prisma.user.findMany({
-      where: { role: "SHAREHOLDER", isActive: false },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: { id: true, fullName: true, companyName: true, email: true, username: true, isActive: true, createdAt: true },
-    }),
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore
+    .getAll()
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ");
+
+  const [stats, pendingUsers, returnedUsers] = await Promise.all([
+    fetchJson<DashboardStats>("/secured/admin/dashboard/stats", cookieHeader),
+    fetchJson<UsersListResponse>(
+      "/secured/admin/users?status=PENDING&sortKey=createdAt&sortDir=desc&page=1&limit=5",
+      cookieHeader,
+    ),
+    fetchJson<UsersListResponse>(
+      "/secured/admin/users?status=RETURNED&sortKey=createdAt&sortDir=desc&page=1&limit=5",
+      cookieHeader,
+    ),
   ]);
 
-  const summary = { drafted: 0, request: 0, inReview: 0, approved: 0, rejected: 0, returned: 0, updateRequested: 0 };
-  for (const g of statusGroups) {
-    if (g.status === "DRAFT") summary.drafted = g._count;
-    else if (g.status === "PENDING") summary.request = g._count;
-    else if (g.status === "IN_REVIEW") summary.inReview = g._count;
-    else if (g.status === "APPROVED") summary.approved = g._count;
-    else if (g.status === "REJECTED") summary.rejected = g._count;
-    else if (g.status === "RETURNED") summary.returned = g._count;
-    else if (g.status === "UPDATE_REQUESTED") summary.updateRequested = g._count;
-  }
+  const totalShareholders = stats?.totalShareholders ?? 0;
+  const totalRequests = stats?.totalRequests ?? 0;
+  const summary = stats?.summary ?? {
+    drafted: 0,
+    request: 0,
+    inReview: 0,
+    approved: 0,
+    rejected: 0,
+    returned: 0,
+    updateRequested: 0,
+  };
+  const recent = stats?.recent ?? [];
 
-  const recentSerialized = recent.map((r) => ({ ...r, submittedAt: r.submittedAt.toISOString() }));
-  const recentUsersSerialized = recentUsers.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() }));
+  const recentUsers = [...(pendingUsers?.data ?? []), ...(returnedUsers?.data ?? [])]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
 
   return (
     <DashboardClient
       totalShareholders={totalShareholders}
       totalRequests={totalRequests}
       summary={summary}
-      recent={recentSerialized}
-      recentUsers={recentUsersSerialized}
+      recent={recent}
+      recentUsers={recentUsers}
     />
   );
 }

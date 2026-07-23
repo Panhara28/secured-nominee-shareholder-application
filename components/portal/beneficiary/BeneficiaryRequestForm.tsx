@@ -624,6 +624,15 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
 
   const saveRequest = async (): Promise<string | null> => {
     const url = editId ? `/api/portal/beneficiary/requests/${editId}` : "/api/portal/beneficiary/requests";
+    // NOTE: the backing NestJS schema has no doc-filename columns anymore, so
+    // shPhotoName/shIdDocNames/ownerPhotoName/ownerIdDocNames/
+    // shareholderContractDocNames/otherDocNames are stripped server-side by
+    // the Next.js route handler (see stripFields in app/api/portal/beneficiary/
+    // requests/route.ts and .../[id]/route.ts) before forwarding to the API.
+    // We still send them here rather than special-casing the payload: the UI
+    // keeps capturing these fake filenames for demo purposes (real upload is
+    // out of scope for this pass), and stripping at the proxy boundary keeps
+    // this component unaware of backend schema details.
     const payload = {
       ...form,
       ownerPhotoName,
