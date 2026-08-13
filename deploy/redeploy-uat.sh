@@ -17,6 +17,12 @@ HOST_PORT=3030
 ENV_FILE_ON_SERVER="/etc/pongreay/secured-nominee-shareholder/uat.env"
 HEALTH_PATH="/en/portal/login"
 REMOTE_BUILD_DIR="/home/sysapp01/deploy-nominee-uat"
+# Shared network so this container can reach the API container by its Docker
+# container name (Docker's hairpin-NAT limitation means the host's own
+# published port isn't reliably reachable from inside another container on
+# this same host). Must match the network the API container joins in its own
+# deploy - see secured-nominee-shareholder-api/pongreay.config.yml.
+DOCKER_NETWORK="nominee-net"
 
 cd "$(git rev-parse --show-toplevel)"
 
@@ -56,6 +62,7 @@ ssh "$SERVER" "
   CONTAINER_PORT=$CONTAINER_PORT
   ENV_FILE=$ENV_FILE_ON_SERVER
   HEALTH_URL='http://127.0.0.1:$HOST_PORT$HEALTH_PATH'
+  DOCKER_NETWORK=$DOCKER_NETWORK
 
   OLD_IMAGE=\$(docker inspect --format='{{.Config.Image}}' \"\$APP_NAME\" 2>/dev/null || true)
 
@@ -70,6 +77,7 @@ ssh "$SERVER" "
     --read-only \\
     --tmpfs /tmp:rw,noexec,nosuid,size=64m \\
     --env-file \"\$ENV_FILE\" \\
+    --network \"\$DOCKER_NETWORK\" \\
     --label pongreay.environment=uat \\
     --label pongreay.previous-image=\"\$OLD_IMAGE\" \\
     -p \"\$HOST_PORT:\$CONTAINER_PORT\" \\
@@ -99,6 +107,7 @@ ssh "$SERVER" "
         --read-only \\
         --tmpfs /tmp:rw,noexec,nosuid,size=64m \\
         --env-file \"\$ENV_FILE\" \\
+        --network \"\$DOCKER_NETWORK\" \\
         --label pongreay.environment=uat \\
         -p \"\$HOST_PORT:\$CONTAINER_PORT\" \\
         \"\$OLD_IMAGE\"
