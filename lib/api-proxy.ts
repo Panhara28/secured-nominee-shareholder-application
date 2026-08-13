@@ -35,6 +35,15 @@ function replaceCookieValue(cookieHeader: string, name: string, newValue: string
   return parts.join("; ");
 }
 
+// Admin and portal sessions use distinct cookie names (see src/lib/auth.ts
+// in secured-nominee-shareholder-api) so that logging into one doesn't
+// overwrite the other's cookie in the same browser.
+function cookieNamesFor(nestPath: string): { session: string; refresh: string } {
+  return nestPath.startsWith("/secured/admin")
+    ? { session: "admin_session", refresh: "admin_refresh_token" }
+    : { session: "session", refresh: "refresh_token" };
+}
+
 /**
  * Access tokens expire after 15 minutes (see JWT_ACCESS_EXPIRES_IN in the
  * API). Without this, any request made after that window comes back 401 even
@@ -49,6 +58,7 @@ async function refreshSessionCookie(
   const refreshPath = nestPath.startsWith("/secured/admin")
     ? "/secured/admin/auth/refresh"
     : "/portal/auth/refresh";
+  const { session: sessionCookieName } = cookieNamesFor(nestPath);
 
   const res = await fetch(`${API_BASE_URL}${refreshPath}`, {
     method: "POST",
@@ -59,7 +69,7 @@ async function refreshSessionCookie(
 
   const setCookies =
     typeof (res.headers as any).getSetCookie === "function" ? (res.headers as any).getSetCookie() : [];
-  return setCookies.find((c: string) => c.startsWith("session=")) ?? null;
+  return setCookies.find((c: string) => c.startsWith(`${sessionCookieName}=`)) ?? null;
 }
 
 /**
@@ -79,8 +89,10 @@ async function fetchWithAutoRefresh(
     return { response, refreshedSessionCookie: null };
   }
 
+  const { session: sessionCookieName, refresh: refreshCookieName } = cookieNamesFor(nestPath);
+
   const cookieHeader = init.headers.get("cookie");
-  if (!cookieHeader || !cookieHeader.includes("refresh_token=")) {
+  if (!cookieHeader || !cookieHeader.includes(`${refreshCookieName}=`)) {
     return { response, refreshedSessionCookie: null };
   }
 
@@ -89,13 +101,16 @@ async function fetchWithAutoRefresh(
     return { response, refreshedSessionCookie: null };
   }
 
-  const newSessionValue = extractCookieValue(refreshedSessionCookie, "session");
+  const newSessionValue = extractCookieValue(refreshedSessionCookie, sessionCookieName);
   if (!newSessionValue) {
     return { response, refreshedSessionCookie: null };
   }
 
   const retryHeaders = new Headers(init.headers);
-  retryHeaders.set("cookie", replaceCookieValue(cookieHeader, "session", newSessionValue));
+  retryHeaders.set(
+    "cookie",
+    replaceCookieValue(cookieHeader, sessionCookieName, newSessionValue),
+  );
   const retryResponse = await fetch(target, { ...init, headers: retryHeaders });
   return { response: retryResponse, refreshedSessionCookie };
 }

@@ -6,9 +6,13 @@ import { routing } from "./i18n/routing";
 const intlMiddleware = createMiddleware(routing);
 
 // Cookie names issued by the NestJS API (see src/lib/auth.ts in
-// secured-nominee-shareholder-api).
-const API_SESSION_COOKIE_NAME = "session";
-const REFRESH_COOKIE_NAME = "refresh_token";
+// secured-nominee-shareholder-api). Admin and portal use distinct names so
+// that logging into one doesn't overwrite the other's cookie in the same
+// browser.
+const PORTAL_SESSION_COOKIE_NAME = "session";
+const PORTAL_REFRESH_COOKIE_NAME = "refresh_token";
+const ADMIN_SESSION_COOKIE_NAME = "admin_session";
+const ADMIN_REFRESH_COOKIE_NAME = "admin_refresh_token";
 
 const PUBLIC_PORTAL_PATHS = new Set([
   "/portal/login",
@@ -62,9 +66,11 @@ async function tryRefreshSession(
 ): Promise<string | null> {
   const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8080";
   const refreshPath = scope === "admin" ? "/secured/admin/auth/refresh" : "/portal/auth/refresh";
+  const sessionCookieName = scope === "admin" ? ADMIN_SESSION_COOKIE_NAME : PORTAL_SESSION_COOKIE_NAME;
+  const refreshCookieName = scope === "admin" ? ADMIN_REFRESH_COOKIE_NAME : PORTAL_REFRESH_COOKIE_NAME;
   const cookieHeader = [
-    sessionToken ? `session=${sessionToken}` : null,
-    `refresh_token=${refreshToken}`,
+    sessionToken ? `${sessionCookieName}=${sessionToken}` : null,
+    `${refreshCookieName}=${refreshToken}`,
   ]
     .filter(Boolean)
     .join("; ");
@@ -77,7 +83,7 @@ async function tryRefreshSession(
     if (!res.ok) return null;
     const setCookie = res.headers.get("set-cookie");
     if (!setCookie) return null;
-    const match = setCookie.match(/^session=([^;]+)/);
+    const match = setCookie.match(new RegExp(`^${sessionCookieName}=([^;]+)`));
     return match ? match[1] : null;
   } catch {
     return null;
@@ -93,8 +99,11 @@ export async function proxy(request: NextRequest) {
   const isAdminRoute =
     pathWithoutLocale.startsWith("/secured/admin") && !PUBLIC_ADMIN_PATHS.has(pathWithoutLocale);
 
-  let sessionToken = request.cookies.get(API_SESSION_COOKIE_NAME)?.value;
-  const refreshToken = request.cookies.get(REFRESH_COOKIE_NAME)?.value;
+  const sessionCookieName = isAdminRoute ? ADMIN_SESSION_COOKIE_NAME : PORTAL_SESSION_COOKIE_NAME;
+  const refreshCookieName = isAdminRoute ? ADMIN_REFRESH_COOKIE_NAME : PORTAL_REFRESH_COOKIE_NAME;
+
+  let sessionToken = request.cookies.get(sessionCookieName)?.value;
+  const refreshToken = request.cookies.get(refreshCookieName)?.value;
   let refreshedSessionValue: string | null = null;
 
   if ((isPortalRoute || isAdminRoute) && isSessionExpired(sessionToken) && refreshToken) {
@@ -113,7 +122,7 @@ export async function proxy(request: NextRequest) {
   // portal/admin layouts, which read cookies() directly - see the refreshed
   // session instead of the expired one they arrived with.
   if (refreshedSessionValue) {
-    request.cookies.set(API_SESSION_COOKIE_NAME, refreshedSessionValue);
+    request.cookies.set(sessionCookieName, refreshedSessionValue);
   }
 
   let response: NextResponse;
@@ -126,7 +135,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (refreshedSessionValue) {
-    response.cookies.set(API_SESSION_COOKIE_NAME, refreshedSessionValue, {
+    response.cookies.set(sessionCookieName, refreshedSessionValue, {
       httpOnly: true,
       sameSite: "lax",
       path: "/",
