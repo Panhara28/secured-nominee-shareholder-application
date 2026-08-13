@@ -21,6 +21,85 @@ function forwardSetCookies(nestRes: Response, res: Response) {
   }
 }
 
+function extractCookieValue(setCookieHeader: string, name: string): string | null {
+  const match = setCookieHeader.match(new RegExp(`^${name}=([^;]*)`));
+  return match ? match[1] : null;
+}
+
+function replaceCookieValue(cookieHeader: string, name: string, newValue: string): string {
+  const parts = cookieHeader
+    .split(";")
+    .map((part) => part.trim())
+    .filter((part) => part && !part.startsWith(`${name}=`));
+  parts.push(`${name}=${newValue}`);
+  return parts.join("; ");
+}
+
+/**
+ * Access tokens expire after 15 minutes (see JWT_ACCESS_EXPIRES_IN in the
+ * API). Without this, any request made after that window comes back 401 even
+ * though the 7-day refresh_token cookie is still valid, and callers were
+ * left showing raw "unauthorized"/generic error states instead of quietly
+ * staying logged in.
+ */
+async function refreshSessionCookie(
+  cookieHeader: string,
+  nestPath: string,
+): Promise<string | null> {
+  const refreshPath = nestPath.startsWith("/secured/admin")
+    ? "/secured/admin/auth/refresh"
+    : "/portal/auth/refresh";
+
+  const res = await fetch(`${API_BASE_URL}${refreshPath}`, {
+    method: "POST",
+    headers: { cookie: cookieHeader },
+    redirect: "manual",
+  });
+  if (!res.ok) return null;
+
+  const setCookies =
+    typeof (res.headers as any).getSetCookie === "function" ? (res.headers as any).getSetCookie() : [];
+  return setCookies.find((c: string) => c.startsWith("session=")) ?? null;
+}
+
+/**
+ * Runs `fetch`, and on a 401 (and only when a refresh_token cookie is
+ * present and this isn't an auth endpoint itself, to avoid refresh loops)
+ * transparently refreshes the access token and retries once. Returns the
+ * final response plus the refreshed `session` Set-Cookie header, if any, so
+ * callers can forward it to the browser.
+ */
+async function fetchWithAutoRefresh(
+  target: string,
+  init: RequestInit & { headers: Headers },
+  nestPath: string,
+): Promise<{ response: Response; refreshedSessionCookie: string | null }> {
+  const response = await fetch(target, init);
+  if (response.status !== 401 || nestPath.includes("/auth/")) {
+    return { response, refreshedSessionCookie: null };
+  }
+
+  const cookieHeader = init.headers.get("cookie");
+  if (!cookieHeader || !cookieHeader.includes("refresh_token=")) {
+    return { response, refreshedSessionCookie: null };
+  }
+
+  const refreshedSessionCookie = await refreshSessionCookie(cookieHeader, nestPath);
+  if (!refreshedSessionCookie) {
+    return { response, refreshedSessionCookie: null };
+  }
+
+  const newSessionValue = extractCookieValue(refreshedSessionCookie, "session");
+  if (!newSessionValue) {
+    return { response, refreshedSessionCookie: null };
+  }
+
+  const retryHeaders = new Headers(init.headers);
+  retryHeaders.set("cookie", replaceCookieValue(cookieHeader, "session", newSessionValue));
+  const retryResponse = await fetch(target, { ...init, headers: retryHeaders });
+  return { response: retryResponse, refreshedSessionCookie };
+}
+
 /**
  * Thin proxy: forwards a Next.js API route request to the NestJS API,
  * piping back status/body/cookies unchanged. `nestPath` must start with "/".
@@ -52,12 +131,11 @@ export async function proxyRequest(
     }
   }
 
-  const nestRes = await fetch(target, {
-    method: request.method,
-    headers,
-    body: bodyToSend,
-    redirect: "manual",
-  });
+  const { response: nestRes, refreshedSessionCookie } = await fetchWithAutoRefresh(
+    target,
+    { method: request.method, headers, body: bodyToSend, redirect: "manual" },
+    nestPath,
+  );
 
   const contentType = nestRes.headers.get("content-type") ?? "application/json";
   const buffer = await nestRes.arrayBuffer();
@@ -66,6 +144,7 @@ export async function proxyRequest(
     headers: { "content-type": contentType },
   });
   forwardSetCookies(nestRes, res);
+  if (refreshedSessionCookie) res.headers.append("set-cookie", refreshedSessionCookie);
   return res;
 }
 
@@ -79,7 +158,11 @@ export async function proxyStream(request: Request, nestPath: string): Promise<R
   const target = `${API_BASE_URL}${nestPath}${url.search}`;
   const headers = buildHeaders(request);
 
-  const nestRes = await fetch(target, { method: "GET", headers, redirect: "manual" });
+  const { response: nestRes, refreshedSessionCookie } = await fetchWithAutoRefresh(
+    target,
+    { method: "GET", headers, redirect: "manual" },
+    nestPath,
+  );
 
   if (!nestRes.body) {
     return new Response(null, { status: nestRes.status });
@@ -94,6 +177,7 @@ export async function proxyStream(request: Request, nestPath: string): Promise<R
     },
   });
   forwardSetCookies(nestRes, res);
+  if (refreshedSessionCookie) res.headers.append("set-cookie", refreshedSessionCookie);
   return res;
 }
 
@@ -105,7 +189,11 @@ export async function proxyBinary(request: Request, nestPath: string): Promise<R
   const target = `${API_BASE_URL}${nestPath}${url.search}`;
   const headers = buildHeaders(request);
 
-  const nestRes = await fetch(target, { method: "GET", headers, redirect: "manual" });
+  const { response: nestRes, refreshedSessionCookie } = await fetchWithAutoRefresh(
+    target,
+    { method: "GET", headers, redirect: "manual" },
+    nestPath,
+  );
   const buffer = await nestRes.arrayBuffer();
 
   const res = new Response(buffer, {
@@ -116,5 +204,6 @@ export async function proxyBinary(request: Request, nestPath: string): Promise<R
     },
   });
   forwardSetCookies(nestRes, res);
+  if (refreshedSessionCookie) res.headers.append("set-cookie", refreshedSessionCookie);
   return res;
 }
