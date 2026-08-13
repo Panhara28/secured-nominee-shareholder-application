@@ -1,4 +1,4 @@
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "../lib/generated/prisma/index.js";
 import { scryptSync, randomBytes } from "crypto";
 import * as dotenv from "dotenv";
@@ -12,8 +12,9 @@ function hashPassword(password: string): string {
 }
 
 async function main() {
-  const url = process.env.DATABASE_URL || "file:./dev.db";
-  const adapter = new PrismaLibSql({ url });
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL environment variable is not set.");
+  const adapter = new PrismaMariaDb(url);
   const prisma = new PrismaClient({ adapter });
 
   console.log("Cleaning database…");

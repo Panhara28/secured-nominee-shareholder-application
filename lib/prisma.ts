@@ -1,9 +1,10 @@
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "./generated/prisma/index.js";
 
 function createPrismaClient() {
-  const url = process.env.DATABASE_URL || "file:./dev.db";
-  const adapter = new PrismaLibSql({ url });
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL environment variable is not set.");
+  const adapter = new PrismaMariaDb(url);
   return new PrismaClient({ adapter });
 }
 
