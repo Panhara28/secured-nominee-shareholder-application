@@ -50,7 +50,7 @@ function isSessionExpired(token: string | undefined): boolean {
   return exp * 1000 <= Date.now() + EXPIRY_SKEW_SECONDS * 1000;
 }
 
-// Access tokens expire after 15 minutes; the 7-day refresh_token cookie is
+// Access tokens expire after 60 minutes; the 7-day refresh_token cookie is
 // what keeps a full-page load from bouncing an otherwise-active user to the
 // login screen. Mirrors the retry done for client-side fetches in
 // lib/api-proxy.ts, but here we refresh proactively since middleware is the
@@ -131,7 +131,9 @@ export async function proxy(request: NextRequest) {
       sameSite: "lax",
       path: "/",
       secure: request.nextUrl.protocol === "https:",
-      maxAge: 60 * 15,
+      // Must stay numerically in sync with ACCESS_TOKEN_COOKIE_MAX_AGE_MS in
+      // secured-nominee-shareholder-api/src/lib/auth.ts.
+      maxAge: 60 * 60,
     });
   }
 
