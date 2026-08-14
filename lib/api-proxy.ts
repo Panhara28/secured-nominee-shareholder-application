@@ -35,11 +35,21 @@ function replaceCookieValue(cookieHeader: string, name: string, newValue: string
   return parts.join("; ");
 }
 
+// /roles and /permissions live outside /secured/admin but are admin-only
+// (mirrors isAdminPath in secured-nominee-shareholder-api/src/lib/auth.ts).
+function isAdminNestPath(nestPath: string): boolean {
+  return (
+    nestPath.startsWith("/secured/admin") ||
+    nestPath.startsWith("/roles") ||
+    nestPath.startsWith("/permissions")
+  );
+}
+
 // Admin and portal sessions use distinct cookie names (see src/lib/auth.ts
 // in secured-nominee-shareholder-api) so that logging into one doesn't
 // overwrite the other's cookie in the same browser.
 function cookieNamesFor(nestPath: string): { session: string; refresh: string } {
-  return nestPath.startsWith("/secured/admin")
+  return isAdminNestPath(nestPath)
     ? { session: "admin_session", refresh: "admin_refresh_token" }
     : { session: "session", refresh: "refresh_token" };
 }
@@ -55,7 +65,7 @@ async function refreshSessionCookie(
   cookieHeader: string,
   nestPath: string,
 ): Promise<string | null> {
-  const refreshPath = nestPath.startsWith("/secured/admin")
+  const refreshPath = isAdminNestPath(nestPath)
     ? "/secured/admin/auth/refresh"
     : "/portal/auth/refresh";
   const { session: sessionCookieName } = cookieNamesFor(nestPath);

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
-import { ArrowLeft, CheckCircle2, Loader2, Mail, Phone, ShieldCheck, User, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Mail, Pencil, Phone, ShieldCheck, User, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function formatDateTime(iso: string | null): string {
@@ -119,14 +119,23 @@ export default function AdminInternalUserDetail({ id }: { id: string }) {
 
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-xl font-semibold text-slate-800">{data.fullName}</h1>
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium",
-            data.isActive ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-600"
-          )}
-        >
-          {data.isActive ? t("statusActive") : t("statusInactive")}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium",
+              data.isActive ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-600"
+            )}
+          >
+            {data.isActive ? t("statusActive") : t("statusInactive")}
+          </span>
+          <Link
+            href={`/secured/admin/internal-users/${id}/edit`}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            {t("edit")}
+          </Link>
+        </div>
       </div>
 
       <SectionCard icon={<User className="h-4 w-4" />} title={t("col.name")}>

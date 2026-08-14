@@ -77,7 +77,14 @@ export default function AdminShell({ fullName, children }: Props) {
         {navItems.map((item) => {
           if (item.children) {
             const isOpen = openDropdown === item.label;
-            const anyChildActive = item.children.some((c) => pathname.startsWith(c.href));
+            const matchingChildren = item.children.filter(
+              (c) => pathname === c.href || pathname.startsWith(`${c.href}/`)
+            );
+            // Sibling routes can be prefixes of one another (e.g. internal-users
+            // vs internal-users/add) - only the longest (most specific) match
+            // should render as active, not every prefix that matches.
+            const activeChildHref = matchingChildren.sort((a, b) => b.href.length - a.href.length)[0]?.href;
+            const anyChildActive = matchingChildren.length > 0;
             const Icon = item.icon;
             return (
               <div key={item.label} className="mb-1">
@@ -101,7 +108,7 @@ export default function AdminShell({ fullName, children }: Props) {
                         onClick={() => setMobileOpen(false)}
                         className={cn(
                           "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors text-sm",
-                          pathname.startsWith(child.href)
+                          child.href === activeChildHref
                             ? "bg-white/15 text-white font-medium"
                             : "text-blue-200 hover:bg-blue-800/70 hover:text-white"
                         )}

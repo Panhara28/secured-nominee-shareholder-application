@@ -468,7 +468,41 @@
       "noRole": "No role assigned",
       "statusActive": "Active",
       "statusInactive": "Inactive",
-      "view": "View"
+      "view": "View",
+      "edit": "Edit",
+      "form": {
+        "fullName": "Full Name",
+        "fullNamePlaceholder": "Enter full name",
+        "username": "Username",
+        "usernamePlaceholder": "Choose a username",
+        "email": "Email Address",
+        "emailPlaceholder": "Enter email address",
+        "password": "Password",
+        "phoneNumber": "Phone Number",
+        "phoneNumberPlaceholder": "Enter phone number (optional)",
+        "role": "Role",
+        "rolePlaceholder": "Select a role",
+        "roleLoadError": "Failed to load roles.",
+        "isActive": "Active immediately",
+        "cancel": "Cancel"
+      },
+      "create": {
+        "passwordPlaceholder": "Create a password",
+        "passwordHint": "At least 6 characters.",
+        "submit": "Create User",
+        "submitting": "Creating…",
+        "success": "Internal user created successfully.",
+        "error": "Failed to create user. Please try again."
+      },
+      "editForm": {
+        "passwordPlaceholder": "Leave blank to keep current password",
+        "passwordHint": "Only fill this in to reset the password (min. 6 characters).",
+        "submit": "Save Changes",
+        "submitting": "Saving…",
+        "success": "Internal user updated successfully.",
+        "error": "Failed to update user. Please try again.",
+        "loadError": "Failed to load user."
+      }
     },
     "notifications": {
       "title": "Notifications",
