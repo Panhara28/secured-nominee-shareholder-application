@@ -17,7 +17,7 @@ export function AuthBrandSection() {
 
       <div className="relative z-10 flex h-full flex-col px-12 py-16 text-white">
         <div className="flex items-center gap-4">
-          <Image src="/moc-logo.png" alt="Ministry of Commerce" width={120} height={120} className="object-contain" style={{ height: "auto" }} />
+          <Image src="/moc-logo.png" alt="Ministry of Commerce" width={120} height={120} className="object-contain" style={{ height: "auto" }} priority />
           <div>
             <h1 className="text-4xl font-extrabold leading-tight">ក្រសួងពាណិជ្ជកម្ម</h1>
             <p className="mt-1 text-lg font-semibold text-blue-100">Ministry Of Commerce</p>

@@ -4,6 +4,7 @@ import EditRequest from "@/components/portal/beneficiary/EditRequest";
 
 export const metadata: Metadata = {
   title: "Edit Request — Secured Nominee Shareholder",
+  description: "Edit and resubmit a returned or approved request.",
 };
 
 type Props = { params: Promise<{ locale: string; id: string }> };

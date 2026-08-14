@@ -39,9 +39,7 @@ export default function PortalShell({
   const pathname = usePathname() ?? "";
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [beneficiaryOpen, setBeneficiaryOpen] = useState(
-    !navDisabled && pathname.startsWith("/portal/beneficiary"),
-  );
+  const [beneficiaryOpen, setBeneficiaryOpen] = useState(!navDisabled);
 
   const isEditRequestPage =
     /^\/portal\/beneficiary\/all-requests\/[^/]+\/edit$/.test(pathname);

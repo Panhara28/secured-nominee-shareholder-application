@@ -7,6 +7,7 @@ import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
 export const metadata: Metadata = {
   title: "Set New Password — Secured Nominee Shareholder",
+  description: "Enter your new password to complete the reset.",
 };
 
 type Props = {

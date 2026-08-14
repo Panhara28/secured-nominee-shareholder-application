@@ -4,6 +4,7 @@ import BeneficiaryRequestForm from "@/components/portal/beneficiary/BeneficiaryR
 
 export const metadata: Metadata = {
   title: "Request Add Beneficiary Owner — Secured Nominee Shareholder",
+  description: "Fill in all required fields to submit a new beneficiary owner request.",
 };
 
 type Props = { params: Promise<{ locale: string }> };

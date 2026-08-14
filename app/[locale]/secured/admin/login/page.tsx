@@ -6,6 +6,7 @@ import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
 export const metadata: Metadata = {
   title: "Admin Sign In — Secured Nominee Shareholder",
+  description: "Sign in to the Secured Nominee Shareholder admin panel.",
 };
 
 type Props = { params: Promise<{ locale: string }> };

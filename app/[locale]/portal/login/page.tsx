@@ -6,6 +6,7 @@ import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
 export const metadata: Metadata = {
   title: "Sign In — Secured Nominee Shareholder",
+  description: "Logon to Online Filing Information, and Nominee Shareholder Agreements.",
 };
 
 type Props = { params: Promise<{ locale: string }> };

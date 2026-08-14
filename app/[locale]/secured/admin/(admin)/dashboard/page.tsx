@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { setRequestLocale } from "next-intl/server";
 import DashboardClient from "@/components/admin/DashboardClient";
+
+export const metadata: Metadata = {
+  title: "Admin Dashboard — Secured Nominee Shareholder",
+  description: "Overview of shareholder requests, pending approvals, and recent activity.",
+};
 
 type Props = { params: Promise<{ locale: string }> };
 

@@ -6,6 +6,7 @@ import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
 export const metadata: Metadata = {
   title: "Reset Password — Secured Nominee Shareholder",
+  description: "Enter your email to receive a password reset link.",
 };
 
 type Props = { params: Promise<{ locale: string }> };

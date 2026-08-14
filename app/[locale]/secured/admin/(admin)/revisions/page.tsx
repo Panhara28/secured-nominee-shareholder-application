@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import RevisionLogBrowser from "@/components/beneficiary/RevisionLogBrowser";
+
+export const metadata: Metadata = {
+  title: "Admin Diff & Compare — Secured Nominee Shareholder",
+  description: "Review field-level changes across request edit history.",
+};
 
 type Props = { params: Promise<{ locale: string }> };
 

@@ -4,6 +4,7 @@ import RequestDetail from "@/components/portal/beneficiary/RequestDetail";
 
 export const metadata: Metadata = {
   title: "Request Detail — Secured Nominee Shareholder",
+  description: "View the full details and status of a submitted request.",
 };
 
 type Props = { params: Promise<{ locale: string; id: string }> };

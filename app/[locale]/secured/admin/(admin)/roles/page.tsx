@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { ShieldCheck } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Role & Permission — Secured Nominee Shareholder",
+  description: "Manage staff roles and permission assignments.",
+};
 
 type Props = { params: Promise<{ locale: string }> };
 

@@ -8,6 +8,7 @@ import DashboardRequestsTable from "@/components/portal/DashboardRequestsTable";
 
 export const metadata: Metadata = {
   title: "Dashboard — Secured Nominee Shareholder",
+  description: "View your request summary, status breakdown, and recent activity.",
 };
 
 export const dynamic = "force-dynamic";
@@ -183,7 +184,7 @@ export default async function DashboardPage({ params }: Props) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -194,9 +195,9 @@ export default async function DashboardPage({ params }: Props) {
               <div className={`h-12 w-12 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
                 <Icon className={`h-6 w-6 ${stat.color}`} />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                <p className="text-sm text-slate-500">{stat.label}</p>
+                <p className="text-sm text-slate-500 break-words">{stat.label}</p>
               </div>
             </div>
           );

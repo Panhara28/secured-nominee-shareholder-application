@@ -5,6 +5,7 @@ import AllRequestsList from "@/components/portal/beneficiary/AllRequestsList";
 
 export const metadata: Metadata = {
   title: "All Requests — Secured Nominee Shareholder",
+  description: "Browse and manage all your submitted nominee shareholder requests.",
 };
 
 type Props = { params: Promise<{ locale: string }> };

@@ -146,7 +146,7 @@ export default function AdminUsersList() {
       <h1 className="text-xl font-semibold text-slate-800">{t("pageTitle")}</h1>
       <p className="text-sm text-slate-500">{t("pageSubtitle")}</p>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
             <Clock className="h-5 w-5 text-amber-600" />

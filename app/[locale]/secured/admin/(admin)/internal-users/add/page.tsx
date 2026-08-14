@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { EditIcon } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Create User — Secured Nominee Shareholder",
+  description: "Add a new staff or administrator account.",
+};
 
 type Props = { params: Promise<{ locale: string }> };
 

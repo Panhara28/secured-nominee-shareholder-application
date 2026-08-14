@@ -158,7 +158,7 @@ export default function AllRequestsList() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
             <FileEdit className="h-5 w-5 text-slate-500" />
