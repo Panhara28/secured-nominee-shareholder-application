@@ -343,6 +343,7 @@
       "portalName": "Admin Panel",
       "dashboard": "Dashboard",
       "requests": "Requests",
+      "reports": "Reports",
       "activitiesLogs": "Activities Log",
       "users": "External Users",
       "internalUsers": "Administrators",
@@ -397,6 +398,24 @@
       "returnDialogDescription": "Please provide a reason for returning this request for correction. The shareholder will be able to see this.",
       "returnReason": "Return Reason",
       "confirmReturn": "Return Request"
+    },
+    "reports": {
+      "pageTitle": "Reports",
+      "periodLabel": "Period",
+      "period": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "yearly": "Yearly",
+        "custom": "Custom Range"
+      },
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "totalRequests": "Total Requests",
+      "downloadExcel": "Download Excel",
+      "downloading": "Downloading…",
+      "downloadError": "Failed to download the Excel report. Please try again.",
+      "loadError": "Failed to load the report. Please try again."
     },
     "users": {
       "pageTitle": "User Registrations",

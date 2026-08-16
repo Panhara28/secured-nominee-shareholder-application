@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/lib/navigation";
 import {
   LayoutDashboard, UserCog, ShieldCheck, ChevronDown,
-  User, EditIcon, Menu, X, LogOut, FileText, History, GitCompare,
+  User, EditIcon, Menu, X, LogOut, FileText, History, GitCompare, FileSpreadsheet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
@@ -37,6 +37,7 @@ export default function AdminShell({ fullName, children }: Props) {
   const navItems: NavItem[] = [
     { label: t("dashboard"), href: "/secured/admin/dashboard", icon: LayoutDashboard },
     { label: t("requests"), href: "/secured/admin/requests", icon: FileText },
+    { label: t("reports"), href: "/secured/admin/reports", icon: FileSpreadsheet },
     { label: t("activitiesLogs"), href: "/secured/admin/activities-logs", icon: History },
     { label: trev("diffCompare"), href: "/secured/admin/revisions", icon: GitCompare },
     { label: t("users"), href: "/secured/admin/users", icon: User },
