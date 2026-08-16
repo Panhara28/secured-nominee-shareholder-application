@@ -78,6 +78,10 @@ export default function AdminUserDetail({ id }: { id: string }) {
   const [returnReason, setReturnReason] = useState("");
   const [returnReasonError, setReturnReasonError] = useState<string | null>(null);
 
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectReasonError, setRejectReasonError] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -132,6 +136,7 @@ export default function AdminUserDetail({ id }: { id: string }) {
         router.push("/secured/admin/users");
       } else {
         toast.success(t("rejectSuccess"));
+        setRejectOpen(false);
         router.push("/secured/admin/users");
       }
     } catch (err) {
@@ -174,6 +179,21 @@ export default function AdminUserDetail({ id }: { id: string }) {
     }
     setReturnReasonError(null);
     handleAction("return", returnReason.trim());
+  };
+
+  const openRejectDialog = () => {
+    setRejectReason(verifyResult && !verifyResult.verified ? verifyResult.issues.join("\n") : "");
+    setRejectReasonError(null);
+    setRejectOpen(true);
+  };
+
+  const handleConfirmReject = () => {
+    if (!rejectReason.trim()) {
+      setRejectReasonError(tr("reasonRequired"));
+      return;
+    }
+    setRejectReasonError(null);
+    handleAction("reject", rejectReason.trim());
   };
 
   if (loading) {
@@ -230,7 +250,7 @@ export default function AdminUserDetail({ id }: { id: string }) {
               )}
               {verifyResult && !verifyResult.verified && (
                 <button
-                  onClick={() => handleAction("reject")}
+                  onClick={openRejectDialog}
                   disabled={acting !== null}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50"
                 >
@@ -342,6 +362,36 @@ export default function AdminUserDetail({ id }: { id: string }) {
             <Button type="button" onClick={handleConfirmReturn} disabled={acting !== null} className="bg-orange-600 hover:bg-orange-700 text-white">
               <RotateCcw className="h-4 w-4" />
               {acting === "return" ? t("returning") : t("confirmReturn")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tr("rejectDialogTitle")}</DialogTitle>
+            <DialogDescription>{tr("rejectDialogDescription")}</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={rejectReason}
+            onChange={(e) => { setRejectReason(e.target.value); if (rejectReasonError) setRejectReasonError(null); }}
+            placeholder={tr("reasonPlaceholder")}
+            rows={4}
+          />
+          {rejectReasonError && <p className="mt-1.5 text-xs text-red-600">{rejectReasonError}</p>}
+          <DialogFooter>
+            <DialogClose
+              render={
+                <Button type="button" variant="outline" disabled={acting !== null}>
+                  <X className="h-4 w-4" />
+                  {tr("cancel")}
+                </Button>
+              }
+            />
+            <Button type="button" onClick={handleConfirmReject} disabled={acting !== null} className="bg-red-600 hover:bg-red-700 text-white">
+              <XCircle className="h-4 w-4" />
+              {acting === "reject" ? t("rejecting") : tr("confirmReject")}
             </Button>
           </DialogFooter>
         </DialogContent>
