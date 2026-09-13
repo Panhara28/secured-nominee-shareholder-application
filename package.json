@@ -10,7 +10,9 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma generate && prisma migrate deploy",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "deploy:uat": "pongreay uat",
+    "postdeploy:uat": "bash scripts/ensure-nominee-net.sh"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
