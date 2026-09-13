@@ -32,6 +32,7 @@ export default function AdminRolePermissionsEditor({ slug }: { slug: string }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [permissions, setPermissions] = useState<PermissionRow[]>([]);
+  const [savedPermissions, setSavedPermissions] = useState<PermissionRow[]>([]);
   const [otherRoles, setOtherRoles] = useState<RoleOption[]>([]);
   const [cloneFromSlug, setCloneFromSlug] = useState("");
 
@@ -63,6 +64,7 @@ export default function AdminRolePermissionsEditor({ slug }: { slug: string }) {
         setName(detailJson.data.name);
         setDescription(detailJson.data.description ?? "");
         setPermissions(permsJson.permissions);
+        setSavedPermissions(permsJson.permissions);
         setOtherRoles(
           (rolesJson.data as { id: number; slug: string; name: string }[]).filter((r) => r.slug !== slug),
         );
@@ -107,6 +109,24 @@ export default function AdminRolePermissionsEditor({ slug }: { slug: string }) {
     );
   };
 
+  const isDirty = permissions.some((p) => {
+    const saved = savedPermissions.find((s) => s.moduleId === p.moduleId);
+    if (!saved) return true;
+    return ACTIONS.some((action) => p[action] !== saved[action]);
+  });
+
+  const handleDiscardPermissions = () => setPermissions(savedPermissions);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
   const handleSavePermissions = async () => {
     setSavingPermissions(true);
     try {
@@ -127,6 +147,7 @@ export default function AdminRolePermissionsEditor({ slug }: { slug: string }) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? t("permissionsError"));
       }
+      setSavedPermissions(permissions);
       toast.success(t("permissionsSuccess"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("permissionsError"));
@@ -153,6 +174,7 @@ export default function AdminRolePermissionsEditor({ slug }: { slug: string }) {
       const permsRes = await fetch(`/api/roles/permissions/${slug}`);
       const permsJson = await permsRes.json();
       setPermissions(permsJson.permissions);
+      setSavedPermissions(permsJson.permissions);
       toast.success(t("cloneSuccess"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("cloneError"));
@@ -290,7 +312,7 @@ export default function AdminRolePermissionsEditor({ slug }: { slug: string }) {
           </table>
         </div>
         <div className="px-5 py-4 border-t border-slate-100">
-          <Button type="button" onClick={handleSavePermissions} disabled={savingPermissions}>
+          <Button type="button" onClick={handleSavePermissions} disabled={savingPermissions || !isDirty}>
             {savingPermissions ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -305,6 +327,35 @@ export default function AdminRolePermissionsEditor({ slug }: { slug: string }) {
           </Button>
         </div>
       </div>
+
+      {isDirty && (
+        <div className="sticky bottom-4 z-30 mx-auto flex max-w-2xl items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 shadow-lg">
+          <p className="text-sm font-medium text-amber-800">{t("unsavedPermissions")}</p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDiscardPermissions}
+              disabled={savingPermissions}
+              className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-50"
+            >
+              {t("discardPermissions")}
+            </button>
+            <Button type="button" size="sm" onClick={handleSavePermissions} disabled={savingPermissions}>
+              {savingPermissions ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("savingPermissions")}
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  {t("savePermissions")}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

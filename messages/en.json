@@ -580,6 +580,8 @@
         "savingPermissions": "Saving…",
         "permissionsSuccess": "Permissions updated.",
         "permissionsError": "Failed to update permissions.",
+        "unsavedPermissions": "You have unsaved permission changes.",
+        "discardPermissions": "Discard",
         "cloneFromPlaceholder": "Clone from role…",
         "cloneButton": "Clone",
         "cloneSuccess": "Permissions cloned successfully.",

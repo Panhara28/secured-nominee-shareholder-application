@@ -580,6 +580,8 @@
         "savingPermissions": "កំពុងរក្សាទុក…",
         "permissionsSuccess": "បានធ្វើបច្ចុប្បន្នភាពសិទ្ធិ។",
         "permissionsError": "មិនអាចធ្វើបច្ចុប្បន្នភាពសិទ្ធិបានទេ។",
+        "unsavedPermissions": "អ្នកមានការផ្លាស់ប្តូរសិទ្ធិដែលមិនទាន់បានរក្សាទុក។",
+        "discardPermissions": "បោះបង់",
         "cloneFromPlaceholder": "ចម្លងពីតួនាទី…",
         "cloneButton": "ចម្លង",
         "cloneSuccess": "បានចម្លងសិទ្ធិដោយជោគជ័យ។",
