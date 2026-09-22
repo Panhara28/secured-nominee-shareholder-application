@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   ArrowDown, ArrowUp, ArrowUpDown, Clock, Eye, Loader2,
-  RotateCcw, Search, RefreshCw, UserCheck,
+  RotateCcw, Search, RefreshCw, UserCheck, Users,
 } from "lucide-react";
 import { useRouter } from "@/lib/navigation";
 import EmptyState from "@/components/ui/EmptyState";
@@ -146,7 +146,16 @@ export default function AdminUsersList() {
       <h1 className="text-xl font-semibold text-slate-800">{t("pageTitle")}</h1>
       <p className="text-sm text-slate-500">{t("pageSubtitle")}</p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+            <Users className="h-5 w-5 text-blue-600" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-slate-500 truncate">{t("summary.total")}</p>
+            <p className="text-xl font-semibold text-slate-800">{summary.pending + summary.returned + summary.active}</p>
+          </div>
+        </div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
             <Clock className="h-5 w-5 text-amber-600" />
@@ -268,7 +277,11 @@ export default function AdminUsersList() {
                 </tr>
               ) : (
                 rows.map((u) => (
-                  <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <tr
+                    key={u.id}
+                    onClick={() => router.push(`/secured/admin/users/${u.id}`)}
+                    className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                  >
                     <td className="px-4 py-3 text-slate-800">{u.fullName}</td>
                     <td className="px-4 py-3 text-slate-700">{u.companyName ?? "-"}</td>
                     <td className="px-4 py-3 text-slate-700">
@@ -290,7 +303,7 @@ export default function AdminUsersList() {
                         {u.status === "ACTIVE" ? t("statusActive") : u.status === "RETURNED" ? t("statusReturned") : t("statusPending")}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => router.push(`/secured/admin/users/${u.id}`)}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"

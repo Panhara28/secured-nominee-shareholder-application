@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/lib/navigation";
+import { Link, useRouter } from "@/lib/navigation";
 import { Eye, Loader2, Pencil, Search } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import StatusBadge from "@/components/ui/StatusBadge";
+import TablePagination from "@/components/ui/TablePagination";
 
 type RequestRow = {
   id: number;
@@ -28,16 +29,55 @@ function formatDate(iso: string): string {
 export default function RequestToUpdateSearch() {
   const t = useTranslations("portal.requestUpdate");
   const tr = useTranslations("beneficiary.allRequests");
+  const router = useRouter();
 
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
   const [rows, setRows] = useState<RequestRow[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Item 19: once the user starts an update (editing an APPROVED request),
+  // it moves to UPDATE_REQUESTED and previously had no home in this page —
+  // only the status changed in All Requests. Surface it here while it's
+  // still awaiting review; once resolved it behaves like any other request
+  // and only lives in All Requests, same as every other status.
+  const [pendingUpdates, setPendingUpdates] = useState<RequestRow[]>([]);
+  const [pendingUpdatesLoading, setPendingUpdatesLoading] = useState(true);
+
   useEffect(() => {
-    if (!appliedQuery) return;
+    let cancelled = false;
+    async function fetchPendingUpdates() {
+      setPendingUpdatesLoading(true);
+      try {
+        const params = new URLSearchParams({
+          status: "UPDATE_REQUESTED",
+          sortKey: "submittedAt",
+          sortDir: "desc",
+          page: "1",
+          limit: "50",
+        });
+        const res = await fetch(`/api/portal/beneficiary/requests?${params.toString()}`);
+        if (!res.ok || cancelled) return;
+        const json = await res.json();
+        if (!cancelled) setPendingUpdates(json.data ?? []);
+      } catch {
+        // non-fatal — the section just stays empty
+      } finally {
+        if (!cancelled) setPendingUpdatesLoading(false);
+      }
+    }
+    fetchPendingUpdates();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function fetchResults() {
@@ -49,15 +89,15 @@ export default function RequestToUpdateSearch() {
           status: "APPROVED",
           sortKey: "submittedAt",
           sortDir: "desc",
-          page: "1",
-          limit: "20",
+          page: String(page),
+          limit: String(limit),
         });
         const res = await fetch(`/api/portal/beneficiary/requests?${params.toString()}`);
-        if (!res.ok) throw new Error("Failed to search requests.");
+        if (!res.ok) throw new Error("Failed to load requests.");
         const json = await res.json();
         if (cancelled) return;
         setRows(json.data);
-        setSearched(true);
+        setTotal(json.total);
       } catch {
         if (!cancelled) setError(tr("loadError"));
       } finally {
@@ -69,10 +109,11 @@ export default function RequestToUpdateSearch() {
     return () => {
       cancelled = true;
     };
-  }, [appliedQuery, tr]);
+  }, [appliedQuery, page, tr]);
 
   const handleSearch = () => {
     setAppliedQuery(query.trim());
+    setPage(1);
   };
 
   return (
@@ -96,21 +137,13 @@ export default function RequestToUpdateSearch() {
             {t("search")}
           </button>
         </div>
-        <p className="mt-2 text-xs text-slate-400">{t("searchHint")}</p>
       </div>
 
-      {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-16 text-center">
-          <Loader2 className="h-5 w-5 animate-spin text-slate-400 inline-block" />
-        </div>
-      ) : searched ? (
+      {!pendingUpdatesLoading && pendingUpdates.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-100">
+            <p className="text-sm font-semibold text-slate-700">{t("pendingUpdatesTitle")}</p>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -123,55 +156,111 @@ export default function RequestToUpdateSearch() {
                 </tr>
               </thead>
               <tbody>
-                {rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={5}>
-                      <EmptyState message={t("noResults")} />
+                {pendingUpdates.map((r) => (
+                  <tr
+                    key={r.id}
+                    onClick={() => router.push(`/portal/beneficiary/all-requests/${r.id}`)}
+                    className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                  >
+                    <td className="px-4 py-3 font-mono text-xs text-slate-700">{r.requestNo}</td>
+                    <td className="px-4 py-3 text-slate-800">
+                      <div>{r.companyNameEn}</div>
+                      {r.companyNameKh && <div className="text-xs text-slate-400">{r.companyNameKh}</div>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={r.status} label={tr(`status.${r.status}` as Parameters<typeof tr>[0])} />
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(r.submittedAt)}</td>
+                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                      <Link
+                        href={`/portal/beneficiary/all-requests/${r.id}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200 transition-colors"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        {tr("view")}
+                      </Link>
                     </td>
                   </tr>
-                ) : (
-                  rows.map((r) => (
-                    <tr key={r.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs text-slate-700">{r.requestNo}</td>
-                      <td className="px-4 py-3 text-slate-800">
-                        <div>{r.companyNameEn}</div>
-                        {r.companyNameKh && <div className="text-xs text-slate-400">{r.companyNameKh}</div>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={r.status} label={tr(`status.${r.status}` as Parameters<typeof tr>[0])} />
-                      </td>
-                      <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(r.submittedAt)}</td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="inline-flex items-center gap-2">
-                          <Link
-                            href={`/portal/beneficiary/all-requests/${r.id}`}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200 transition-colors"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                            {tr("view")}
-                          </Link>
-                          <Link
-                            href={`/portal/beneficiary/all-requests/${r.id}/edit`}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                            {t("update")}
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
         </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-16 flex flex-col items-center justify-center text-center gap-2">
-          <Search className="h-8 w-8 text-slate-300" />
-          <p className="text-sm text-slate-500">{t("searchPrompt")}</p>
+      )}
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
+
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide whitespace-nowrap">{tr("col.requestNo")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide whitespace-nowrap">{tr("col.company")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide whitespace-nowrap">{tr("col.status")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide whitespace-nowrap">{tr("col.submittedAt")}</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wide whitespace-nowrap">{tr("col.action")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="py-16 text-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-slate-400 inline-block" />
+                  </td>
+                </tr>
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={5}>
+                    <EmptyState message={t("noResults")} />
+                  </td>
+                </tr>
+              ) : (
+                rows.map((r) => (
+                  <tr
+                    key={r.id}
+                    onClick={() => router.push(`/portal/beneficiary/all-requests/${r.id}`)}
+                    className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                  >
+                    <td className="px-4 py-3 font-mono text-xs text-slate-700">{r.requestNo}</td>
+                    <td className="px-4 py-3 text-slate-800">
+                      <div>{r.companyNameEn}</div>
+                      {r.companyNameKh && <div className="text-xs text-slate-400">{r.companyNameKh}</div>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={r.status} label={tr(`status.${r.status}` as Parameters<typeof tr>[0])} />
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(r.submittedAt)}</td>
+                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="inline-flex items-center gap-2">
+                        <Link
+                          href={`/portal/beneficiary/all-requests/${r.id}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200 transition-colors"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          {tr("view")}
+                        </Link>
+                        <Link
+                          href={`/portal/beneficiary/all-requests/${r.id}/edit`}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          {t("update")}
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        <TablePagination page={page} total={total} limit={limit} onPageChange={setPage} />
+      </div>
     </div>
   );
 }

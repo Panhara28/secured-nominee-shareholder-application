@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/lib/navigation";
-import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, FileText, GitCompare, History, Loader2, MessageSquare, Pencil, RotateCcw, ShieldCheck, Users, X, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, FileText, GitCompare, History, Loader2, MessageSquare, PanelRightClose, PanelRightOpen, Pencil, RotateCcw, ShieldCheck, Users, X, XCircle } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { splitReasonItems } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
@@ -45,17 +45,20 @@ function DocList({ names }: { names: string[] }) {
 function SectionCard({
   icon,
   title,
+  headerAction,
   children,
 }: {
   icon: React.ReactNode;
   title: string;
+  headerAction?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
       <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100">
         <span className="text-blue-600">{icon}</span>
-        <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
+        <h3 className="text-sm font-semibold text-slate-700 flex-1">{title}</h3>
+        {headerAction}
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -126,6 +129,7 @@ type RequestDetailData = {
   shareholderContractDocNames?: string[];
   otherDocNames?: string[];
   consentAgreed: boolean;
+  agreementDate: string | null;
   submittedAt: string;
   updatedAt: string;
   rejectionReason: string | null;
@@ -161,6 +165,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<{ verified: boolean; issues: string[]; checkedAt: string } | null>(null);
   const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [editHistoryOpen, setEditHistoryOpen] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -266,9 +271,14 @@ export default function AdminRequestDetail({ id }: { id: string }) {
   };
 
   const openReturnDialog = () => {
-    setReturnReason(verifyResult && !verifyResult.verified ? verifyResult.issues.join("\n") : "");
+    setReturnReason("");
     setReturnReasonError(null);
     setReturnOpen(true);
+  };
+
+  const addReturnSuggestion = (issue: string) => {
+    setReturnReason((prev) => (prev.trim() ? `${prev}\n${issue}` : issue));
+    if (returnReasonError) setReturnReasonError(null);
   };
 
   const handleConfirmReturn = () => {
@@ -324,8 +334,8 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                 )}
               </div>
             </div>
-            {(request.status === "PENDING" || request.status === "IN_REVIEW" || request.status === "UPDATE_REQUESTED") && (
-              <div className="flex-shrink-0 text-right space-y-2">
+            <div className="flex-shrink-0 text-right space-y-2">
+              {(request.status === "PENDING" || request.status === "IN_REVIEW" || request.status === "UPDATE_REQUESTED") && (
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -348,10 +358,13 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                     </button>
                   )}
                 </div>
-                {actionError && <p className="mt-1 text-xs text-red-600 max-w-xs">{actionError}</p>}
-                {verifyError && <p className="mt-1 text-xs text-red-600 max-w-xs">{verifyError}</p>}
-              </div>
-            )}
+              )}
+              <p className="text-xs text-slate-500">
+                {t("col.submittedAt")}: <span className="font-medium text-slate-700">{formatDate(request.submittedAt)}</span>
+              </p>
+              {actionError && <p className="mt-1 text-xs text-red-600 max-w-xs">{actionError}</p>}
+              {verifyError && <p className="mt-1 text-xs text-red-600 max-w-xs">{verifyError}</p>}
+            </div>
           </div>
         ) : (
           <h1 className="text-lg font-semibold text-slate-800">{t("detailTitle")}</h1>
@@ -381,17 +394,22 @@ export default function AdminRequestDetail({ id }: { id: string }) {
               </ul>
             )}
             <p className="mt-1 text-xs text-slate-400">{formatDate(verifyResult.checkedAt)}</p>
-            {!verifyResult.verified && (
-              <button
-                type="button"
-                onClick={openReturnDialog}
-                disabled={acting !== null}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-orange-100 hover:bg-orange-200 px-4 py-2 text-sm font-medium text-orange-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <RotateCcw className="h-4 w-4" />
-                {acting === "return" ? ta("returning") : ta("return")}
-              </button>
-            )}
+            {/* Item 40: shown whether verification failed or passed — an
+                admin may still want to return a request that verified clean
+                (e.g. an issue they spotted manually). The reason dialog
+                already requires a reason either way (openReturnDialog only
+                pre-fills it from verifyResult.issues when verification
+                failed; a passing verify starts with an empty, still-required
+                reason field). */}
+            <button
+              type="button"
+              onClick={openReturnDialog}
+              disabled={acting !== null}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-orange-100 hover:bg-orange-200 px-4 py-2 text-sm font-medium text-orange-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <RotateCcw className="h-4 w-4" />
+              {acting === "return" ? ta("returning") : ta("return")}
+            </button>
           </div>
         </div>
       )}
@@ -455,6 +473,23 @@ export default function AdminRequestDetail({ id }: { id: string }) {
             rows={4}
           />
           {returnReasonError && <p className="mt-1.5 text-xs text-red-600">{returnReasonError}</p>}
+          {verifyResult && !verifyResult.verified && verifyResult.issues.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs text-slate-500 mb-1.5">{ta("suggestionsLabel")}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {verifyResult.issues.map((issue, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => addReturnSuggestion(issue)}
+                    className="rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3 py-1 text-xs text-slate-700 transition-colors text-left"
+                  >
+                    {issue}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <DialogFooter>
             <DialogClose
               render={
@@ -481,8 +516,20 @@ export default function AdminRequestDetail({ id }: { id: string }) {
           {t("notFound")}
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        <div className="lg:col-span-8 space-y-4">
+        <div className={`grid grid-cols-1 gap-4 items-start ${editHistoryOpen ? "lg:grid-cols-12" : ""}`}>
+        <div className={editHistoryOpen ? "lg:col-span-8 space-y-4" : "space-y-4"}>
+          {!editHistoryOpen && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setEditHistoryOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors"
+              >
+                <PanelRightOpen className="h-3.5 w-3.5" />
+                {trev("expand")} {trev("title")}
+              </button>
+            </div>
+          )}
           {/* 1. Company Information */}
           <SectionCard icon={<Building2 className="h-4 w-4" />} title={`1. ${tf("step1Title")}`}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -500,20 +547,20 @@ export default function AdminRequestDetail({ id }: { id: string }) {
           {/* 2. Nominee Shareholder Information */}
           <SectionCard icon={<Users className="h-4 w-4" />} title={`2. ${tf("step2Title")}`}>
             <div className="flex items-start gap-6 mb-4">
-              <PersonPhoto name={request.shPhotoName ?? null} />
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label={t("shareholderName")} value={`${request.shLastNameEn} ${request.shFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.shLastNameKh ?? ""} ${request.shFirstNameKh ?? ""}`.trim()} />
                 <Field label={tf("dob")} value={formatDate(request.shDob)} />
-                <Field label={tf("shBecameDate")} value={formatDate(request.shBecameDate)} />
                 <Field label={tf("nationality")} value={request.shNationality} />
                 <Field label={tf("gender")} value={genderLabel(request.shGender)} />
                 <Field label={tf("idCard")} value={request.shIdCard} />
                 <Field label={tf("issueDate")} value={formatDate(request.shIdIssuedDate)} />
                 <Field label={tf("expiryDate")} value={formatDate(request.shIdExpiredDate)} />
                 <Field label={tf("email")} value={request.shEmail} />
+                <Field label={tf("shBecameDate")} value={formatDate(request.shBecameDate)} />
                 <Field label={tf("phone")} value={request.shPhone} />
               </div>
+              <PersonPhoto name={request.shPhotoName ?? null} />
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
@@ -524,21 +571,21 @@ export default function AdminRequestDetail({ id }: { id: string }) {
           {/* 3. Beneficial Owner Information */}
           <SectionCard icon={<Users className="h-4 w-4" />} title={`3. ${tf("step3Title")}`}>
             <div className="flex items-start gap-6 mb-4">
-              <PersonPhoto name={request.ownerPhotoName ?? null} />
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label={t("ownerNameEn")} value={`${request.ownerLastNameEn} ${request.ownerFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.ownerLastNameKh ?? ""} ${request.ownerFirstNameKh ?? ""}`.trim()} />
                 <Field label={tf("dob")} value={formatDate(request.ownerDob)} />
-                <Field label={tf("becameDate")} value={formatDate(request.ownerBecameDate)} />
                 <Field label={tf("nationality")} value={request.ownerNationality} />
                 <Field label={tf("gender")} value={genderLabel(request.ownerGender)} />
                 <Field label={tf("idCard")} value={request.ownerIdCard} />
                 <Field label={tf("issueDate")} value={formatDate(request.ownerIdIssuedDate)} />
                 <Field label={tf("expiryDate")} value={formatDate(request.ownerIdExpiredDate)} />
                 <Field label={tf("email")} value={request.ownerEmail} />
+                <Field label={tf("becameDate")} value={formatDate(request.ownerBecameDate)} />
                 <Field label={tf("phone")} value={request.ownerPhone} />
                 <Field label={t("shareAmount")} value={request.shareAmount} />
               </div>
+              <PersonPhoto name={request.ownerPhotoName ?? null} />
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
@@ -570,18 +617,9 @@ export default function AdminRequestDetail({ id }: { id: string }) {
               </label>
             </div>
             <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Field label={t("col.submittedAt")} value={formatDate(request.submittedAt)} />
+              <Field label={tf("agreementDate")} value={formatDate(request.agreementDate)} />
               <Field label={t("col.requestType")} value={request.type} />
             </div>
-          </SectionCard>
-        </div>
-
-        <div className="lg:col-span-4 space-y-4">
-          <SectionCard icon={<Pencil className="h-4 w-4" />} title={trev("title")}>
-            <RequestRevisionHistory revisions={request.revisions} />
-          </SectionCard>
-          <SectionCard icon={<History className="h-4 w-4" />} title={t("log.title")}>
-            <RequestActivityLog logs={request.logs} />
           </SectionCard>
 
           {(request.status === "PENDING" || request.status === "IN_REVIEW" || request.status === "UPDATE_REQUESTED") && (
@@ -598,6 +636,30 @@ export default function AdminRequestDetail({ id }: { id: string }) {
             </div>
           )}
         </div>
+
+        {editHistoryOpen && (
+          <div className="lg:col-span-4 space-y-4">
+            <SectionCard
+              icon={<Pencil className="h-4 w-4" />}
+              title={trev("title")}
+              headerAction={
+                <button
+                  type="button"
+                  onClick={() => setEditHistoryOpen(false)}
+                  aria-label={trev("collapse")}
+                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <PanelRightClose className="h-4 w-4" />
+                </button>
+              }
+            >
+              <RequestRevisionHistory revisions={request.revisions} />
+            </SectionCard>
+            <SectionCard icon={<History className="h-4 w-4" />} title={t("log.title")}>
+              <RequestActivityLog logs={request.logs} />
+            </SectionCard>
+          </div>
+        )}
         </div>
       )}
     </div>

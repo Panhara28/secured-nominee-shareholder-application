@@ -29,5 +29,9 @@ export default async function AdminGroupLayout({ children, params }: Props) {
 
   const user = (await res.json()) as AdminMe;
 
-  return <AdminShell fullName={user.fullName}>{children}</AdminShell>;
+  return (
+    <AdminShell fullName={user.fullName} permissions={user.permissions}>
+      {children}
+    </AdminShell>
+  );
 }

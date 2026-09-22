@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, FileText, Loader2, Paperclip, RotateCcw, Save, Send, Sparkles, Upload, X, XCircle } from "lucide-react";
+import { ArrowLeft, Eye, FileText, Loader2, Paperclip, RotateCcw, Save, Send, Sparkles, Upload, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn, splitReasonItems } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import SearchableSelect from "@/components/ui/SearchableSelect";
+import { COUNTRIES } from "@/lib/countries";
 
 function StepTabs({
   steps,
@@ -119,6 +122,48 @@ function guessFieldsFromReason(reason: string): { fields: string[]; steps: numbe
   return { fields, steps: [...steps].sort((a, b) => a - b) };
 }
 
+// Item 30/31 validation helpers, shared by PersonFields and the top-level
+// step-completion checks.
+const KHMER_NAME_REGEX = /^[ក-៿᧠-᧿\s]+$/;
+const LATIN_NAME_REGEX = /^[A-Za-z\s.'-]+$/;
+const PHONE_REGEX = /^[0-9\s]{8,12}$/;
+
+function isValidKhmerName(v: string): boolean {
+  return !v || KHMER_NAME_REGEX.test(v);
+}
+function isValidLatinName(v: string): boolean {
+  return !v || LATIN_NAME_REGEX.test(v);
+}
+function isValidPhone(v: string): boolean {
+  return !v || PHONE_REGEX.test(v);
+}
+function isFutureDate(v: string): boolean {
+  if (!v) return false;
+  return new Date(v) > new Date();
+}
+// Both the nominee shareholder and the beneficial owner must be adults —
+// the date picker itself is capped at this date (via `max`) so a future
+// date can't be picked, and this re-checks on blur/paste for the same rule.
+function maxDobFor18(): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 18);
+  return d.toISOString().slice(0, 10);
+}
+function isUnder18(v: string): boolean {
+  if (!v) return false;
+  return v > maxDobFor18();
+}
+function isValidBecameDate(became: string, dob: string): boolean {
+  if (!became) return true;
+  if (isFutureDate(became)) return false;
+  if (dob && became < dob) return false;
+  return true;
+}
+function isValidIdDateRange(issued: string, expired: string): boolean {
+  if (!issued || !expired) return true;
+  return issued < expired;
+}
+
 const PROVINCES_KH = [
   "ភ្នំពេញ", "កណ្តាល", "កំពង់ចាម", "កំពង់ឆ្នាំង", "កំពង់ស្ពឺ", "កំពង់ធំ", "កំពត",
   "កោះកុង", "ក្រចេះ", "មណ្ឌលគិរី", "ឧត្តរមានជ័យ", "បន្ទាយមានជ័យ", "បាត់ដំបង",
@@ -134,13 +179,15 @@ type FormData = {
   /* Step 2 — Beneficiary Owner */
   lastNameKh: string; firstNameKh: string; lastNameEn: string; firstNameEn: string;
   dob: string; becameDate: string; nationality: string; gender: string;
-  idCard: string; idIssuedDate: string; idExpiredDate: string;
+  idType: "ID" | "PASSPORT"; idCard: string; idIssuedDate: string; idExpiredDate: string;
   email: string; phone: string; shareAmount: string;
   /* Step 3 — Shareholder */
   shLastNameKh: string; shFirstNameKh: string; shLastNameEn: string; shFirstNameEn: string;
   shDob: string; shBecameDate: string; shNationality: string; shGender: string;
-  shIdCard: string; shIdIssuedDate: string; shIdExpiredDate: string;
+  shIdType: "ID" | "PASSPORT"; shIdCard: string; shIdIssuedDate: string; shIdExpiredDate: string;
   shEmail: string; shPhone: string;
+  /* Step 4 — Agreement */
+  agreementDate: string;
 };
 
 const EMPTY: FormData = {
@@ -148,14 +195,72 @@ const EMPTY: FormData = {
   companyProvince: "", companyDistrict: "", companyCommune: "", companyVillage: "",
   companyStreet: "", companyHouse: "", companyPhone: "", companyOfficePhone: "", companyEmail: "",
   lastNameKh: "", firstNameKh: "", lastNameEn: "", firstNameEn: "",
-  dob: "", becameDate: "", nationality: "", gender: "", idCard: "", idIssuedDate: "", idExpiredDate: "",
+  dob: "", becameDate: "", nationality: "", gender: "", idType: "ID", idCard: "", idIssuedDate: "", idExpiredDate: "",
   email: "", phone: "", shareAmount: "",
   shLastNameKh: "", shFirstNameKh: "", shLastNameEn: "", shFirstNameEn: "",
-  shDob: "", shBecameDate: "", shNationality: "", shGender: "", shIdCard: "", shIdIssuedDate: "", shIdExpiredDate: "",
+  shDob: "", shBecameDate: "", shNationality: "", shGender: "", shIdType: "ID", shIdCard: "", shIdIssuedDate: "", shIdExpiredDate: "",
   shEmail: "", shPhone: "",
+  agreementDate: "",
 };
 
-type UploadedDoc = { name: string };
+// `file` is the raw picked File, kept in memory only, until it's uploaded to
+// the real Document/Media backend once a requestId exists (item 39). `url`
+// is either a local preview blob (while `file` is still pending) or a real
+// `/api/portal/documents/:id/download` link once `documentId` is set.
+type UploadedDoc = { name: string; url?: string; file?: File; documentId?: number };
+
+// Matches the API's DocumentCategory enum (prisma/schema.prisma).
+type DocCategory = "SH_PHOTO" | "SH_ID_DOC" | "OWNER_PHOTO" | "OWNER_ID_DOC" | "SHAREHOLDER_CONTRACT" | "OTHER";
+
+async function uploadDocument(
+  requestId: string,
+  category: DocCategory,
+  file: File,
+): Promise<{ documentId: number; filename: string }> {
+  const formData = new FormData();
+  formData.append("requestId", requestId);
+  formData.append("category", category);
+  formData.append("file", file);
+  const res = await fetch("/api/portal/documents/upload", { method: "POST", body: formData });
+  if (!res.ok) throw new Error("Document upload failed.");
+  const data = await res.json();
+  return { documentId: data.document.id as number, filename: data.document.media.filename as string };
+}
+
+function documentDownloadUrl(documentId: number): string {
+  return `/api/portal/documents/${documentId}/download`;
+}
+
+// Item 42: in-progress form state persisted to sessionStorage so a language
+// switch (which remounts this component) doesn't lose what the user typed.
+// Raw `File` objects aren't serializable, so persisted doc entries never
+// carry one — an in-flight (not-yet-uploaded) attachment picked just before
+// a language switch is a known, accepted gap (its filename/preview survive,
+// re-attaching the file itself doesn't).
+type PersistedDoc = Omit<UploadedDoc, "file">;
+type PersistedDraft = {
+  form: Partial<FormData>;
+  ownerPhotoName: string | null;
+  shPhotoName: string | null;
+  ownerPhotoDocId: number | null;
+  shPhotoDocId: number | null;
+  ownerIdDocs: PersistedDoc[];
+  shIdDocs: PersistedDoc[];
+  shareholderContractDocs: PersistedDoc[];
+  supportingDocs: PersistedDoc[];
+  consentAgreed: boolean;
+  activeStep: number;
+};
+
+function readPersistedDraft(storageKey: string): PersistedDraft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(storageKey);
+    return raw ? (JSON.parse(raw) as PersistedDraft) : null;
+  } catch {
+    return null;
+  }
+}
 
 const FAKE_FIRST_KH = ["សុខា", "ដារា", "សុភា", "វិចិត្រ", "ចន្ថា"];
 const FAKE_LAST_KH = ["ចាន់", "សាន", "គឹម", "លី", "អ៊ូច"];
@@ -192,6 +297,16 @@ function randomDateBetween(startYear: number, endYear: number): string {
   return `${year}-${month}-${day}`;
 }
 
+// Auto-fill needs real files (not just placeholder names) so that submitting
+// the fake-filled form actually uploads documents — the API rejects submit
+// without real SH_ID_DOC/OWNER_ID_DOC/SHAREHOLDER_CONTRACT uploads, and its
+// upload validator sniffs the real "%PDF-" signature, so a plain text blob
+// wouldn't pass either.
+function makeFakePdfFile(name: string): File {
+  const content = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\ntrailer<</Size 4/Root 1 0 R>>\n%%EOF";
+  return new File([content], name, { type: "application/pdf" });
+}
+
 function generateFakePerson(prefix: "sh" | "") {
   const key = (f: string) => (prefix ? `${prefix}${f}` : `${f.charAt(0).toLowerCase()}${f.slice(1)}`);
   return {
@@ -212,7 +327,7 @@ function generateFakePerson(prefix: "sh" | "") {
 }
 
 const FAKE_PROFILE_PHOTO = "/profile-manager.jpg";
-const FAKE_ID_DOC_NAME = "sample_passport.jpg";
+const FAKE_ID_DOC_NAME = "sample_passport.pdf";
 const FAKE_CONTRACT_DOC_NAME = "Nominee shareholder agreement KHM.pdf";
 const FAKE_OTHER_DOC_NAME = "This is  other documents.pdf";
 
@@ -236,6 +351,7 @@ function generateFakeFormData(): FormData {
     shareAmount: String(Math.floor(Math.random() * 9000) + 1000),
     ...generateFakePerson(""),
     ...generateFakePerson("sh"),
+    agreementDate: randomDateBetween(2024, 2026),
   } as unknown as FormData;
 }
 
@@ -249,6 +365,7 @@ function PersonFields({
   photo,
   setPhoto,
   setPhotoName,
+  setPhotoFile,
   idDocs,
   setIdDocs,
   requiredFields,
@@ -265,6 +382,7 @@ function PersonFields({
   photo: string | null;
   setPhoto: (v: string | null) => void;
   setPhotoName: (v: string | null) => void;
+  setPhotoFile: (v: File | null) => void;
   idDocs: UploadedDoc[];
   setIdDocs: React.Dispatch<React.SetStateAction<UploadedDoc[]>>;
   requiredFields: string[];
@@ -275,8 +393,20 @@ function PersonFields({
   const key = (f: string) => (prefix ? `${prefix}${f}` : `${f.charAt(0).toLowerCase()}${f.slice(1)}`);
   const isFlagged = (f: string) => flaggedFields.includes(key(f));
   const isUnchanged = (f: string) => unchangedFields.includes(key(f));
-  const fieldError = (f: string) =>
-    isUnchanged(f) ? t("unchangedFieldInline") : touched[key(f)] && !form[key(f)] ? t("required") : "";
+  const fieldError = (f: string) => {
+    if (isUnchanged(f)) return t("unchangedFieldInline");
+    if (!touched[key(f)]) return "";
+    const val = form[key(f)] ?? "";
+    if (!val) return requiredFields.includes(key(f)) ? t("required") : "";
+    if ((f === "LastNameKh" || f === "FirstNameKh") && !isValidKhmerName(val)) return t("invalidNameKh");
+    if ((f === "LastNameEn" || f === "FirstNameEn") && !isValidLatinName(val)) return t("invalidNameEn");
+    if (f === "Dob" && isFutureDate(val)) return t("invalidDobFuture");
+    if (f === "Dob" && isUnder18(val)) return t("invalidDobUnder18");
+    if (f === "BecameDate" && !isValidBecameDate(val, form[key("Dob")] ?? "")) return t("invalidBecameDate");
+    if (f === "IdExpiredDate" && !isValidIdDateRange(form[key("IdIssuedDate")] ?? "", val)) return t("invalidIdDates");
+    if (f === "Phone" && !isValidPhone(val)) return t("invalidPhone");
+    return "";
+  };
   const inputCls = (f: string) =>
     cn("w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
       isUnchanged(f)
@@ -290,24 +420,6 @@ function PersonFields({
   return (
     <div className="space-y-5">
       <div className="flex items-start gap-6">
-        {/* Photo */}
-        <div className="flex flex-col items-center gap-2 shrink-0">
-          <div className="h-44 w-36 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-300 overflow-hidden">
-            {photo ? (
-              <img src={photo} alt="person" className="h-full w-full object-cover" />
-            ) : (
-              <svg className="h-16 w-16" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
-              </svg>
-            )}
-          </div>
-          <label className="w-full inline-flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-blue-500 py-1.5 text-xs font-medium text-white hover:bg-blue-600 transition-colors">
-            <Upload className="h-3.5 w-3.5" />
-            {t("uploadPhoto")}
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setPhoto(URL.createObjectURL(f)); setPhotoName(f.name); } }} />
-          </label>
-        </div>
-
         {/* Names */}
         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {(["LastNameKh", "FirstNameKh", "LastNameEn", "FirstNameEn"] as const).map((f) => {
@@ -323,7 +435,7 @@ function PersonFields({
                   type="text"
                   value={form[key(field)] ?? ""}
                   onChange={(e) => set({ [key(field)]: e.target.value })}
-                  onBlur={() => isRequired && setTouched({ [key(field)]: true })}
+                  onBlur={() => setTouched({ [key(field)]: true })}
                   className={inputCls(field)}
                 />
                 {fieldError(field) && <p className="mt-1 text-xs text-red-600">{fieldError(field)}</p>}
@@ -331,35 +443,43 @@ function PersonFields({
             );
           })}
         </div>
+
+        {/* Photo — moved to the right side (item 10) */}
+        <div className="flex flex-col items-center gap-2 shrink-0">
+          <div className="h-44 w-36 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-300 overflow-hidden">
+            {photo ? (
+              <img src={photo} alt="person" className="h-full w-full object-cover" />
+            ) : (
+              <svg className="h-16 w-16" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+              </svg>
+            )}
+          </div>
+          <label className="w-full inline-flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-blue-500 py-1.5 text-xs font-medium text-white hover:bg-blue-600 transition-colors">
+            <Upload className="h-3.5 w-3.5" />
+            {t("uploadPhoto")}
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setPhoto(URL.createObjectURL(f)); setPhotoName(f.name); setPhotoFile(f); } }} />
+          </label>
+        </div>
       </div>
 
-      {/* DOB / Became Date / Nationality / Gender */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* DOB / Nationality / Gender */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("dob")} <span className="text-red-500">*</span></label>
-          <input type="date" value={form[key("Dob")] ?? ""} onChange={(e) => set({ [key("Dob")]: e.target.value })} onBlur={() => setTouched({ [key("Dob")]: true })} className={inputCls("Dob")} />
+          <input type="date" max={maxDobFor18()} value={form[key("Dob")] ?? ""} onChange={(e) => set({ [key("Dob")]: e.target.value })} onBlur={() => setTouched({ [key("Dob")]: true })} className={inputCls("Dob")} />
           {fieldError("Dob") && <p className="mt-1 text-xs text-red-600">{fieldError("Dob")}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            {t(prefix === "sh" ? "shBecameDate" : "becameDate")} <span className="text-red-500">*</span>
-          </label>
-          <input type="date" value={form[key("BecameDate")] ?? ""} onChange={(e) => set({ [key("BecameDate")]: e.target.value })} onBlur={() => setTouched({ [key("BecameDate")]: true })} className={inputCls("BecameDate")} />
-          {fieldError("BecameDate") && <p className="mt-1 text-xs text-red-600">{fieldError("BecameDate")}</p>}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("nationality")} <span className="text-red-500">*</span></label>
-          <select value={form[key("Nationality")] ?? ""} onChange={(e) => set({ [key("Nationality")]: e.target.value })} onBlur={() => setTouched({ [key("Nationality")]: true })} className={cn(inputCls("Nationality"), "bg-white")}>
-            <option value="">{t("select")}</option>
-            <option value="KH">{t("nationalityKH")}</option>
-            <option value="CN">{t("nationalityCN")}</option>
-            <option value="TH">{t("nationalityTH")}</option>
-            <option value="VN">{t("nationalityVN")}</option>
-            <option value="OTHER">{t("nationalityOther")}</option>
-          </select>
+          <SearchableSelect
+            value={form[key("Nationality")] ?? ""}
+            onChange={(code) => set({ [key("Nationality")]: code })}
+            onBlur={() => setTouched({ [key("Nationality")]: true })}
+            options={COUNTRIES}
+            placeholder={t("select")}
+            className={cn(inputCls("Nationality"), "bg-white")}
+          />
           {fieldError("Nationality") && <p className="mt-1 text-xs text-red-600">{fieldError("Nationality")}</p>}
         </div>
         <div>
@@ -376,16 +496,46 @@ function PersonFields({
       {/* ID Card */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{t("idCard")}</label>
-          <input type="text" value={form[key("IdCard")] ?? ""} onChange={(e) => set({ [key("IdCard")]: e.target.value })} className={inputCls("IdCard")} />
+          <div className="mb-1.5 flex items-center gap-4">
+            <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+              <input
+                type="radio"
+                name={key("IdType")}
+                value="ID"
+                checked={(form[key("IdType")] ?? "ID") === "ID"}
+                onChange={() => set({ [key("IdType")]: "ID" })}
+                className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500"
+              />
+              {t("idTypeId")}
+            </label>
+            <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+              <input
+                type="radio"
+                name={key("IdType")}
+                value="PASSPORT"
+                checked={form[key("IdType")] === "PASSPORT"}
+                onChange={() => set({ [key("IdType")]: "PASSPORT" })}
+                className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500"
+              />
+              {t("idTypePassport")}
+            </label>
+          </div>
+          <input
+            type="text"
+            value={form[key("IdCard")] ?? ""}
+            onChange={(e) => set({ [key("IdCard")]: e.target.value })}
+            placeholder={form[key("IdType")] === "PASSPORT" ? t("passportPlaceholder") : t("idCardPlaceholder")}
+            className={inputCls("IdCard")}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("issueDate")}</label>
-          <input type="date" value={form[key("IdIssuedDate")] ?? ""} onChange={(e) => set({ [key("IdIssuedDate")]: e.target.value })} className={inputCls("IdIssuedDate")} />
+          <input type="date" value={form[key("IdIssuedDate")] ?? ""} onChange={(e) => set({ [key("IdIssuedDate")]: e.target.value })} onBlur={() => setTouched({ [key("IdIssuedDate")]: true })} className={inputCls("IdIssuedDate")} />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("expiryDate")}</label>
-          <input type="date" value={form[key("IdExpiredDate")] ?? ""} onChange={(e) => set({ [key("IdExpiredDate")]: e.target.value })} className={inputCls("IdExpiredDate")} />
+          <input type="date" value={form[key("IdExpiredDate")] ?? ""} onChange={(e) => set({ [key("IdExpiredDate")]: e.target.value })} onBlur={() => setTouched({ [key("IdExpiredDate")]: true })} className={inputCls("IdExpiredDate")} />
+          {fieldError("IdExpiredDate") && <p className="mt-1 text-xs text-red-600">{fieldError("IdExpiredDate")}</p>}
         </div>
       </div>
 
@@ -397,11 +547,23 @@ function PersonFields({
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("phone")}</label>
-          <div className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500">
+          <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500", fieldError("Phone") ? "border-red-400" : "border-slate-300")}>
             <span className="text-base leading-none">🇰🇭</span>
             <span className="text-slate-400 text-xs">+855</span>
-            <input type="tel" value={form[key("Phone")] ?? ""} onChange={(e) => set({ [key("Phone")]: e.target.value })} placeholder="23 756 789" className="flex-1 outline-none text-sm bg-transparent" />
+            <input type="tel" value={form[key("Phone")] ?? ""} onChange={(e) => set({ [key("Phone")]: e.target.value })} onBlur={() => setTouched({ [key("Phone")]: true })} placeholder="23 756 789" className="flex-1 outline-none text-sm bg-transparent" />
           </div>
+          {fieldError("Phone") && <p className="mt-1 text-xs text-red-600">{fieldError("Phone")}</p>}
+        </div>
+      </div>
+
+      {/* Date of Becoming — moved directly above the ID document upload (item 11) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            {t(prefix === "sh" ? "shBecameDate" : "becameDate")} <span className="text-red-500">*</span>
+          </label>
+          <input type="date" value={form[key("BecameDate")] ?? ""} onChange={(e) => set({ [key("BecameDate")]: e.target.value })} onBlur={() => setTouched({ [key("BecameDate")]: true })} className={inputCls("BecameDate")} />
+          {fieldError("BecameDate") && <p className="mt-1 text-xs text-red-600">{fieldError("BecameDate")}</p>}
         </div>
       </div>
 
@@ -416,22 +578,35 @@ function PersonFields({
             <div className="min-w-0">
               <p className="text-sm text-slate-700">{t("idDocLabel")} <span className="text-red-500">*</span></p>
               <p className="text-xs text-slate-400 mt-0.5">{t("idDocHint")}</p>
-              {idDocs.length > 0 && (
+              {idDocs.length > 0 ? (
                 <ul className="mt-1 space-y-0.5">
                   {idDocs.map((d, i) => (
                     <li key={i} className="flex items-center gap-1 text-xs text-slate-500">
-                      <span className="truncate">{d.name}</span>
+                      {d.url ? (
+                        <a href={d.url} target="_blank" rel="noreferrer" className="truncate text-blue-500 hover:text-blue-700 hover:underline" title={t("preview")}>
+                          {d.name}
+                        </a>
+                      ) : (
+                        <span className="truncate">{d.name}</span>
+                      )}
+                      {d.url && (
+                        <a href={d.url} target="_blank" rel="noreferrer" className="ml-1 text-blue-500 hover:text-blue-700" title={t("preview")}>
+                          <Eye className="h-3 w-3" />
+                        </a>
+                      )}
                       <button type="button" onClick={() => setIdDocs((p) => p.filter((_, idx) => idx !== i))} className="ml-1 text-red-400 hover:text-red-600"><X className="h-3 w-3" /></button>
                     </li>
                   ))}
                 </ul>
+              ) : (
+                <p className="mt-1 text-xs text-red-600">{t("requiredDoc")}</p>
               )}
             </div>
           </div>
           <label className="inline-flex items-center gap-1.5 cursor-pointer flex-shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
             <Paperclip className="h-3.5 w-3.5" />
             {t("attach")}
-            <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setIdDocs((p) => [...p, { name: f.name }]); } e.target.value = ""; }} className="hidden" />
+            <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setIdDocs((p) => [...p, { name: f.name, url: URL.createObjectURL(f), file: f }]); } e.target.value = ""; }} className="hidden" />
           </label>
         </div>
       </div>
@@ -444,11 +619,37 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
   const router = useRouter();
   const pathname = usePathname() ?? "/en";
   const locale = pathname.split("/")[1] || "en";
+
+  // Item 42: switching language re-mounts this component (the [locale]
+  // route segment changes), which would otherwise wipe in-progress form
+  // state. Persist to sessionStorage (same tab/session only) and restore via
+  // lazy state initializers so a language switch doesn't lose what the user
+  // typed. For a brand-new (non-edit) request this is the full initial
+  // state; for an edit it's merged over the fetched record once that loads
+  // (see loadExisting below).
+  const storageKey = `beneficiary-request-draft:${editId ?? "new"}`;
+  const clearPersisted = () => {
+    try {
+      sessionStorage.removeItem(storageKey);
+    } catch {
+      // ignore
+    }
+  };
+
+  // Lazy-initializing state from sessionStorage would make the very first
+  // client render differ from the server-rendered HTML (server never has
+  // access to it), causing a hydration mismatch. So every field below starts
+  // at its plain server-safe default and the persisted draft, if any, is
+  // applied in an effect after mount instead (see the restore effect below).
   const [form, setForm] = useState<FormData>(EMPTY);
+  const [ownerPhotoDocId, setOwnerPhotoDocId] = useState<number | null>(null);
   const [ownerPhoto, setOwnerPhoto] = useState<string | null>(null);
+  const [ownerPhotoFile, setOwnerPhotoFile] = useState<File | null>(null);
   const [ownerPhotoName, setOwnerPhotoName] = useState<string | null>(null);
   const [ownerIdDocs, setOwnerIdDocs] = useState<UploadedDoc[]>([]);
+  const [shPhotoDocId, setShPhotoDocId] = useState<number | null>(null);
   const [shPhoto, setShPhoto] = useState<string | null>(null);
+  const [shPhotoFile, setShPhotoFile] = useState<File | null>(null);
   const [shPhotoName, setShPhotoName] = useState<string | null>(null);
   const [shIdDocs, setShIdDocs] = useState<UploadedDoc[]>([]);
   const [supportingDocs, setSupportingDocs] = useState<UploadedDoc[]>([]);
@@ -462,11 +663,71 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
   const [loadError, setLoadError] = useState<string | null>(null);
   const [notAllowed, setNotAllowed] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
+  const [draftRestored, setDraftRestored] = useState(!editId ? false : true);
   const [returnReason, setReturnReason] = useState<string | null>(null);
   const [returnSteps, setReturnSteps] = useState<number[]>([]);
   const [flaggedFields, setFlaggedFields] = useState<string[]>([]);
   const [originalFlaggedValues, setOriginalFlaggedValues] = useState<Record<string, string>>({});
   const [unchangedFields, setUnchangedFields] = useState<string[]>([]);
+  const [loadedStatus, setLoadedStatus] = useState<string | null>(null);
+
+  // Runs once after mount to apply any sessionStorage draft — deferred out of
+  // the useState initializers above so the first client render matches the
+  // server-rendered HTML (see the comment there).
+  useEffect(() => {
+    if (editId) return;
+    const persistedDraft = readPersistedDraft(storageKey);
+    if (persistedDraft) {
+      setForm((f) => ({ ...f, ...persistedDraft.form }));
+      setOwnerPhotoDocId(persistedDraft.ownerPhotoDocId ?? null);
+      setOwnerPhoto(persistedDraft.ownerPhotoDocId ? documentDownloadUrl(persistedDraft.ownerPhotoDocId) : null);
+      setOwnerPhotoName(persistedDraft.ownerPhotoName ?? null);
+      setOwnerIdDocs(persistedDraft.ownerIdDocs ?? []);
+      setShPhotoDocId(persistedDraft.shPhotoDocId ?? null);
+      setShPhoto(persistedDraft.shPhotoDocId ? documentDownloadUrl(persistedDraft.shPhotoDocId) : null);
+      setShPhotoName(persistedDraft.shPhotoName ?? null);
+      setShIdDocs(persistedDraft.shIdDocs ?? []);
+      setSupportingDocs(persistedDraft.supportingDocs ?? []);
+      setShareholderContractDocs(persistedDraft.shareholderContractDocs ?? []);
+      setConsentAgreed(!!persistedDraft.consentAgreed);
+      setActiveStep(persistedDraft.activeStep ?? 1);
+    }
+    setDraftRestored(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keep the persisted snapshot in sync with in-progress edits. `file` is
+  // stripped from doc entries since raw File objects aren't serializable —
+  // only already-uploaded (documentId) or filename/preview info survives.
+  const stripFile = (docs: UploadedDoc[]): PersistedDoc[] =>
+    docs.map((d) => ({ name: d.name, url: d.url, documentId: d.documentId }));
+  useEffect(() => {
+    // Skip persisting until the mount-time draft restore above has settled
+    // (otherwise it would overwrite the just-read draft with the pre-restore
+    // empty defaults), and, for an edit, while the initial fetch is still in
+    // flight (see loadExisting below) for the same reason.
+    if (!draftRestored) return;
+    if (editId && loading) return;
+    try {
+      const snapshot: PersistedDraft = {
+        form,
+        ownerPhotoName,
+        shPhotoName,
+        ownerPhotoDocId,
+        shPhotoDocId,
+        ownerIdDocs: stripFile(ownerIdDocs),
+        shIdDocs: stripFile(shIdDocs),
+        shareholderContractDocs: stripFile(shareholderContractDocs),
+        supportingDocs: stripFile(supportingDocs),
+        consentAgreed,
+        activeStep,
+      };
+      sessionStorage.setItem(storageKey, JSON.stringify(snapshot));
+    } catch {
+      // ignore (e.g. private browsing storage quota)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form, ownerPhotoName, shPhotoName, ownerPhotoDocId, shPhotoDocId, ownerIdDocs, shIdDocs, shareholderContractDocs, supportingDocs, consentAgreed, activeStep, editId, loading, draftRestored]);
 
   useEffect(() => {
     if (!editId) return;
@@ -481,10 +742,15 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           return;
         }
         const data = await res.json();
-        if (data.status !== "APPROVED" && data.status !== "RETURNED") {
+        if (
+          data.status !== "APPROVED" &&
+          data.status !== "RETURNED" &&
+          data.status !== "DRAFT"
+        ) {
           setNotAllowed(true);
           return;
         }
+        setLoadedStatus(data.status);
         const dateOnly = (iso: string | null) => (iso ? iso.slice(0, 10) : "");
         const mappedForm: FormData = {
           companyNameKh: data.companyNameKh ?? "", companyNameEn: data.companyNameEn ?? "",
@@ -497,13 +763,16 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           lastNameKh: data.ownerLastNameKh ?? "", firstNameKh: data.ownerFirstNameKh ?? "",
           lastNameEn: data.ownerLastNameEn ?? "", firstNameEn: data.ownerFirstNameEn ?? "",
           dob: dateOnly(data.ownerDob), becameDate: dateOnly(data.ownerBecameDate), nationality: data.ownerNationality ?? "", gender: data.ownerGender ?? "",
-          idCard: data.ownerIdCard ?? "", idIssuedDate: dateOnly(data.ownerIdIssuedDate), idExpiredDate: dateOnly(data.ownerIdExpiredDate),
+          // idType/shIdType (ID Card vs Passport) aren't persisted server-side
+          // yet — always resets to "ID" on load, see the note in saveRequest().
+          idType: "ID", idCard: data.ownerIdCard ?? "", idIssuedDate: dateOnly(data.ownerIdIssuedDate), idExpiredDate: dateOnly(data.ownerIdExpiredDate),
           email: data.ownerEmail ?? "", phone: data.ownerPhone ?? "", shareAmount: data.shareAmount ?? "",
           shLastNameKh: data.shLastNameKh ?? "", shFirstNameKh: data.shFirstNameKh ?? "",
           shLastNameEn: data.shLastNameEn ?? "", shFirstNameEn: data.shFirstNameEn ?? "",
           shDob: dateOnly(data.shDob), shBecameDate: dateOnly(data.shBecameDate), shNationality: data.shNationality ?? "", shGender: data.shGender ?? "",
-          shIdCard: data.shIdCard ?? "", shIdIssuedDate: dateOnly(data.shIdIssuedDate), shIdExpiredDate: dateOnly(data.shIdExpiredDate),
+          shIdType: "ID", shIdCard: data.shIdCard ?? "", shIdIssuedDate: dateOnly(data.shIdIssuedDate), shIdExpiredDate: dateOnly(data.shIdExpiredDate),
           shEmail: data.shEmail ?? "", shPhone: data.shPhone ?? "",
+          agreementDate: dateOnly(data.agreementDate),
         };
         if (data.status === "RETURNED" && data.rejectionReason) {
           setReturnReason(data.rejectionReason);
@@ -517,14 +786,35 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             setOriginalFlaggedValues(snapshot);
           }
         }
-        setForm(mappedForm);
-        setOwnerPhotoName(data.ownerPhotoName ?? null);
-        setShPhotoName(data.shPhotoName ?? null);
-        setOwnerIdDocs((data.ownerIdDocNames ?? []).map((name: string) => ({ name })));
-        setShIdDocs((data.shIdDocNames ?? []).map((name: string) => ({ name })));
-        setShareholderContractDocs((data.shareholderContractDocNames ?? []).map((name: string) => ({ name })));
-        setSupportingDocs((data.otherDocNames ?? []).map((name: string) => ({ name })));
-        setConsentAgreed(!!data.consentAgreed);
+        // Real uploaded documents (item 39) — grouped by category into the
+        // same shape the wizard already works with, using the authenticated
+        // download proxy as `url` so photos/previews render immediately.
+        type ApiDocument = { id: number; category: DocCategory; media: { filename: string } };
+        const documents = (data.documents ?? []) as ApiDocument[];
+        const byCategory = (cat: DocCategory) =>
+          documents
+            .filter((d) => d.category === cat)
+            .map((d) => ({ name: d.media.filename, documentId: d.id, url: documentDownloadUrl(d.id) }));
+        const shPhotoDoc = byCategory("SH_PHOTO")[0];
+        const ownerPhotoDoc = byCategory("OWNER_PHOTO")[0];
+
+        // If a language switch remounted this page mid-edit, restore the
+        // in-progress (unsaved) edits over the freshly-fetched server data
+        // (item 42).
+        const saved = readPersistedDraft(storageKey);
+        setForm(saved ? { ...mappedForm, ...saved.form } : mappedForm);
+        setOwnerPhotoName((saved ? saved.ownerPhotoName : ownerPhotoDoc?.name) ?? null);
+        setOwnerPhotoDocId(saved ? saved.ownerPhotoDocId : (ownerPhotoDoc?.documentId ?? null));
+        setOwnerPhoto(saved?.ownerPhotoDocId ? documentDownloadUrl(saved.ownerPhotoDocId) : (ownerPhotoDoc ? ownerPhotoDoc.url : null));
+        setShPhotoName((saved ? saved.shPhotoName : shPhotoDoc?.name) ?? null);
+        setShPhotoDocId(saved ? saved.shPhotoDocId : (shPhotoDoc?.documentId ?? null));
+        setShPhoto(saved?.shPhotoDocId ? documentDownloadUrl(saved.shPhotoDocId) : (shPhotoDoc ? shPhotoDoc.url : null));
+        setOwnerIdDocs(saved?.ownerIdDocs ?? byCategory("OWNER_ID_DOC"));
+        setShIdDocs(saved?.shIdDocs ?? byCategory("SH_ID_DOC"));
+        setShareholderContractDocs(saved?.shareholderContractDocs ?? byCategory("SHAREHOLDER_CONTRACT"));
+        setSupportingDocs(saved?.supportingDocs ?? byCategory("OTHER"));
+        setConsentAgreed(saved ? !!saved.consentAgreed : !!data.consentAgreed);
+        if (saved?.activeStep) setActiveStep(saved.activeStep);
       } catch {
         if (!cancelled) setLoadError(t("editLoadError"));
       } finally {
@@ -561,10 +851,14 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     setOwnerPhotoName("profile-manager.jpg");
     setShPhoto(FAKE_PROFILE_PHOTO);
     setShPhotoName("profile-manager.jpg");
-    setOwnerIdDocs([{ name: FAKE_ID_DOC_NAME }]);
-    setShIdDocs([{ name: FAKE_ID_DOC_NAME }]);
-    setShareholderContractDocs([{ name: FAKE_CONTRACT_DOC_NAME }]);
-    setSupportingDocs([{ name: FAKE_OTHER_DOC_NAME }]);
+    const ownerIdFile = makeFakePdfFile(FAKE_ID_DOC_NAME);
+    const shIdFile = makeFakePdfFile(FAKE_ID_DOC_NAME);
+    const contractFile = makeFakePdfFile(FAKE_CONTRACT_DOC_NAME);
+    const otherFile = makeFakePdfFile(FAKE_OTHER_DOC_NAME);
+    setOwnerIdDocs([{ name: ownerIdFile.name, url: URL.createObjectURL(ownerIdFile), file: ownerIdFile }]);
+    setShIdDocs([{ name: shIdFile.name, url: URL.createObjectURL(shIdFile), file: shIdFile }]);
+    setShareholderContractDocs([{ name: contractFile.name, url: URL.createObjectURL(contractFile), file: contractFile }]);
+    setSupportingDocs([{ name: otherFile.name, url: URL.createObjectURL(otherFile), file: otherFile }]);
     setConsentAgreed(true);
   };
 
@@ -574,6 +868,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     companyPhone: 1, companyEmail: 1,
     shLastNameEn: 2, shFirstNameEn: 2, shDob: 2, shBecameDate: 2, shNationality: 2, shGender: 2,
     lastNameEn: 3, firstNameEn: 3, dob: 3, becameDate: 3, nationality: 3, gender: 3, shareAmount: 3,
+    agreementDate: 4,
   };
 
   const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = Object.entries(STEP_OF_FIELD).reduce(
@@ -585,8 +880,50 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     {} as Record<number, (keyof FormData)[]>
   );
 
+  // Extra per-step validation beyond "is this field non-empty": name
+  // character sets, date rules, phone format, and required uploads
+  // (items 30-33). Feeds both the stepper/Next-button gating and the
+  // final submit-time check below.
+  const stepExtraValid = (step: number): boolean => {
+    if (step === 1) {
+      return isValidPhone(form.companyPhone) && isValidPhone(form.companyOfficePhone);
+    }
+    if (step === 2) {
+      return (
+        isValidKhmerName(form.shLastNameKh) &&
+        isValidKhmerName(form.shFirstNameKh) &&
+        isValidLatinName(form.shLastNameEn) &&
+        isValidLatinName(form.shFirstNameEn) &&
+        !isFutureDate(form.shDob) &&
+        !isUnder18(form.shDob) &&
+        isValidBecameDate(form.shBecameDate, form.shDob) &&
+        isValidIdDateRange(form.shIdIssuedDate, form.shIdExpiredDate) &&
+        isValidPhone(form.shPhone) &&
+        shIdDocs.length > 0
+      );
+    }
+    if (step === 3) {
+      return (
+        isValidKhmerName(form.lastNameKh) &&
+        isValidKhmerName(form.firstNameKh) &&
+        isValidLatinName(form.lastNameEn) &&
+        isValidLatinName(form.firstNameEn) &&
+        !isFutureDate(form.dob) &&
+        !isUnder18(form.dob) &&
+        isValidBecameDate(form.becameDate, form.dob) &&
+        isValidIdDateRange(form.idIssuedDate, form.idExpiredDate) &&
+        isValidPhone(form.phone) &&
+        ownerIdDocs.length > 0
+      );
+    }
+    if (step === 4) {
+      return shareholderContractDocs.length > 0;
+    }
+    return true;
+  };
+
   const isStepComplete = (step: number) =>
-    (STEP_REQUIRED_FIELDS[step] ?? []).every((f) => !!form[f]);
+    (STEP_REQUIRED_FIELDS[step] ?? []).every((f) => !!form[f]) && stepExtraValid(step);
 
   const validateAndFocusStep = () => {
     const required: (keyof FormData)[] = [
@@ -595,6 +932,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
       "companyPhone", "companyEmail",
       "lastNameEn", "firstNameEn", "dob", "becameDate", "nationality", "gender", "shareAmount",
       "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
+      "agreementDate",
     ];
     const t2: Record<string, boolean> = {};
     required.forEach((k) => (t2[k] = true));
@@ -605,6 +943,12 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
       const missingSteps = missing.map((k) => STEP_OF_FIELD[k] ?? 1);
       setActiveStep(Math.min(...missingSteps));
       return false;
+    }
+    for (const step of [1, 2, 3, 4]) {
+      if (!stepExtraValid(step)) {
+        setActiveStep(step);
+        return false;
+      }
     }
     if (flaggedFields.length > 0) {
       const stillUnchanged = flaggedFields.filter((f) => form[f as keyof FormData] === originalFlaggedValues[f]);
@@ -624,23 +968,18 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
 
   const saveRequest = async (): Promise<string | null> => {
     const url = editId ? `/api/portal/beneficiary/requests/${editId}` : "/api/portal/beneficiary/requests";
-    // NOTE: the backing NestJS schema has no doc-filename columns anymore, so
-    // shPhotoName/shIdDocNames/ownerPhotoName/ownerIdDocNames/
-    // shareholderContractDocNames/otherDocNames are stripped server-side by
-    // the Next.js route handler (see stripFields in app/api/portal/beneficiary/
-    // requests/route.ts and .../[id]/route.ts) before forwarding to the API.
-    // We still send them here rather than special-casing the payload: the UI
-    // keeps capturing these fake filenames for demo purposes (real upload is
-    // out of scope for this pass), and stripping at the proxy boundary keeps
-    // this component unaware of backend schema details.
+    // Document/photo attachments are no longer sent inline here — they're
+    // real uploads (item 39), handled by uploadPendingDocuments() once we
+    // have a requestId (see handleSaveDraft/handleSubmitRequest below).
+    // idType/shIdType (ID Card vs Passport radio) are UI-only — the API's
+    // BeneficiaryRequestFieldsDto has no matching columns yet, and its
+    // ValidationPipe rejects unknown fields outright, so these must not be
+    // sent.
+    const { idType, shIdType, ...formForApi } = form;
+    void idType;
+    void shIdType;
     const payload = {
-      ...form,
-      ownerPhotoName,
-      ownerIdDocNames: ownerIdDocs.map((d) => d.name),
-      shPhotoName,
-      shIdDocNames: shIdDocs.map((d) => d.name),
-      shareholderContractDocNames: shareholderContractDocs.map((d) => d.name),
-      otherDocNames: supportingDocs.map((d) => d.name),
+      ...formForApi,
       consentAgreed,
       ...(editId && { action: "edit" }),
     };
@@ -662,6 +1001,58 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     return editId ?? saved.id;
   };
 
+  // Item 39: upload any locally-picked-but-not-yet-uploaded files now that
+  // we have a real requestId to attach them to. Already-uploaded entries
+  // (documentId set) are skipped. Best-effort: a failed attachment doesn't
+  // block the save that just succeeded — it just stays pending and retries
+  // on the next save.
+  const uploadPendingDocuments = async (requestId: string) => {
+    const uploadArray = async (docs: UploadedDoc[], category: DocCategory): Promise<UploadedDoc[]> =>
+      Promise.all(
+        docs.map(async (d) => {
+          if (!d.file || d.documentId) return d;
+          try {
+            const { documentId } = await uploadDocument(requestId, category, d.file);
+            return { name: d.name, documentId, url: documentDownloadUrl(documentId) };
+          } catch {
+            toast.error(t("submitError"));
+            return d;
+          }
+        }),
+      );
+
+    const uploadPhoto = async (
+      file: File | null,
+      category: DocCategory,
+      setDocId: (id: number) => void,
+      setPreviewUrl: (url: string) => void,
+      clearFile: () => void,
+    ) => {
+      if (!file) return;
+      try {
+        const { documentId } = await uploadDocument(requestId, category, file);
+        setDocId(documentId);
+        setPreviewUrl(documentDownloadUrl(documentId));
+        clearFile();
+      } catch {
+        toast.error(t("submitError"));
+      }
+    };
+
+    const [newShIdDocs, newOwnerIdDocs, newContractDocs, newOtherDocs] = await Promise.all([
+      uploadArray(shIdDocs, "SH_ID_DOC"),
+      uploadArray(ownerIdDocs, "OWNER_ID_DOC"),
+      uploadArray(shareholderContractDocs, "SHAREHOLDER_CONTRACT"),
+      uploadArray(supportingDocs, "OTHER"),
+      uploadPhoto(shPhotoFile, "SH_PHOTO", setShPhotoDocId, setShPhoto, () => setShPhotoFile(null)),
+      uploadPhoto(ownerPhotoFile, "OWNER_PHOTO", setOwnerPhotoDocId, setOwnerPhoto, () => setOwnerPhotoFile(null)),
+    ]);
+    setShIdDocs(newShIdDocs);
+    setOwnerIdDocs(newOwnerIdDocs);
+    setShareholderContractDocs(newContractDocs);
+    setSupportingDocs(newOtherDocs);
+  };
+
   const handleSaveDraft = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateAndFocusStep()) return;
@@ -669,8 +1060,21 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     setSubmitError(null);
     setSubmitting(true);
     try {
+      // Editing an already-reviewed (APPROVED/RETURNED) request validates
+      // required documents inline, as part of the same PATCH that saves the
+      // fields (see editApprovedOrReturned server-side) — so any newly
+      // attached files must be uploaded first, or that check still sees the
+      // pre-edit document set and 400s even though the user just attached
+      // what was missing.
+      if (editId && loadedStatus !== "DRAFT") {
+        await uploadPendingDocuments(editId);
+      }
       const id = await saveRequest();
       if (!id) return;
+      if (!editId || loadedStatus === "DRAFT") {
+        await uploadPendingDocuments(id);
+      }
+      clearPersisted();
       toast.success(editId ? t("draftUpdated") : t("draftSaved"));
       router.push(editId ? `/${locale}/portal/beneficiary/all-requests/${id}` : `/${locale}/portal/beneficiary/all-requests`);
     } catch {
@@ -688,10 +1092,24 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     setSubmitError(null);
     setSubmitting(true);
     try {
+      // See the matching comment in handleSaveDraft: editing an
+      // already-reviewed request checks required documents inline in the
+      // same PATCH that saves the fields, so new attachments must upload
+      // before that call, not after.
+      if (editId && loadedStatus !== "DRAFT") {
+        await uploadPendingDocuments(editId);
+      }
       const id = await saveRequest();
       if (!id) return;
+      if (!editId || loadedStatus === "DRAFT") {
+        await uploadPendingDocuments(id);
+      }
 
-      if (!editId) {
+      // A brand-new request or a continued draft (item 37) both still need
+      // the separate "submit" transition (DRAFT -> PENDING). Editing an
+      // already-reviewed (APPROVED/RETURNED) request transitions status as
+      // part of saveRequest() itself, so no extra submit call there.
+      if (!editId || loadedStatus === "DRAFT") {
         const submitRes = await fetch(`/api/portal/beneficiary/requests/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -706,6 +1124,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
         }
       }
 
+      clearPersisted();
       toast.success(t("requestSubmitted"));
       router.push(`/${locale}/portal/beneficiary/all-requests/${id}`);
     } catch {
@@ -720,16 +1139,20 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     cn("w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
       unchangedFields.includes(key)
         ? "border-red-400 ring-2 ring-red-100"
-        : touched[key] && !form[key]
+        : fieldError(key)
         ? "border-red-400"
         : flaggedFields.includes(key)
         ? "border-orange-400 ring-2 ring-orange-100"
         : "border-slate-300");
 
-  const fieldError = (key: keyof FormData) =>
-    unchangedFields.includes(key)
-      ? t("unchangedFieldInline")
-      : touched[key] && !form[key] ? t("required") : "";
+  const fieldError = (key: keyof FormData) => {
+    if (unchangedFields.includes(key)) return t("unchangedFieldInline");
+    if (!touched[key]) return "";
+    const val = form[key];
+    if (!val) return t("required");
+    if ((key === "companyPhone" || key === "companyOfficePhone") && !isValidPhone(val)) return t("invalidPhone");
+    return "";
+  };
 
   if (editId && loading) {
     return (
@@ -752,10 +1175,10 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
       {/* Page header */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4">
         <div className="flex items-center justify-between gap-3">
-          <button type="button" onClick={() => router.back()} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-600 transition-colors mb-2">
+          <Button type="button" onClick={() => router.back()} className="mb-2 bg-blue-600 text-white hover:bg-blue-700 h-8 px-3 text-xs">
             <ArrowLeft className="h-3.5 w-3.5" />
             {t("backToList")}
-          </button>
+          </Button>
           {!editId && (
             <button
               type="button"
@@ -768,7 +1191,6 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           )}
         </div>
         <h1 className="text-lg font-semibold text-slate-800">{editId ? t("editRequestTitle") : t("pageTitle")}</h1>
-        <p className="text-sm text-slate-500 mt-0.5">{t("pageSubtitle")}</p>
       </div>
 
       {returnReason && (
@@ -799,7 +1221,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             steps={[1, 2, 3, 4].map((n) => ({
               number: n,
               title: t(`step${n}Title` as "step1Title"),
-              disabled: n > activeStep && Array.from({ length: n - 1 }, (_, i) => i + 1).some((s) => !isStepComplete(s)),
+              disabled: false,
               flagged: returnSteps.includes(n),
             }))}
             activeStep={activeStep}
@@ -879,11 +1301,12 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t("companyOfficePhone")}</label>
-                <div className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500">
+                <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500", fieldError("companyOfficePhone") ? "border-red-400" : "border-slate-300")}>
                   <span className="text-base leading-none">🇰🇭</span>
                   <span className="text-slate-400 text-xs">+855</span>
-                  <input type="tel" value={form.companyOfficePhone} onChange={(e) => set({ companyOfficePhone: e.target.value })} placeholder="23 756 789" className="flex-1 outline-none text-sm bg-transparent" />
+                  <input type="tel" value={form.companyOfficePhone} onChange={(e) => set({ companyOfficePhone: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyOfficePhone: true }))} placeholder="23 756 789" className="flex-1 outline-none text-sm bg-transparent" />
                 </div>
+                {fieldError("companyOfficePhone") && <p className="mt-1 text-xs text-red-600">{fieldError("companyOfficePhone")}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t("companyEmail")} <span className="text-red-500">*</span></label>
@@ -906,6 +1329,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             photo={shPhoto}
             setPhoto={setShPhoto}
             setPhotoName={setShPhotoName}
+            setPhotoFile={setShPhotoFile}
             idDocs={shIdDocs}
             setIdDocs={setShIdDocs}
             requiredFields={["shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender"]}
@@ -926,6 +1350,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             photo={ownerPhoto}
             setPhoto={setOwnerPhoto}
             setPhotoName={setOwnerPhotoName}
+            setPhotoFile={setOwnerPhotoFile}
             idDocs={ownerIdDocs}
             setIdDocs={setOwnerIdDocs}
             requiredFields={["lastNameEn", "firstNameEn", "dob", "becameDate", "nationality", "gender"]}
@@ -961,24 +1386,37 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
               <div className="flex items-center gap-3 min-w-0">
                 <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-sm text-slate-700">{t("shareholderContractLabel")}</p>
+                  <p className="text-sm text-slate-700">{t("shareholderContractLabel")} <span className="text-red-500">*</span></p>
                   <p className="text-xs text-slate-400 mt-0.5">{t("supportingDocHint")}</p>
-                  {shareholderContractDocs.length > 0 && (
+                  {shareholderContractDocs.length > 0 ? (
                     <ul className="mt-1 space-y-0.5">
                       {shareholderContractDocs.map((d, i) => (
                         <li key={i} className="flex items-center gap-1 text-xs text-slate-500">
-                          <span className="truncate">{d.name}</span>
+                          {d.url ? (
+                            <a href={d.url} target="_blank" rel="noreferrer" className="truncate text-blue-500 hover:text-blue-700 hover:underline" title={t("preview")}>
+                              {d.name}
+                            </a>
+                          ) : (
+                            <span className="truncate">{d.name}</span>
+                          )}
+                          {d.url && (
+                            <a href={d.url} target="_blank" rel="noreferrer" className="ml-1 text-blue-500 hover:text-blue-700" title={t("preview")}>
+                              <Eye className="h-3 w-3" />
+                            </a>
+                          )}
                           <button type="button" onClick={() => setShareholderContractDocs((p) => p.filter((_, idx) => idx !== i))} className="ml-1 text-red-400 hover:text-red-600"><X className="h-3 w-3" /></button>
                         </li>
                       ))}
                     </ul>
+                  ) : (
+                    <p className="mt-1 text-xs text-red-600">{t("requiredDoc")}</p>
                   )}
                 </div>
               </div>
               <label className="inline-flex items-center gap-1.5 cursor-pointer flex-shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
                 <Paperclip className="h-3.5 w-3.5" />
                 {t("attach")}
-                <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) setShareholderContractDocs((p) => [...p, { name: f.name }]); e.target.value = ""; }} className="hidden" />
+                <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) setShareholderContractDocs((p) => [...p, { name: f.name, url: URL.createObjectURL(f), file: f }]); e.target.value = ""; }} className="hidden" />
               </label>
             </div>
 
@@ -992,7 +1430,18 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
                     <ul className="mt-1 space-y-0.5">
                       {supportingDocs.map((d, i) => (
                         <li key={i} className="flex items-center gap-1 text-xs text-slate-500">
-                          <span className="truncate">{d.name}</span>
+                          {d.url ? (
+                            <a href={d.url} target="_blank" rel="noreferrer" className="truncate text-blue-500 hover:text-blue-700 hover:underline" title={t("preview")}>
+                              {d.name}
+                            </a>
+                          ) : (
+                            <span className="truncate">{d.name}</span>
+                          )}
+                          {d.url && (
+                            <a href={d.url} target="_blank" rel="noreferrer" className="ml-1 text-blue-500 hover:text-blue-700" title={t("preview")}>
+                              <Eye className="h-3 w-3" />
+                            </a>
+                          )}
                           <button type="button" onClick={() => setSupportingDocs((p) => p.filter((_, idx) => idx !== i))} className="ml-1 text-red-400 hover:text-red-600"><X className="h-3 w-3" /></button>
                         </li>
                       ))}
@@ -1003,8 +1452,16 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
               <label className="inline-flex items-center gap-1.5 cursor-pointer flex-shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
                 <Paperclip className="h-3.5 w-3.5" />
                 {t("attach")}
-                <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) setSupportingDocs((p) => [...p, { name: f.name }]); e.target.value = ""; }} className="hidden" />
+                <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) setSupportingDocs((p) => [...p, { name: f.name, url: URL.createObjectURL(f), file: f }]); e.target.value = ""; }} className="hidden" />
               </label>
+            </div>
+
+            <div>
+              <div className="inline-flex flex-col w-full sm:w-auto">
+                <label className="block text-sm font-medium text-slate-700 mb-1 whitespace-nowrap">{t("agreementDate")} <span className="text-red-500">*</span></label>
+                <input type="date" value={form.agreementDate ?? ""} onChange={(e) => set({ agreementDate: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, agreementDate: true }))} className={cn(inputCls("agreementDate"), "sm:w-full")} />
+                {fieldError("agreementDate") && <p className="mt-1 text-xs text-red-600">{fieldError("agreementDate")}</p>}
+              </div>
             </div>
 
             <div className="pt-2 border-t border-slate-200">

@@ -8,6 +8,7 @@ import { Link } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const FAKE_COMPANY_NAMES = ["Mekong Trading Co., Ltd.", "Angkor Star Enterprise", "Golden Delta Holdings", "Chenla Import Export Co., Ltd.", "Sokha Business Group"];
 const FAKE_LAST_NAMES = ["Sok", "Chan", "Heng", "Pich", "Vann"];
@@ -15,6 +16,10 @@ const FAKE_FIRST_NAMES = ["Dara", "Sopheak", "Rithy", "Chenda", "Vibol"];
 
 const POSITION_VALUES = ["SHAREHOLDER", "DIRECTOR", "SECRETARY"] as const;
 type Position = (typeof POSITION_VALUES)[number];
+
+// Min 8 chars, at least one uppercase, one lowercase, one number, one special char.
+const STRONG_PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
 function randomOf<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -41,8 +46,11 @@ export function RegisterForm() {
   const t = useTranslations("portal.register");
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     companyName: "",
     lastName: "",
@@ -56,8 +64,14 @@ export function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError(null);
+    setConfirmPasswordError(null);
+    if (!STRONG_PASSWORD_REGEX.test(formData.password)) {
+      setPasswordError(t("passwordWeak"));
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
-      setError(t("passwordMismatch"));
+      setConfirmPasswordError(t("passwordMismatch"));
       return;
     }
     if (!formData.position) {
@@ -82,9 +96,12 @@ export function RegisterForm() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? t("error"));
+        const message = Array.isArray(data?.message)
+          ? data.message.join(" ")
+          : (data?.message ?? data?.error);
+        throw new Error(message ?? t("error"));
       }
-      router.push("/portal/dashboard");
+      router.push("/portal/beneficiary/all-requests");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("error"));
@@ -171,11 +188,11 @@ export function RegisterForm() {
 
         <div>
           <Label>{t("position")}</Label>
-          <div className="mt-1 grid grid-cols-3 gap-2">
+          <div className="mt-1 grid grid-cols-3 gap-1.5">
             {POSITION_VALUES.map((value) => (
               <label
                 key={value}
-                className="flex items-center justify-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
+                className="flex items-center justify-center gap-1.5 rounded-md border border-slate-200 px-1.5 py-2 text-xs sm:text-sm text-slate-700 hover:bg-slate-50 cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
               >
                 <input
                   type="radio"
@@ -184,9 +201,13 @@ export function RegisterForm() {
                   required
                   checked={formData.position === value}
                   onChange={() => setFormData((p) => ({ ...p, position: value }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 flex-shrink-0 text-blue-600 focus:ring-blue-500"
                 />
-                {t(`positionOptions.${value}`)}
+                {/* break-keep (not nowrap) so "Company Secretary" wraps at
+                    its space instead of overflowing, while Khmer's
+                    "លេខាធិការក្រុមហ៊ុន" (no spaces) still won't break
+                    mid-word onto a second line. */}
+                <span className="break-keep text-center">{t(`positionOptions.${value}`)}</span>
               </label>
             ))}
           </div>
@@ -232,10 +253,21 @@ export function RegisterForm() {
               id="password"
               type={showPassword ? "text" : "password"}
               required
-              className="pl-10 pr-10"
+              className={cn(
+                "pl-10 pr-10",
+                passwordError && "border-red-400 focus-visible:ring-red-400",
+              )}
+              // The shared Input component appends its own default
+              // `border-slate-200` after this className via plain string
+              // concatenation (not class-merged), so an inline style is the
+              // only reliable way to actually turn the border red here.
+              style={passwordError ? { borderColor: "#f87171" } : undefined}
               placeholder={t("passwordPlaceholder")}
               value={formData.password}
-              onChange={field("password")}
+              onChange={(e) => {
+                field("password")(e);
+                if (passwordError) setPasswordError(null);
+              }}
             />
             <button
               type="button"
@@ -245,6 +277,11 @@ export function RegisterForm() {
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
+          {passwordError ? (
+            <p className="mt-1 text-xs text-red-600">{passwordError}</p>
+          ) : (
+            <p className="mt-1 text-xs text-slate-500">{t("passwordRequirements")}</p>
+          )}
         </div>
 
         <div>
@@ -253,14 +290,29 @@ export function RegisterForm() {
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
             <Input
               id="confirmPassword"
-              type={showPassword ? "text" : "password"}
+              type={showConfirmPassword ? "text" : "password"}
               required
-              className="pl-10"
+              className={cn(
+                "pl-10 pr-10",
+                confirmPasswordError && "border-red-400 focus-visible:ring-red-400",
+              )}
+              style={confirmPasswordError ? { borderColor: "#f87171" } : undefined}
               placeholder={t("confirmPasswordPlaceholder")}
               value={formData.confirmPassword}
-              onChange={field("confirmPassword")}
+              onChange={(e) => {
+                field("confirmPassword")(e);
+                if (confirmPasswordError) setConfirmPasswordError(null);
+              }}
             />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
           </div>
+          {confirmPasswordError && <p className="mt-1 text-xs text-red-600">{confirmPasswordError}</p>}
         </div>
 
         <Button

@@ -17,7 +17,7 @@ export default async function PortalRevisionsPage({ params }: Props) {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-slate-800">{t("diffCompare")}</h1>
+      <h1 className="text-xl font-semibold text-slate-800">{t("sidebarLabel")}</h1>
       <Suspense>
         <RevisionLogBrowser fetchUrl="/api/portal/beneficiary/revisions" requestLinkBase="/portal/beneficiary/all-requests" />
       </Suspense>

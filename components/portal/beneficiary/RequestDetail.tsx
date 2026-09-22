@@ -8,7 +8,7 @@ import { ArrowLeft, Building2, Download, FileText, GitCompare, History, MessageS
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { splitReasonItems } from "@/lib/utils";
+import { cn, splitReasonItems } from "@/lib/utils";
 import RequestActivityLog, { type ActivityLogEntry } from "@/components/beneficiary/RequestActivityLog";
 import RequestRevisionHistory, { type RequestRevisionEntry } from "@/components/beneficiary/RequestRevisionHistory";
 
@@ -19,23 +19,55 @@ function formatDate(iso: string | null): string {
   return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
 }
 
-function Field({ label, value }: { label: string; value: string | null | undefined }) {
+function Field({
+  label,
+  value,
+  truncate = false,
+}: {
+  label: string;
+  value: string | null | undefined;
+  truncate?: boolean;
+}) {
   return (
     <div className="min-w-0">
       <p className="text-xs text-slate-500 mb-0.5">{label}</p>
-      <p className="text-sm font-medium text-slate-800 break-words">{value || "-"}</p>
+      <p
+        className={cn(
+          "text-sm font-medium text-slate-800",
+          truncate ? "truncate" : "break-words",
+        )}
+        title={truncate && value ? value : undefined}
+      >
+        {value || "-"}
+      </p>
     </div>
   );
 }
 
-function DocList({ names }: { names: string[] }) {
-  if (names.length === 0) return <p className="text-sm text-slate-400">-</p>;
+// Phone numbers are stored without a country code; display with the Cambodia
+// (+855) prefix per item 17. Leaves already-prefixed or empty values as-is.
+function formatPhone(phone: string | null | undefined): string | null | undefined {
+  if (!phone) return phone;
+  const trimmed = phone.trim();
+  if (trimmed.startsWith("+")) return trimmed;
+  return `+855 ${trimmed.replace(/^0+/, "")}`;
+}
+
+function DocList({ documents }: { documents: ApiDocument[] }) {
+  if (documents.length === 0) return <p className="text-sm text-slate-400">-</p>;
   return (
     <ul className="space-y-0.5">
-      {names.map((n, i) => (
-        <li key={i} className="flex items-center gap-1 text-sm text-slate-800 truncate">
+      {documents.map((d) => (
+        <li key={d.id} className="flex items-center gap-1.5 text-sm text-slate-800 truncate">
           <span className="text-green-500 font-bold">✓</span>
-          {n}
+          <a
+            href={documentDownloadUrl(d.id)}
+            target="_blank"
+            rel="noreferrer"
+            className="truncate text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            {d.media.filename}
+          </a>
         </li>
       ))}
     </ul>
@@ -62,11 +94,19 @@ function SectionCard({
   );
 }
 
-function PersonPhoto({ name }: { name: string | null }) {
+function PersonPhoto({ document }: { document: ApiDocument | undefined }) {
   return (
     <div className="flex-shrink-0 w-36 h-44 border-2 border-blue-300 rounded-xl overflow-hidden bg-slate-100 text-slate-400 flex flex-col items-center justify-center gap-1">
-      <Users className="h-12 w-12" />
-      {name && <p className="text-[10px] text-slate-500 px-2 truncate max-w-full">{name}</p>}
+      {document ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={documentDownloadUrl(document.id)}
+          alt={document.media.filename}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <Users className="h-12 w-12" />
+      )}
     </div>
   );
 }
@@ -102,11 +142,6 @@ type RequestDetailData = {
   shIdExpiredDate: string | null;
   shEmail: string | null;
   shPhone: string | null;
-  // The NestJS API's schema has no doc-filename columns, so these are never
-  // present in the response — optional here, defaulted to null/[] at the
-  // call sites below.
-  shPhotoName?: string | null;
-  shIdDocNames?: string[];
   ownerLastNameKh: string | null;
   ownerFirstNameKh: string | null;
   ownerLastNameEn: string;
@@ -120,17 +155,27 @@ type RequestDetailData = {
   ownerIdExpiredDate: string | null;
   ownerEmail: string | null;
   ownerPhone: string | null;
-  ownerPhotoName?: string | null;
-  ownerIdDocNames?: string[];
   shareAmount: string;
-  shareholderContractDocNames?: string[];
-  otherDocNames?: string[];
+  agreementDate: string | null;
   consentAgreed: boolean;
   submittedAt: string;
   rejectionReason: string | null;
   logs: ActivityLogEntry[];
   revisions: RequestRevisionEntry[];
+  // Real uploaded files (item 39), grouped client-side by category below.
+  documents?: ApiDocument[];
 };
+
+type DocCategory = "SH_PHOTO" | "SH_ID_DOC" | "OWNER_PHOTO" | "OWNER_ID_DOC" | "SHAREHOLDER_CONTRACT" | "OTHER";
+type ApiDocument = { id: number; category: DocCategory; media: { filename: string } };
+
+function docsByCategory(documents: ApiDocument[] | undefined, category: DocCategory) {
+  return (documents ?? []).filter((d) => d.category === category);
+}
+
+function documentDownloadUrl(documentId: number): string {
+  return `/api/portal/documents/${documentId}/download`;
+}
 
 export default function RequestDetail({ id }: { id: string }) {
   const t = useTranslations("beneficiary.allRequests");
@@ -233,14 +278,14 @@ export default function RequestDetail({ id }: { id: string }) {
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4">
-        <button
+        <Button
           type="button"
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-600 transition-colors mb-2"
+          className="mb-2 bg-blue-600 text-white hover:bg-blue-700 h-8 px-3 text-xs"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           {t("backToList")}
-        </button>
+        </Button>
         {request ? (
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -272,17 +317,27 @@ export default function RequestDetail({ id }: { id: string }) {
               )}
             </div>
             {request.status === "DRAFT" && (
-              <div className="flex-shrink-0 text-right">
+              <div className="flex-shrink-0 flex items-start gap-2">
                 <button
                   type="button"
-                  onClick={handleSubmitRequest}
-                  disabled={submitting}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={() => router.push(`/portal/beneficiary/all-requests/${request.id}/edit`)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 bg-white hover:bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition-colors"
                 >
-                  <Send className="h-4 w-4" />
-                  {submitting ? t("submittingRequest") : t("submitRequest")}
+                  <Pencil className="h-4 w-4" />
+                  {t("continueDraft")}
                 </button>
-                {submitError && <p className="mt-2 text-xs text-red-600 max-w-xs">{submitError}</p>}
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={handleSubmitRequest}
+                    disabled={submitting}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Send className="h-4 w-4" />
+                    {submitting ? t("submittingRequest") : t("submitRequest")}
+                  </button>
+                  {submitError && <p className="mt-2 text-xs text-red-600 max-w-xs">{submitError}</p>}
+                </div>
               </div>
             )}
             {request.status === "RETURNED" && (
@@ -351,16 +406,16 @@ export default function RequestDetail({ id }: { id: string }) {
               <Field label={t("registrationNo")} value={request.registrationNo} />
               <Field label={tf("registrationDate")} value={formatDate(request.registrationDate)} />
               <Field label={t("companyAddress")} value={companyAddress} />
-              <Field label={tf("companyPhone")} value={request.companyPhone} />
-              <Field label={tf("companyOfficePhone")} value={request.companyOfficePhone} />
-              <Field label={tf("companyEmail")} value={request.companyEmail} />
+              <Field label={tf("companyPhone")} value={formatPhone(request.companyPhone)} />
+              <Field label={tf("companyOfficePhone")} value={formatPhone(request.companyOfficePhone)} />
+              <Field label={tf("companyEmail")} value={request.companyEmail} truncate />
             </div>
           </SectionCard>
 
           {/* 2. Nominee Shareholder Information */}
           <SectionCard icon={<Users className="h-4 w-4" />} title={`2. ${tf("step2Title")}`}>
             <div className="flex items-start gap-6 mb-4">
-              <PersonPhoto name={request.shPhotoName ?? null} />
+              <PersonPhoto document={docsByCategory(request.documents, "SH_PHOTO")[0]} />
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label={t("shareholderName")} value={`${request.shLastNameEn} ${request.shFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.shLastNameKh ?? ""} ${request.shFirstNameKh ?? ""}`.trim()} />
@@ -371,20 +426,20 @@ export default function RequestDetail({ id }: { id: string }) {
                 <Field label={tf("idCard")} value={request.shIdCard} />
                 <Field label={tf("issueDate")} value={formatDate(request.shIdIssuedDate)} />
                 <Field label={tf("expiryDate")} value={formatDate(request.shIdExpiredDate)} />
-                <Field label={tf("email")} value={request.shEmail} />
-                <Field label={tf("phone")} value={request.shPhone} />
+                <Field label={tf("email")} value={request.shEmail} truncate />
+                <Field label={tf("phone")} value={formatPhone(request.shPhone)} />
               </div>
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
-              <DocList names={request.shIdDocNames ?? []} />
+              <DocList documents={docsByCategory(request.documents, "SH_ID_DOC")} />
             </div>
           </SectionCard>
 
           {/* 3. Beneficial Owner Information */}
           <SectionCard icon={<Users className="h-4 w-4" />} title={`3. ${tf("step3Title")}`}>
             <div className="flex items-start gap-6 mb-4">
-              <PersonPhoto name={request.ownerPhotoName ?? null} />
+              <PersonPhoto document={docsByCategory(request.documents, "OWNER_PHOTO")[0]} />
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label={t("ownerNameEn")} value={`${request.ownerLastNameEn} ${request.ownerFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.ownerLastNameKh ?? ""} ${request.ownerFirstNameKh ?? ""}`.trim()} />
@@ -395,29 +450,43 @@ export default function RequestDetail({ id }: { id: string }) {
                 <Field label={tf("idCard")} value={request.ownerIdCard} />
                 <Field label={tf("issueDate")} value={formatDate(request.ownerIdIssuedDate)} />
                 <Field label={tf("expiryDate")} value={formatDate(request.ownerIdExpiredDate)} />
-                <Field label={tf("email")} value={request.ownerEmail} />
-                <Field label={tf("phone")} value={request.ownerPhone} />
+                <Field label={tf("email")} value={request.ownerEmail} truncate />
+                <Field label={tf("phone")} value={formatPhone(request.ownerPhone)} />
                 <Field label={t("shareAmount")} value={request.shareAmount} />
               </div>
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
-              <DocList names={request.ownerIdDocNames ?? []} />
+              <DocList documents={docsByCategory(request.documents, "OWNER_ID_DOC")} />
             </div>
           </SectionCard>
 
           {/* 4. Agreement */}
           <SectionCard icon={<FileText className="h-4 w-4" />} title={`4. ${tf("step4Title")}`}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-xs text-slate-500 mb-1">{tf("shareholderContractLabel")}</p>
-                <DocList names={request.shareholderContractDocNames ?? []} />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">{tf("otherDocsLabel")}</p>
-                <DocList names={request.otherDocNames ?? []} />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <Field label={tf("agreementDate")} value={formatDate(request.agreementDate)} />
             </div>
+            {(() => {
+              const contractDocs = docsByCategory(request.documents, "SHAREHOLDER_CONTRACT");
+              const otherDocs = docsByCategory(request.documents, "OTHER");
+              if (contractDocs.length === 0 && otherDocs.length === 0) return null;
+              return (
+                <div className="space-y-4 mb-4">
+                  {contractDocs.length > 0 && (
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">{tf("shareholderContractLabel")}</p>
+                      <DocList documents={contractDocs} />
+                    </div>
+                  )}
+                  {otherDocs.length > 0 && (
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">{tf("otherDocsLabel")}</p>
+                      <DocList documents={otherDocs} />
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <div className="pt-4 border-t border-slate-100">
               <label className="flex items-start gap-3">
                 <input

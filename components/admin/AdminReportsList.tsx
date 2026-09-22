@@ -2,24 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-  Calendar, CheckCircle2, Download, FileEdit, FileSpreadsheet,
-  Loader2, RefreshCw, RotateCcw, ShieldCheck, TimerReset, XCircle,
-} from "lucide-react";
+import { Calendar, Download, FileSpreadsheet, Loader2, RefreshCw } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 type Period = "daily" | "weekly" | "monthly" | "yearly" | "custom";
-
-type Summary = {
-  drafted: number;
-  inReview: number;
-  verifying: number;
-  approved: number;
-  rejected: number;
-  returned: number;
-  updateRequested: number;
-};
 
 type ReportRow = {
   id: number;
@@ -39,7 +26,6 @@ type ReportData = {
   from: string;
   to: string;
   total: number;
-  summary: Summary;
   breakdown: { date: string; count: number }[];
   data: ReportRow[];
 };
@@ -55,11 +41,7 @@ function toInputDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-const EMPTY_SUMMARY: Summary = {
-  drafted: 0, inReview: 0, verifying: 0, approved: 0, rejected: 0, returned: 0, updateRequested: 0,
-};
-
-const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
+const STATUS_OPTIONS = ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
 
 export default function AdminReportsList() {
   const t = useTranslations("admin.reports");
@@ -137,7 +119,6 @@ export default function AdminReportsList() {
     }
   };
 
-  const summary = report?.summary ?? EMPTY_SUMMARY;
   const rows = report?.data ?? [];
 
   const periodOptions: { value: Period; label: string }[] = [
@@ -243,72 +224,6 @@ export default function AdminReportsList() {
           </button>
         </div>
       )}
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-            <FileEdit className="h-5 w-5 text-slate-500" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.drafted")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.drafted}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-            <TimerReset className="h-5 w-5 text-blue-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.inReview")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.inReview}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
-            <ShieldCheck className="h-5 w-5 text-purple-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.verifying")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.verifying}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.approved")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.approved}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-            <XCircle className="h-5 w-5 text-red-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.rejected")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.rejected}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
-            <RotateCcw className="h-5 w-5 text-orange-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.returned")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.returned}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3 col-span-2 sm:col-span-1">
-          <div className="h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
-            <FileSpreadsheet className="h-5 w-5 text-indigo-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{t("totalRequests")}</p>
-            <p className="text-xl font-semibold text-slate-800">{report?.total ?? 0}</p>
-          </div>
-        </div>
-      </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">

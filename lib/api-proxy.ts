@@ -174,6 +174,35 @@ export async function proxyRequest(
 }
 
 /**
+ * Proxies a multipart/form-data upload (e.g. document/photo attachments)
+ * through to the NestJS API unchanged — the body is piped as raw bytes
+ * rather than re-parsed, so the original multipart boundary in
+ * `content-type` stays valid.
+ */
+export async function proxyUpload(request: Request, nestPath: string): Promise<Response> {
+  const url = new URL(request.url);
+  const target = `${API_BASE_URL}${nestPath}${url.search}`;
+  const headers = buildHeaders(request);
+  const bodyBuffer = await request.arrayBuffer();
+
+  const { response: nestRes, refreshedSessionCookie } = await fetchWithAutoRefresh(
+    target,
+    { method: request.method, headers, body: bodyBuffer, redirect: "manual" },
+    nestPath,
+  );
+
+  const contentType = nestRes.headers.get("content-type") ?? "application/json";
+  const buffer = await nestRes.arrayBuffer();
+  const res = new Response(buffer, {
+    status: nestRes.status,
+    headers: { "content-type": contentType },
+  });
+  forwardSetCookies(nestRes, res);
+  if (refreshedSessionCookie) res.headers.append("set-cookie", refreshedSessionCookie);
+  return res;
+}
+
+/**
  * Streams a Server-Sent Events response from the NestJS API through to the
  * browser without buffering. Route files using this must also export
  * `export const dynamic = "force-dynamic";`.

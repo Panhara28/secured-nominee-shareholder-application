@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { AlertTriangle, Building2, Clock, Mail, RefreshCw, ShieldCheck, User } from "lucide-react";
+import { AlertTriangle, Building2, Mail, RefreshCw, ShieldCheck, User } from "lucide-react";
 import { useRouter } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -176,10 +176,6 @@ export default function PendingApprovalGate({ fullName, companyName, firstName, 
         </div>
         <h2 className="text-2xl font-bold text-slate-900 mb-3">{t("title")}</h2>
         <p className="text-slate-600 leading-relaxed">{t("message", { fullName })}</p>
-        <div className="mt-5 inline-flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-2.5 text-sm text-amber-800">
-          <Clock className="h-4 w-4 flex-shrink-0" />
-          {t("timeframe")}
-        </div>
 
         <Button
           type="button"

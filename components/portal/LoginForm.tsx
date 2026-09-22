@@ -33,7 +33,7 @@ export function LoginForm() {
         throw new Error(data?.error ?? t("error"));
       }
       toast.success(t("loginSuccess"));
-      router.push("/portal/dashboard");
+      router.push("/portal/beneficiary/all-requests");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("error"));

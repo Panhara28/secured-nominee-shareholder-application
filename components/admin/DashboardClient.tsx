@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Users, FileText, FileEdit, CheckCircle2, XCircle, TimerReset, ShieldCheck, RotateCcw, Loader2, GitCompare } from "lucide-react";
-import { Link } from "@/lib/navigation";
+import { Users, FileText, CheckCircle2, XCircle, ShieldCheck, RotateCcw, Loader2, UserSquare2 } from "lucide-react";
+import { Link, useRouter } from "@/lib/navigation";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
 
-const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
+const STATUS_OPTIONS = ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
 
-type Summary = { drafted: number; request: number; inReview: number; approved: number; rejected: number; returned: number; updateRequested: number };
+type Summary = { inReview: number; approved: number; rejected: number; returned: number };
 type RecentRow = { id: number; requestNo: string; companyNameEn: string; status: string; submittedAt: string };
 type RecentUserRow = {
   id: number;
@@ -25,6 +25,7 @@ type RecentUserRow = {
 type Props = {
   totalShareholders: number;
   totalRequests: number;
+  totalBO: number;
   summary: Summary;
   recent: RecentRow[];
   recentUsers: RecentUserRow[];
@@ -36,11 +37,14 @@ function formatDate(iso: string): string {
   return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
 }
 
-export default function DashboardClient({ totalShareholders, totalRequests, summary, recent: initialRecent, recentUsers: initialRecentUsers }: Props) {
+export default function DashboardClient({ totalShareholders, totalRequests, totalBO, summary, recent: initialRecent, recentUsers: initialRecentUsers }: Props) {
   const t = useTranslations("admin.dashboard");
   const tr = useTranslations("beneficiary.allRequests");
   const tu = useTranslations("admin.users");
+  const tn = useTranslations("admin.nav");
+  const router = useRouter();
 
+  const [requestTab, setRequestTab] = useState<"new" | "update" | "dissolve">("new");
   const [status, setStatus] = useState("PENDING");
   const [recent, setRecent] = useState<RecentRow[]>(initialRecent);
   const [loading, setLoading] = useState(false);
@@ -49,7 +53,7 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
   const [recentUsers, setRecentUsers] = useState<RecentUserRow[]>(initialRecentUsers);
   const [usersLoading, setUsersLoading] = useState(false);
 
-  const [stats, setStats] = useState({ totalShareholders, totalRequests, summary });
+  const [stats, setStats] = useState({ totalShareholders, totalRequests, totalBO, summary });
 
   // Shared by both channels below so the dashboard only ever holds one
   // connection per channel — opening a separate EventSource per consumer
@@ -59,20 +63,28 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
       const res = await fetch("/api/secured/admin/dashboard/stats");
       if (!res.ok) return;
       const json = await res.json();
-      setStats({ totalShareholders: json.totalShareholders, totalRequests: json.totalRequests, summary: json.summary });
+      setStats({
+        totalShareholders: json.totalShareholders,
+        totalRequests: json.totalRequests,
+        totalBO: json.totalBO,
+        summary: json.summary,
+      });
     } catch {
       // silently ignore — the previous values remain visible
     }
   }
 
   useEffect(() => {
+    // Dissolve Request has no backing status/flow yet — nothing to fetch.
+    if (requestTab === "dissolve") return;
+
     let cancelled = false;
 
     async function fetchRecent() {
       setLoading(true);
       try {
         const params = new URLSearchParams({
-          status,
+          status: requestTab === "update" ? "UPDATE_REQUESTED" : status,
           sortKey: "submittedAt",
           sortDir: "desc",
           page: "1",
@@ -104,7 +116,7 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
       source.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, requestTab]);
 
   useEffect(() => {
     let cancelled = false;
@@ -147,44 +159,26 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userStatus]);
 
-  const topCards = [
-    { label: t("totalShareholders"), value: stats.totalShareholders, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: t("totalRequests"), value: stats.totalRequests, icon: FileText, color: "text-slate-600", bg: "bg-slate-100" },
-  ];
+  // Dissolve Request has no backing status/flow yet — always render as empty rather than stale data from another tab.
+  const displayedRecent = requestTab === "dissolve" ? [] : recent;
+  const displayedLoading = requestTab === "dissolve" ? false : loading;
 
-  const bottomCards = [
-    { label: t("drafted"), value: stats.summary.drafted, icon: FileEdit, color: "text-slate-500", bg: "bg-slate-100" },
-    { label: t("request"), value: stats.summary.request, icon: TimerReset, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: t("inReview"), value: stats.summary.inReview, icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50" },
+  const cards = [
+    { label: t("totalRequests"), value: stats.totalRequests, icon: FileText, color: "text-slate-600", bg: "bg-slate-100" },
     { label: t("approved"), value: stats.summary.approved, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
-    { label: t("rejected"), value: stats.summary.rejected, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
     { label: t("returned"), value: stats.summary.returned, icon: RotateCcw, color: "text-orange-600", bg: "bg-orange-50" },
-    { label: t("updateRequested"), value: stats.summary.updateRequested, icon: GitCompare, color: "text-teal-600", bg: "bg-teal-50" },
+    { label: t("inReview"), value: stats.summary.inReview, icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50" },
+    { label: t("rejected"), value: stats.summary.rejected, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
+    { label: t("totalShareholders"), value: stats.totalShareholders, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: t("totalBO"), value: stats.totalBO, icon: UserSquare2, color: "text-teal-600", bg: "bg-teal-50" },
   ];
 
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold text-slate-800">{t("pageTitle")}</h1>
 
-      <div className="grid grid-cols-2 gap-4">
-        {topCards.map((c) => {
-          const Icon = c.icon;
-          return (
-            <div key={c.label} className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-4 flex items-center gap-3">
-              <div className={`h-10 w-10 rounded-lg ${c.bg} flex items-center justify-center flex-shrink-0`}>
-                <Icon className={`h-5 w-5 ${c.color}`} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-slate-500 leading-tight">{c.label}</p>
-                <p className="text-xl font-semibold text-slate-800">{c.value}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7 gap-4">
-        {bottomCards.map((c) => {
+        {cards.map((c) => {
           const Icon = c.icon;
           return (
             <div key={c.label} className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-4 flex items-center gap-3">
@@ -202,23 +196,44 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
 
       <div className="grid grid-cols-1 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-700">
+          <div className="px-5 pt-3.5 border-b border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">
               {t("recentRequests")}
             </h3>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              <option value="">{tr("statusAll")}</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {tr(`status.${s}` as Parameters<typeof tr>[0])}
-                </option>
+            <div className="flex items-center gap-1">
+              {(["new", "update", "dissolve"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setRequestTab(tab)}
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors",
+                    requestTab === tab
+                      ? "border-blue-600 text-blue-700"
+                      : "border-transparent text-slate-500 hover:text-slate-700"
+                  )}
+                >
+                  {tab === "new" ? tn("newRequest") : tab === "update" ? tn("updateRequest") : tn("dissolveRequest")}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
+          {requestTab === "new" && (
+            <div className="flex items-center justify-end gap-3 px-5 py-3 border-b border-slate-100">
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="">{tr("statusAll")}</option>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {tr(`status.${s}` as Parameters<typeof tr>[0])}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -230,19 +245,23 @@ export default function DashboardClient({ totalShareholders, totalRequests, summ
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+                {displayedLoading ? (
                   <tr>
                     <td colSpan={4} className="py-10 text-center">
                       <Loader2 className="h-5 w-5 animate-spin text-slate-400 inline-block" />
                     </td>
                   </tr>
-                ) : recent.length === 0 ? (
+                ) : displayedRecent.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-10 text-center text-sm text-slate-400">{tr("empty")}</td>
                   </tr>
                 ) : (
-                  recent.map((r) => (
-                    <tr key={r.id} className="border-b border-slate-100">
+                  displayedRecent.map((r) => (
+                    <tr
+                      key={r.id}
+                      onClick={() => router.push(`/secured/admin/requests/${r.id}`)}
+                      className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                    >
                       <td className="px-4 py-2.5 font-mono text-xs text-slate-700">{r.requestNo}</td>
                       <td className="px-4 py-2.5 text-slate-800">{r.companyNameEn}</td>
                       <td className="px-4 py-2.5">

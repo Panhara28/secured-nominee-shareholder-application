@@ -7,5 +7,5 @@ export default async function PortalIndexPage({ params }: Props) {
   // Auth gating now happens in proxy.ts (middleware), which checks for the
   // NestJS `session` cookie before this page is reached. No server-side
   // session check is needed here anymore.
-  return redirect({ href: "/portal/dashboard", locale });
+  return redirect({ href: "/portal/beneficiary/all-requests", locale });
 }

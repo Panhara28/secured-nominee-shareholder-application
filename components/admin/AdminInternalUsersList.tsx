@@ -205,7 +205,11 @@ export default function AdminInternalUsersList() {
                 </tr>
               ) : (
                 rows.map((u) => (
-                  <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <tr
+                    key={u.id}
+                    onClick={() => router.push(`/secured/admin/internal-users/${u.id}`)}
+                    className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                  >
                     <td className="px-4 py-3 text-slate-800">{u.fullName}</td>
                     <td className="px-4 py-3 text-slate-700">
                       <div>{u.email}</div>
@@ -228,7 +232,7 @@ export default function AdminInternalUsersList() {
                         {u.isActive ? t("statusActive") : t("statusInactive")}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => router.push(`/secured/admin/internal-users/${u.id}`)}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"

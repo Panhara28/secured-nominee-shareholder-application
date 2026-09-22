@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Loader2, User, Mail, Lock, Phone, ShieldCheck } from "lucide-react";
+import { Loader2, User, Mail, Lock, Phone, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +55,7 @@ export default function AdminInternalUserForm({ userId }: { userId?: string }) {
   const [userLoading, setUserLoading] = useState(isEdit);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -227,14 +228,21 @@ export default function AdminInternalUserForm({ userId }: { userId?: string }) {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 minLength={6}
-                className="pl-10"
+                className="pl-10 pr-10"
                 placeholder={tCreate("passwordPlaceholder")}
                 value={formData.password}
                 onChange={field("password")}
               />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
             <p className="mt-1 text-xs text-slate-500">{tCreate("passwordHint")}</p>
           </div>

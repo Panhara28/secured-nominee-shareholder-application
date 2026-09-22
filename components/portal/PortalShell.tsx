@@ -5,17 +5,14 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/lib/navigation";
 import {
-  LayoutDashboard,
-  Users,
   Menu,
   X,
   LogOut,
   User,
-  ChevronDown,
   ListChecks,
-  FilePlus2,
   FileEdit,
   GitCompare,
+  FileX,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
@@ -34,12 +31,10 @@ export default function PortalShell({
 }: Props) {
   const t = useTranslations("portal.nav");
   const tAllRequests = useTranslations("beneficiary.allRequests");
-  const tRequest = useTranslations("beneficiary.request");
   const tRevisions = useTranslations("beneficiary.revisions");
   const pathname = usePathname() ?? "";
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [beneficiaryOpen, setBeneficiaryOpen] = useState(!navDisabled);
 
   const isEditRequestPage =
     /^\/portal\/beneficiary\/all-requests\/[^/]+\/edit$/.test(pathname);
@@ -75,115 +70,83 @@ export default function PortalShell({
           <p className="text-[11px] font-semibold text-blue-100 leading-tight mt-0.5 truncate">
             Ministry Of Commerce
           </p>
-          <p className="text-[10px] text-blue-200/80 leading-tight mt-0.5">
-            {t("portalName")}
-          </p>
         </div>
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {/* Dashboard */}
+        <p className="px-3 pt-1 pb-4 text-sm font-semibold text-blue-100 leading-snug">
+          {t("portalName")}
+        </p>
+
         <Link
-          href="/portal/dashboard"
+          href="/portal/beneficiary/all-requests"
           onClick={navLinkClick}
           aria-disabled={navDisabled}
           tabIndex={navDisabled ? -1 : undefined}
           className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+            "flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-colors",
             navDisabled
               ? "text-blue-100/40 cursor-not-allowed"
-              : pathname === "/portal/dashboard" ||
-                  pathname.startsWith("/portal/dashboard/")
+              : pathname.startsWith("/portal/beneficiary/all-requests") &&
+                  !isEditRequestPage
                 ? "bg-white/15 text-white"
                 : "text-blue-100 hover:bg-blue-800/70 hover:text-white",
           )}
         >
-          <LayoutDashboard className="h-4.5 w-4.5" />
-          {t("dashboard")}
+          <ListChecks className="h-5 w-5 flex-shrink-0" />
+          {tAllRequests("pageTitle")}
         </Link>
-
-        {/* Beneficiary Owner dropdown */}
-        <div>
-          <button
-            onClick={() => !navDisabled && setBeneficiaryOpen((v) => !v)}
-            disabled={navDisabled}
-            className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-              navDisabled
-                ? "text-blue-100/40 cursor-not-allowed"
-                : pathname.startsWith("/portal/beneficiary")
-                  ? "bg-white/15 text-white"
-                  : "text-blue-100 hover:bg-blue-800/70 hover:text-white",
-            )}
-          >
-            <Users className="h-4.5 w-4.5 flex-shrink-0" />
-            <span className="flex-1 text-left">{t("beneficiaryOwner")}</span>
-            <ChevronDown
-              className={cn(
-                "h-4 w-4 transition-transform duration-200",
-                beneficiaryOpen && "rotate-180",
-              )}
-            />
-          </button>
-          {beneficiaryOpen && !navDisabled && (
-            <div className="mt-1 ml-4 border-l border-blue-600/40 pl-3 space-y-0.5">
-              <Link
-                href="/portal/beneficiary/all-requests"
-                onClick={navLinkClick}
-                className={cn(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors text-sm",
-                  pathname.startsWith("/portal/beneficiary/all-requests") &&
-                    !isEditRequestPage
-                    ? "bg-white/15 text-white font-medium"
-                    : "text-blue-200 hover:bg-blue-800/70 hover:text-white",
-                )}
-              >
-                <ListChecks className="h-4 w-4 flex-shrink-0" />
-                {tAllRequests("pageTitle")}
-              </Link>
-              <Link
-                href="/portal/beneficiary/request"
-                onClick={navLinkClick}
-                className={cn(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors text-sm",
-                  pathname === "/portal/beneficiary/request" ||
-                    pathname.startsWith("/portal/beneficiary/request/")
-                    ? "bg-white/15 text-white font-medium"
-                    : "text-blue-200 hover:bg-blue-800/70 hover:text-white",
-                )}
-              >
-                <FilePlus2 className="h-4 w-4 flex-shrink-0" />
-                {tRequest("pageTitle")}
-              </Link>
-              <Link
-                href="/portal/beneficiary/request-update"
-                onClick={navLinkClick}
-                className={cn(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors text-sm",
-                  pathname.startsWith("/portal/beneficiary/request-update") ||
-                    isEditRequestPage
-                    ? "bg-white/15 text-white font-medium"
-                    : "text-blue-200 hover:bg-blue-800/70 hover:text-white",
-                )}
-              >
-                <FileEdit className="h-4 w-4 flex-shrink-0" />
-                {t("requestToUpdate")}
-              </Link>
-              <Link
-                href="/portal/beneficiary/revisions"
-                onClick={navLinkClick}
-                className={cn(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors text-sm",
-                  pathname.startsWith("/portal/beneficiary/revisions")
-                    ? "bg-white/15 text-white font-medium"
-                    : "text-blue-200 hover:bg-blue-800/70 hover:text-white",
-                )}
-              >
-                <GitCompare className="h-4 w-4 flex-shrink-0" />
-                {tRevisions("diffCompare")}
-              </Link>
-            </div>
+        <Link
+          href="/portal/beneficiary/request-update"
+          onClick={navLinkClick}
+          aria-disabled={navDisabled}
+          tabIndex={navDisabled ? -1 : undefined}
+          className={cn(
+            "flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-colors",
+            navDisabled
+              ? "text-blue-100/40 cursor-not-allowed"
+              : pathname.startsWith("/portal/beneficiary/request-update") ||
+                  isEditRequestPage
+                ? "bg-white/15 text-white"
+                : "text-blue-100 hover:bg-blue-800/70 hover:text-white",
           )}
-        </div>
+        >
+          <FileEdit className="h-5 w-5 flex-shrink-0" />
+          {t("requestToUpdate")}
+        </Link>
+        <Link
+          href="/portal/beneficiary/revisions"
+          onClick={navLinkClick}
+          aria-disabled={navDisabled}
+          tabIndex={navDisabled ? -1 : undefined}
+          className={cn(
+            "flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-colors",
+            navDisabled
+              ? "text-blue-100/40 cursor-not-allowed"
+              : pathname.startsWith("/portal/beneficiary/revisions")
+                ? "bg-white/15 text-white"
+                : "text-blue-100 hover:bg-blue-800/70 hover:text-white",
+          )}
+        >
+          <GitCompare className="h-5 w-5 flex-shrink-0" />
+          {tRevisions("sidebarLabel")}
+        </Link>
+        <Link
+          href="/portal/beneficiary/dissolve"
+          onClick={navLinkClick}
+          aria-disabled={navDisabled}
+          tabIndex={navDisabled ? -1 : undefined}
+          className={cn(
+            "flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-colors",
+            navDisabled
+              ? "text-blue-100/40 cursor-not-allowed"
+              : pathname.startsWith("/portal/beneficiary/dissolve")
+                ? "bg-white/15 text-white"
+                : "text-blue-100 hover:bg-blue-800/70 hover:text-white",
+          )}
+        >
+          <FileX className="h-5 w-5 flex-shrink-0" />
+          {t("requestDissolve")}
+        </Link>
       </nav>
       <div className="px-3 py-4 border-t border-blue-600/40">
         <button

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { setRequestLocale } from "next-intl/server";
 import AdminRequestsList from "@/components/admin/AdminRequestsList";
 
@@ -12,5 +13,9 @@ type Props = { params: Promise<{ locale: string }> };
 export default async function AdminRequestsPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <AdminRequestsList />;
+  return (
+    <Suspense fallback={null}>
+      <AdminRequestsList />
+    </Suspense>
+  );
 }

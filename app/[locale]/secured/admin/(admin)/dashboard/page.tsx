@@ -17,14 +17,12 @@ const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8080";
 type DashboardStats = {
   totalShareholders: number;
   totalRequests: number;
+  totalBO: number;
   summary: {
-    drafted: number;
-    request: number;
     inReview: number;
     approved: number;
     rejected: number;
     returned: number;
-    updateRequested: number;
   };
   recent: { id: number; requestNo: string; companyNameEn: string; status: string; submittedAt: string }[];
 };
@@ -75,14 +73,12 @@ export default async function AdminDashboardPage({ params }: Props) {
 
   const totalShareholders = stats?.totalShareholders ?? 0;
   const totalRequests = stats?.totalRequests ?? 0;
+  const totalBO = stats?.totalBO ?? 0;
   const summary = stats?.summary ?? {
-    drafted: 0,
-    request: 0,
     inReview: 0,
     approved: 0,
     rejected: 0,
     returned: 0,
-    updateRequested: 0,
   };
   const recent = stats?.recent ?? [];
 
@@ -94,6 +90,7 @@ export default async function AdminDashboardPage({ params }: Props) {
     <DashboardClient
       totalShareholders={totalShareholders}
       totalRequests={totalRequests}
+      totalBO={totalBO}
       summary={summary}
       recent={recent}
       recentUsers={recentUsers}

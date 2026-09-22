@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { moul } from "@/lib/fonts";
 
 export function AuthBrandSection() {
   const t = useTranslations("auth.brand");
@@ -19,7 +20,7 @@ export function AuthBrandSection() {
         <div className="flex items-center gap-4">
           <Image src="/moc-logo.png" alt="Ministry of Commerce" width={120} height={120} className="object-contain" style={{ height: "auto" }} priority />
           <div>
-            <h1 className="text-4xl font-extrabold leading-tight">ក្រសួងពាណិជ្ជកម្ម</h1>
+            <h1 className={`${moul.className} text-4xl font-extrabold leading-tight`}>ក្រសួងពាណិជ្ជកម្ម</h1>
             <p className="mt-1 text-lg font-semibold text-blue-100">Ministry Of Commerce</p>
           </div>
         </div>

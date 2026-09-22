@@ -201,7 +201,11 @@ export default function AdminRolesList() {
                 </tr>
               ) : (
                 rows.map((role) => (
-                  <tr key={role.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <tr
+                    key={role.id}
+                    onClick={() => router.push(`/secured/admin/roles/${role.slug}/edit`)}
+                    className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                  >
                     <td className="px-4 py-3 text-slate-800">
                       <div className="inline-flex items-center gap-1.5">
                         <ShieldCheck className="h-3.5 w-3.5 text-purple-500" />
@@ -216,7 +220,7 @@ export default function AdminRolesList() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(role.createdAt)}</td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="inline-flex items-center gap-2">
                         <button
                           onClick={() => router.push(`/secured/admin/roles/${role.slug}/edit`)}

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/lib/navigation";
-import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Eye, FileEdit, GitCompare, Loader2, RotateCcw, Search, RefreshCw, ShieldCheck, TimerReset, XCircle } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Eye, Loader2, RotateCcw, Search, RefreshCw } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import StatusBadge from "@/components/ui/StatusBadge";
 import TablePagination from "@/components/ui/TablePagination";
@@ -16,7 +17,7 @@ function formatDate(iso: string): string {
   return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
 }
 
-const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
+const STATUS_OPTIONS = ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
 const DEFAULT_STATUS = "PENDING,UPDATE_REQUESTED";
 
 type SortKey = "requestNo" | "companyNameEn" | "submittedAt" | "status";
@@ -35,20 +36,17 @@ type RequestRow = {
   status: string;
 };
 
-// Matches BeneficiaryRequestsService.buildListSummary in the NestJS API:
-// PENDING count is keyed `inReview`, IN_REVIEW count is keyed `verifying`
-// (the old Next.js Prisma route used `request`/`inReview` for those two —
-// different names for the same underlying counts).
-type Summary = { drafted: number; inReview: number; verifying: number; approved: number; rejected: number; returned: number; updateRequested: number };
-
 export default function AdminRequestsList() {
   const t = useTranslations("admin.requests");
   const ta = useTranslations("beneficiary.allRequests");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Deep-links from the sidebar/dashboard (New/Update Request) pre-select a status filter.
+  const initialStatus = searchParams.get("status");
 
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
-  const [status, setStatus] = useState(DEFAULT_STATUS);
+  const [status, setStatus] = useState(initialStatus || DEFAULT_STATUS);
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>("submittedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -56,7 +54,6 @@ export default function AdminRequestsList() {
 
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [total, setTotal] = useState(0);
-  const [summary, setSummary] = useState<Summary>({ drafted: 0, inReview: 0, verifying: 0, approved: 0, rejected: 0, returned: 0, updateRequested: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -82,7 +79,6 @@ export default function AdminRequestsList() {
         if (cancelled) return;
         setRows(json.data);
         setTotal(json.total);
-        setSummary(json.summary);
       } catch {
         if (!cancelled) setError(ta("loadError"));
       } finally {
@@ -153,72 +149,6 @@ export default function AdminRequestsList() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold text-slate-800">{t("pageTitle")}</h1>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-            <FileEdit className="h-5 w-5 text-slate-500" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.drafted")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.drafted}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-            <TimerReset className="h-5 w-5 text-blue-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.inReview")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.inReview}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
-            <ShieldCheck className="h-5 w-5 text-purple-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.verifying")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.verifying}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.approved")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.approved}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-            <XCircle className="h-5 w-5 text-red-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.rejected")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.rejected}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
-            <RotateCcw className="h-5 w-5 text-orange-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.returned")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.returned}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-            <GitCompare className="h-5 w-5 text-teal-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs text-slate-500 leading-tight">{ta("summary.updateRequested")}</p>
-            <p className="text-xl font-semibold text-slate-800">{summary.updateRequested}</p>
-          </div>
-        </div>
-      </div>
 
       <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
         <div className="flex flex-wrap gap-3 items-end">
@@ -318,7 +248,11 @@ export default function AdminRequestsList() {
                 </tr>
               ) : (
                 rows.map((req) => (
-                  <tr key={req.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <tr
+                    key={req.id}
+                    onClick={() => router.push(`/secured/admin/requests/${req.id}`)}
+                    className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                  >
                     <td className="px-4 py-3 font-mono text-xs text-slate-700">{req.requestNo}</td>
                     <td className="px-4 py-3 text-slate-800">
                       <div>{req.companyNameEn}</div>
@@ -335,7 +269,7 @@ export default function AdminRequestsList() {
                     <td className="px-4 py-3">
                       <StatusBadge status={req.status} label={ta(`status.${req.status}` as Parameters<typeof ta>[0])} />
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => router.push(`/secured/admin/requests/${req.id}`)}
                         className={cn(

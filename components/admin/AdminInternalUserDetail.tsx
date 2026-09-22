@@ -27,12 +27,23 @@ function Field({ label, value, icon }: { label: string; value: string | null | u
   );
 }
 
-function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+function SectionCard({
+  icon,
+  title,
+  headerAction,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  headerAction?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
       <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100">
         <span className="text-blue-600">{icon}</span>
-        <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
+        <h3 className="text-sm font-semibold text-slate-700 flex-1">{title}</h3>
+        {headerAction}
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -55,7 +66,7 @@ type InternalUserDetailData = {
   phoneNumber: string | null;
   isActive: boolean;
   createdAt: string;
-  role: { name: string; description: string | null; permissions: PermissionRow[] } | null;
+  role: { slug: string; name: string; description: string | null; permissions: PermissionRow[] } | null;
 };
 
 export default function AdminInternalUserDetail({ id }: { id: string }) {
@@ -150,7 +161,19 @@ export default function AdminInternalUserDetail({ id }: { id: string }) {
       </SectionCard>
 
       {data.role && (
-        <SectionCard icon={<ShieldCheck className="h-4 w-4" />} title={data.role.name}>
+        <SectionCard
+          icon={<ShieldCheck className="h-4 w-4" />}
+          title={data.role.name}
+          headerAction={
+            <Link
+              href={`/secured/admin/roles/${data.role.slug}/edit`}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:underline"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              {t("editRolePermissions")}
+            </Link>
+          }
+        >
           {data.role.description && (
             <p className="text-sm text-slate-500 mb-4">{data.role.description}</p>
           )}

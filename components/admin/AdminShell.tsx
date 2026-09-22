@@ -6,21 +6,25 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/lib/navigation";
 import {
   LayoutDashboard, UserCog, ShieldCheck, ChevronDown,
-  User, EditIcon, Menu, X, LogOut, FileText, History, GitCompare, FileSpreadsheet,
+  User, EditIcon, Menu, X, LogOut, History, GitCompare, FileSpreadsheet,
+  FilePlus2, FileEdit, FileX2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
 
+type PermissionsMap = Record<string, { create: boolean; read: boolean; update: boolean; delete: boolean }>;
+
 type Props = {
   fullName: string;
+  permissions: PermissionsMap;
   children: React.ReactNode;
 };
 
 type NavChild = { label: string; href: string; icon?: React.ElementType };
-type NavItem = { label: string; href?: string; icon: React.ElementType; children?: NavChild[] };
+type NavItem = { label: string; href?: string; icon: React.ElementType; children?: NavChild[]; module: string };
 
-export default function AdminShell({ fullName, children }: Props) {
+export default function AdminShell({ fullName, permissions, children }: Props) {
   const t = useTranslations("admin.nav");
   const trev = useTranslations("beneficiary.revisions");
   const pathname = usePathname() ?? "";
@@ -34,16 +38,19 @@ export default function AdminShell({ fullName, children }: Props) {
     router.refresh();
   };
 
-  const navItems: NavItem[] = [
-    { label: t("dashboard"), href: "/secured/admin/dashboard", icon: LayoutDashboard },
-    { label: t("requests"), href: "/secured/admin/requests", icon: FileText },
-    { label: t("reports"), href: "/secured/admin/reports", icon: FileSpreadsheet },
-    { label: t("activitiesLogs"), href: "/secured/admin/activities-logs", icon: History },
-    { label: trev("diffCompare"), href: "/secured/admin/revisions", icon: GitCompare },
-    { label: t("users"), href: "/secured/admin/users", icon: User },
+  const allNavItems: NavItem[] = [
+    { label: t("dashboard"), href: "/secured/admin/dashboard", icon: LayoutDashboard, module: "dashboard" },
+    { label: t("newRequest"), href: "/secured/admin/requests", icon: FilePlus2, module: "requests" },
+    { label: t("updateRequest"), href: "/secured/admin/requests?status=UPDATE_REQUESTED", icon: FileEdit, module: "requests" },
+    { label: t("dissolveRequest"), href: "/secured/admin/requests/dissolve", icon: FileX2, module: "requests" },
+    { label: t("users"), href: "/secured/admin/users", icon: User, module: "users" },
+    { label: t("reports"), href: "/secured/admin/reports", icon: FileSpreadsheet, module: "requests" },
+    { label: t("activitiesLogs"), href: "/secured/admin/activities-logs", icon: History, module: "activity-logs" },
+    { label: trev("diffCompare"), href: "/secured/admin/revisions", icon: GitCompare, module: "revisions" },
     {
       label: t("internalUsers"),
       icon: UserCog,
+      module: "users",
       children: [
         { label: t("allInternalUsers"), href: "/secured/admin/internal-users", icon: User },
         { label: t("createInternalUser"), href: "/secured/admin/internal-users/add", icon: EditIcon },
@@ -52,11 +59,15 @@ export default function AdminShell({ fullName, children }: Props) {
     {
       label: t("rolesPermissions"),
       icon: ShieldCheck,
+      module: "roles",
       children: [
         { label: t("assignRole"), href: "/secured/admin/roles", icon: ShieldCheck },
       ],
     },
   ];
+
+  // A user with no permission entry for a module (or no `read` access) never sees that menu.
+  const navItems = allNavItems.filter((item) => permissions[item.module]?.read);
 
   useEffect(() => {
     const active = navItems.find((item) => item.children?.some((c) => pathname.startsWith(c.href)));
@@ -181,10 +192,12 @@ export default function AdminShell({ fullName, children }: Props) {
           <div className="ml-auto flex items-center gap-3">
             <AdminNotificationBell />
             <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <User className="h-4 w-4 text-blue-700" />
-              </div>
-              <span className="hidden sm:block text-sm font-medium text-slate-700">{fullName}</span>
+              <Link href="/secured/admin/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <User className="h-4 w-4 text-blue-700" />
+                </div>
+                <span className="hidden sm:block text-sm font-medium text-slate-700">{fullName}</span>
+              </Link>
               <LanguageSwitcher />
             </div>
           </div>

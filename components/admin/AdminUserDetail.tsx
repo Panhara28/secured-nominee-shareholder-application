@@ -167,9 +167,14 @@ export default function AdminUserDetail({ id }: { id: string }) {
   };
 
   const openReturnDialog = () => {
-    setReturnReason(verifyResult && !verifyResult.verified ? verifyResult.issues.join("\n") : "");
+    setReturnReason("");
     setReturnReasonError(null);
     setReturnOpen(true);
+  };
+
+  const addReturnSuggestion = (issue: string) => {
+    setReturnReason((prev) => (prev.trim() ? `${prev}\n${issue}` : issue));
+    if (returnReasonError) setReturnReasonError(null);
   };
 
   const handleConfirmReturn = () => {
@@ -350,6 +355,23 @@ export default function AdminUserDetail({ id }: { id: string }) {
             rows={4}
           />
           {returnReasonError && <p className="mt-1.5 text-xs text-red-600">{returnReasonError}</p>}
+          {verifyResult && !verifyResult.verified && verifyResult.issues.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs text-slate-500 mb-1.5">{t("suggestionsLabel")}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {verifyResult.issues.map((issue, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => addReturnSuggestion(issue)}
+                    className="rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3 py-1 text-xs text-slate-700 transition-colors text-left"
+                  >
+                    {issue}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <DialogFooter>
             <DialogClose
               render={
