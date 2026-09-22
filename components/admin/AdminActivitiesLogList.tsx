@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   LogIn, LogOut, UserPlus, KeyRound, KeyRoundIcon, FileEdit, Send, Pencil,
-  CheckCircle2, XCircle, RotateCcw, ShieldCheck, Loader2, RefreshCw, Search, UserCheck, UserX,
+  CheckCircle2, XCircle, RotateCcw, ShieldCheck, Loader2, RefreshCw, Search, UserCheck, UserX, Trash2,
 } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import TablePagination from "@/components/ui/TablePagination";
@@ -14,6 +14,7 @@ const ACTION_OPTIONS = [
   "LOGIN", "LOGOUT", "REGISTER", "PASSWORD_RESET_REQUESTED", "PASSWORD_RESET",
   "REQUEST_CREATED", "REQUEST_SUBMITTED", "REQUEST_EDITED",
   "REQUEST_APPROVED", "REQUEST_REJECTED", "REQUEST_RETURNED", "REQUEST_VERIFIED",
+  "REQUEST_DISSOLVE_REQUESTED", "REQUEST_DISSOLVED",
   "USER_APPROVED", "USER_REJECTED", "USER_VERIFIED", "USER_RETURNED", "REGISTRATION_RESUBMITTED",
 ];
 
@@ -30,6 +31,8 @@ const ACTION_META: Record<string, { icon: React.ElementType; color: string; bg: 
   REQUEST_REJECTED: { icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
   REQUEST_RETURNED: { icon: RotateCcw, color: "text-orange-600", bg: "bg-orange-50" },
   REQUEST_VERIFIED: { icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50" },
+  REQUEST_DISSOLVE_REQUESTED: { icon: Trash2, color: "text-amber-600", bg: "bg-amber-50" },
+  REQUEST_DISSOLVED: { icon: Trash2, color: "text-slate-600", bg: "bg-slate-100" },
   USER_APPROVED: { icon: UserCheck, color: "text-green-600", bg: "bg-green-50" },
   USER_REJECTED: { icon: UserX, color: "text-red-600", bg: "bg-red-50" },
   USER_VERIFIED: { icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50" },

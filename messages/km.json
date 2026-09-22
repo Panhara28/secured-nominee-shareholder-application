@@ -704,6 +704,8 @@
         "REQUEST_REJECTED": "បានបដិសេធសំណើ",
         "REQUEST_RETURNED": "បានប្រគល់ត្រឡប់សំណើ",
         "REQUEST_VERIFIED": "បានផ្ទៀងផ្ទាត់សំណើ",
+        "REQUEST_DISSOLVE_REQUESTED": "បានស្នើសុំលុបកិច្ចសន្យា",
+        "REQUEST_DISSOLVED": "បានលុបកិច្ចសន្យាសំណើ",
         "USER_APPROVED": "បានអនុម័តការចុះឈ្មោះអ្នកប្រើប្រាស់",
         "USER_REJECTED": "បានបដិសេធការចុះឈ្មោះអ្នកប្រើប្រាស់",
         "USER_VERIFIED": "បានផ្ទៀងផ្ទាត់ការចុះឈ្មោះអ្នកប្រើប្រាស់",

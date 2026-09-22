@@ -704,6 +704,8 @@
         "REQUEST_REJECTED": "Rejected request",
         "REQUEST_RETURNED": "Returned request",
         "REQUEST_VERIFIED": "Verified request",
+        "REQUEST_DISSOLVE_REQUESTED": "Requested dissolution",
+        "REQUEST_DISSOLVED": "Dissolved request",
         "USER_APPROVED": "Approved user registration",
         "USER_REJECTED": "Rejected user registration",
         "USER_VERIFIED": "Verified user registration",
