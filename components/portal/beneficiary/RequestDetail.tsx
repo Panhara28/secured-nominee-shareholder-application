@@ -310,6 +310,10 @@ export default function RequestDetail({ id }: { id: string }) {
                     {trev("diffCompare")}
                   </Link>
                 </div>
+              ) : request.status === "DISSOLVE_REQUESTED" ? (
+                <p className="mt-2 text-sm text-amber-600">{t("dissolveRequestedNotice")}</p>
+              ) : request.status === "DISSOLVED" ? (
+                <p className="mt-2 text-sm text-slate-500">{t("dissolvedNotice")}</p>
               ) : (
                 <div className="flex items-center gap-2 mt-2">
                   <StatusBadge status={request.status} label={t(`status.${request.status}` as Parameters<typeof t>[0])} />

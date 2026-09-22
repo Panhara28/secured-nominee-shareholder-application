@@ -17,7 +17,7 @@ function formatDate(iso: string): string {
   return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
 }
 
-const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
+const STATUS_OPTIONS = ["DRAFT", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED", "DISSOLVE_REQUESTED", "DISSOLVED"];
 
 type SortKey = "requestNo" | "companyNameEn" | "submittedAt" | "status";
 type SortDir = "asc" | "desc";
