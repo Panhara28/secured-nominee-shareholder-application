@@ -667,6 +667,7 @@
       "empty": "មិនមានការជូនដំណឹងថ្មីទេ។",
       "pendingNotice": "កំពុងរង់ចាំការពិនិត្យ",
       "updateRequestedNotice": "ស្នើសុំធ្វើបច្ចុប្បន្នភាព — ពិនិត្យភាពខុសគ្នា",
+      "dissolveRequestedNotice": "សំណើសុំលុបកិច្ចសន្យា — ពិនិត្យមូលហេតុ",
       "userPendingNotice": "ការចុះឈ្មោះថ្មីកំពុងរង់ចាំការអនុម័ត"
     },
     "activitiesLogs": {

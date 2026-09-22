@@ -1,7 +1,7 @@
 import type { ElementType } from "react";
-import { CheckCircle2, GitCompare, RotateCcw, ShieldCheck, TimerReset, UserPlus, XCircle } from "lucide-react";
+import { CheckCircle2, GitCompare, RotateCcw, ShieldCheck, TimerReset, Trash2, UserPlus, XCircle } from "lucide-react";
 
-export type NotifyStatusKey = "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED" | "RETURNED" | "UPDATE_REQUESTED" | "USER";
+export type NotifyStatusKey = "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED" | "RETURNED" | "UPDATE_REQUESTED" | "DISSOLVE_REQUESTED" | "DISSOLVED" | "USER";
 
 type StatusStyle = {
   icon: ElementType;
@@ -20,6 +20,8 @@ export const NOTIFY_STATUS_STYLES: Record<NotifyStatusKey, StatusStyle> = {
   REJECTED: { icon: XCircle, iconBg: "bg-red-50", iconColor: "text-red-600", textColor: "text-red-600", accent: "#dc2626" },
   RETURNED: { icon: RotateCcw, iconBg: "bg-orange-50", iconColor: "text-orange-600", textColor: "text-orange-600", accent: "#ea580c" },
   UPDATE_REQUESTED: { icon: GitCompare, iconBg: "bg-teal-50", iconColor: "text-teal-600", textColor: "text-teal-600", accent: "#0d9488" },
+  DISSOLVE_REQUESTED: { icon: Trash2, iconBg: "bg-amber-50", iconColor: "text-amber-600", textColor: "text-amber-600", accent: "#d97706" },
+  DISSOLVED: { icon: Trash2, iconBg: "bg-slate-100", iconColor: "text-slate-600", textColor: "text-slate-600", accent: "#475569" },
   USER: { icon: UserPlus, iconBg: "bg-amber-50", iconColor: "text-amber-600", textColor: "text-amber-600", accent: "#d97706" },
 };
 

@@ -667,6 +667,7 @@
       "empty": "No new notifications.",
       "pendingNotice": "Awaiting review",
       "updateRequestedNotice": "Update requested — review diff",
+      "dissolveRequestedNotice": "Dissolution requested — review reason",
       "userPendingNotice": "New registration awaiting approval"
     },
     "activitiesLogs": {

@@ -28,11 +28,12 @@ type PendingUserRow = {
 };
 type PendingRow = PendingRequestRow | PendingUserRow;
 
-const NOTIFY_STATUSES = ["PENDING", "UPDATE_REQUESTED"] as const;
+const NOTIFY_STATUSES = ["PENDING", "UPDATE_REQUESTED", "DISSOLVE_REQUESTED"] as const;
 
 const NOTICE_KEYS: Record<string, string> = {
   PENDING: "pendingNotice",
   UPDATE_REQUESTED: "updateRequestedNotice",
+  DISSOLVE_REQUESTED: "dissolveRequestedNotice",
   USER: "userPendingNotice",
 };
 
