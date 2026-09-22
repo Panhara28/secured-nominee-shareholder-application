@@ -359,6 +359,21 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                   )}
                 </div>
               )}
+              {/* Dissolve requests have no verify step — the shareholder-supplied
+                  reason is the review basis, so Approve/Deny are always available. */}
+              {request.status === "DISSOLVE_REQUESTED" && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleAction("approve")}
+                    disabled={acting !== null}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 hover:bg-red-700 px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    {acting === "approve" ? ta("dissolveApproving") : ta("dissolveApprove")}
+                  </button>
+                </div>
+              )}
               <p className="text-xs text-slate-500">
                 {t("col.submittedAt")}: <span className="font-medium text-slate-700">{formatDate(request.submittedAt)}</span>
               </p>
@@ -622,7 +637,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
             </div>
           </SectionCard>
 
-          {(request.status === "PENDING" || request.status === "IN_REVIEW" || request.status === "UPDATE_REQUESTED") && (
+          {(request.status === "PENDING" || request.status === "IN_REVIEW" || request.status === "UPDATE_REQUESTED" || request.status === "DISSOLVE_REQUESTED") && (
             <div className="text-right">
               <button
                 type="button"
@@ -631,7 +646,9 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                 className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 hover:bg-red-100 px-4 py-2 text-sm font-medium text-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <XCircle className="h-4 w-4" />
-                {acting === "reject" ? ta("rejecting") : ta("reject")}
+                {request.status === "DISSOLVE_REQUESTED"
+                  ? (acting === "reject" ? ta("denyingDissolve") : ta("denyDissolve"))
+                  : (acting === "reject" ? ta("rejecting") : ta("reject"))}
               </button>
             </div>
           )}

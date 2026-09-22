@@ -7,7 +7,7 @@ import { Link, useRouter } from "@/lib/navigation";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
 
-const STATUS_OPTIONS = ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
+const STATUS_OPTIONS = ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED", "DISSOLVE_REQUESTED", "DISSOLVED"];
 
 type Summary = { inReview: number; approved: number; rejected: number; returned: number };
 type RecentRow = { id: number; requestNo: string; companyNameEn: string; status: string; submittedAt: string };
@@ -75,16 +75,19 @@ export default function DashboardClient({ totalShareholders, totalRequests, tota
   }
 
   useEffect(() => {
-    // Dissolve Request has no backing status/flow yet — nothing to fetch.
-    if (requestTab === "dissolve") return;
-
     let cancelled = false;
 
     async function fetchRecent() {
       setLoading(true);
       try {
+        const tabStatus =
+          requestTab === "update"
+            ? "UPDATE_REQUESTED"
+            : requestTab === "dissolve"
+              ? "DISSOLVE_REQUESTED"
+              : status;
         const params = new URLSearchParams({
-          status: requestTab === "update" ? "UPDATE_REQUESTED" : status,
+          status: tabStatus,
           sortKey: "submittedAt",
           sortDir: "desc",
           page: "1",
@@ -158,10 +161,6 @@ export default function DashboardClient({ totalShareholders, totalRequests, tota
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userStatus]);
-
-  // Dissolve Request has no backing status/flow yet — always render as empty rather than stale data from another tab.
-  const displayedRecent = requestTab === "dissolve" ? [] : recent;
-  const displayedLoading = requestTab === "dissolve" ? false : loading;
 
   const cards = [
     { label: t("totalRequests"), value: stats.totalRequests, icon: FileText, color: "text-slate-600", bg: "bg-slate-100" },
@@ -245,18 +244,18 @@ export default function DashboardClient({ totalShareholders, totalRequests, tota
                 </tr>
               </thead>
               <tbody>
-                {displayedLoading ? (
+                {loading ? (
                   <tr>
                     <td colSpan={4} className="py-10 text-center">
                       <Loader2 className="h-5 w-5 animate-spin text-slate-400 inline-block" />
                     </td>
                   </tr>
-                ) : displayedRecent.length === 0 ? (
+                ) : recent.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-10 text-center text-sm text-slate-400">{tr("empty")}</td>
                   </tr>
                 ) : (
-                  displayedRecent.map((r) => (
+                  recent.map((r) => (
                     <tr
                       key={r.id}
                       onClick={() => router.push(`/secured/admin/requests/${r.id}`)}

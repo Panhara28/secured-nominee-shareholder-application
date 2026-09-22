@@ -1,10 +1,10 @@
 import { useTranslations } from "next-intl";
-import { CheckCircle2, FileEdit, Pencil, RotateCcw, TimerReset, XCircle } from "lucide-react";
+import { CheckCircle2, FileEdit, Pencil, RotateCcw, TimerReset, Trash2, XCircle } from "lucide-react";
 import { cn, splitReasonItems } from "@/lib/utils";
 
 export type ActivityLogEntry = {
   id: number;
-  action: "CREATED" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RETURNED" | "EDITED";
+  action: "CREATED" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RETURNED" | "EDITED" | "DISSOLVE_REQUESTED" | "DISSOLVED";
   actorName: string;
   actorRole: string;
   note: string | null;
@@ -26,6 +26,8 @@ const ICONS: Record<ActivityLogEntry["action"], React.ElementType> = {
   REJECTED: XCircle,
   RETURNED: RotateCcw,
   EDITED: Pencil,
+  DISSOLVE_REQUESTED: Trash2,
+  DISSOLVED: Trash2,
 };
 
 const ICON_STYLES: Record<ActivityLogEntry["action"], string> = {
@@ -35,6 +37,8 @@ const ICON_STYLES: Record<ActivityLogEntry["action"], string> = {
   REJECTED: "bg-red-50 text-red-600",
   RETURNED: "bg-orange-50 text-orange-600",
   EDITED: "bg-amber-50 text-amber-600",
+  DISSOLVE_REQUESTED: "bg-amber-50 text-amber-600",
+  DISSOLVED: "bg-slate-200 text-slate-700",
 };
 
 export default function RequestActivityLog({ logs = [] }: { logs?: ActivityLogEntry[] }) {

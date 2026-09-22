@@ -42,7 +42,7 @@ export default function AdminShell({ fullName, permissions, children }: Props) {
     { label: t("dashboard"), href: "/secured/admin/dashboard", icon: LayoutDashboard, module: "dashboard" },
     { label: t("newRequest"), href: "/secured/admin/requests", icon: FilePlus2, module: "requests" },
     { label: t("updateRequest"), href: "/secured/admin/requests?status=UPDATE_REQUESTED", icon: FileEdit, module: "requests" },
-    { label: t("dissolveRequest"), href: "/secured/admin/requests/dissolve", icon: FileX2, module: "requests" },
+    { label: t("dissolveRequest"), href: "/secured/admin/requests?status=DISSOLVE_REQUESTED", icon: FileX2, module: "requests" },
     { label: t("users"), href: "/secured/admin/users", icon: User, module: "users" },
     { label: t("reports"), href: "/secured/admin/reports", icon: FileSpreadsheet, module: "requests" },
     { label: t("activitiesLogs"), href: "/secured/admin/activities-logs", icon: History, module: "activity-logs" },

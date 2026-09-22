@@ -41,7 +41,7 @@ function toInputDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-const STATUS_OPTIONS = ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED"];
+const STATUS_OPTIONS = ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED", "DISSOLVE_REQUESTED", "DISSOLVED"];
 
 export default function AdminReportsList() {
   const t = useTranslations("admin.reports");

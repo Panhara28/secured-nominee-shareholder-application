@@ -10,6 +10,8 @@ const STYLES: Record<string, string> = {
   REJECTED: "bg-red-100 text-red-800",
   RETURNED: "bg-orange-100 text-orange-800",
   UPDATE_REQUESTED: "bg-teal-100 text-teal-800",
+  DISSOLVE_REQUESTED: "bg-amber-100 text-amber-800",
+  DISSOLVED: "bg-slate-200 text-slate-700",
 };
 
 export default function StatusBadge({ status, label }: { status: Status; label?: string }) {

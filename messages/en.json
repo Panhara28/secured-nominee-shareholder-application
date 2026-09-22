@@ -112,6 +112,25 @@
       "noResults": "No approved requests matched your search.",
       "update": "Update"
     },
+    "requestDissolve": {
+      "searchLabel": "Search Approved Requests",
+      "searchPlaceholder": "Request No., or company name",
+      "search": "Search",
+      "searchHint": "You can only request dissolution for requests that have already been approved.",
+      "noResults": "No approved requests matched your search.",
+      "dissolve": "Request Dissolve",
+      "pendingDissolutionsTitle": "Pending Dissolutions",
+      "pendingDissolutionsEmpty": "You have no dissolution requests awaiting review.",
+      "dialogTitle": "Request Dissolve",
+      "dialogDescription": "Please explain why this nominee shareholder agreement should be dissolved. This cannot be undone once approved.",
+      "reasonPlaceholder": "Enter reason for dissolution...",
+      "reasonRequired": "A reason is required.",
+      "cancel": "Cancel",
+      "confirm": "Submit",
+      "submitting": "Submitting…",
+      "success": "Dissolution request submitted for review.",
+      "error": "Failed to submit dissolution request. Please try again."
+    },
     "dashboard": {
       "welcome": "Welcome back,",
       "draftedLabel": "Drafted",
@@ -274,7 +293,9 @@
         "APPROVED": "Approved",
         "REJECTED": "Rejected",
         "RETURNED": "Returned",
-        "UPDATE_REQUESTED": "Update Requested"
+        "UPDATE_REQUESTED": "Update Requested",
+        "DISSOLVE_REQUESTED": "Dissolve Requested",
+        "DISSOLVED": "Dissolved"
       },
       "reset": "Reset",
       "search": "Search",
@@ -343,7 +364,9 @@
           "APPROVED": "Approved",
           "REJECTED": "Rejected",
           "RETURNED": "Returned for correction",
-          "EDITED": "Edited and resubmitted"
+          "EDITED": "Edited and resubmitted",
+          "DISSOLVE_REQUESTED": "Dissolution requested",
+          "DISSOLVED": "Dissolved"
         }
       }
     }
@@ -421,6 +444,10 @@
       "approving": "Approving…",
       "reject": "Reject",
       "rejecting": "Rejecting…",
+      "dissolveApprove": "Approve Dissolution",
+      "dissolveApproving": "Dissolving…",
+      "denyDissolve": "Deny Dissolution",
+      "denyingDissolve": "Denying…",
       "actionError": "Failed to update request. Please try again.",
       "rejectDialogTitle": "Reject Request",
       "rejectDialogDescription": "Please provide a reason for rejecting this request. The shareholder will be able to see this.",
