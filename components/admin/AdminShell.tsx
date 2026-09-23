@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Link, usePathname, useRouter } from "@/lib/navigation";
 import {
   LayoutDashboard, UserCog, ShieldCheck, ChevronDown,
@@ -28,6 +29,11 @@ export default function AdminShell({ fullName, permissions, children }: Props) {
   const t = useTranslations("admin.nav");
   const trev = useTranslations("beneficiary.revisions");
   const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams();
+  const currentSearch = searchParams.toString();
+  // New/Update/Dissolve Request all share the same pathname, distinguished only
+  // by `?status=`, so plain pathname matching can't tell them apart.
+  const currentFull = currentSearch ? `${pathname}?${currentSearch}` : pathname;
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -135,7 +141,10 @@ export default function AdminShell({ fullName, permissions, children }: Props) {
             );
           }
 
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active =
+            currentFull === item.href ||
+            (!item.href!.includes("?") &&
+              ((pathname === item.href && currentSearch === "") || pathname.startsWith(`${item.href}/`)));
           const Icon = item.icon;
           return (
             <Link

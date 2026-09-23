@@ -58,6 +58,18 @@ export default function AdminRequestsList() {
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
 
+  // Sidebar/dashboard links (New/Update/Dissolve Request) navigate client-side
+  // to this same route with a different `?status=`. Since that doesn't remount
+  // the component, the status filter has to react to searchParams changing,
+  // not just read it once at mount.
+  useEffect(() => {
+    const urlStatus = searchParams.get("status");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from the URL, an external source, not derived render state
+    setStatus(urlStatus || DEFAULT_STATUS);
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   useEffect(() => {
     let cancelled = false;
 
