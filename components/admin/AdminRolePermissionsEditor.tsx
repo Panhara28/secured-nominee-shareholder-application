@@ -311,21 +311,6 @@ export default function AdminRolePermissionsEditor({ slug }: { slug: string }) {
             </tbody>
           </table>
         </div>
-        <div className="px-5 py-4 border-t border-slate-100">
-          <Button type="button" onClick={handleSavePermissions} disabled={savingPermissions || !isDirty}>
-            {savingPermissions ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t("savingPermissions")}
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                {t("savePermissions")}
-              </>
-            )}
-          </Button>
-        </div>
       </div>
 
       {isDirty && (

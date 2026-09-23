@@ -9,7 +9,7 @@ export const REVISION_FIELDS = [
   "ownerLastNameKh", "ownerFirstNameKh", "ownerLastNameEn", "ownerFirstNameEn", "ownerDob", "ownerBecameDate", "ownerNationality", "ownerGender",
   "ownerIdCard", "ownerIdIssuedDate", "ownerIdExpiredDate", "ownerEmail", "ownerPhone", "ownerPhotoName", "ownerIdDocNames",
   "shareAmount",
-  "shareholderContractDocNames", "otherDocNames", "consentAgreed",
+  "shareholderContractDocNames", "otherDocNames", "agreementDate", "consentAgreed",
 ] as const;
 
 export type RevisionFieldName = (typeof REVISION_FIELDS)[number];
@@ -17,7 +17,7 @@ export type RequestSnapshot = Record<RevisionFieldName, string | boolean | strin
 
 const DATE_FIELDS = new Set<RevisionFieldName>([
   "registrationDate", "shDob", "shBecameDate", "shIdIssuedDate", "shIdExpiredDate",
-  "ownerDob", "ownerBecameDate", "ownerIdIssuedDate", "ownerIdExpiredDate",
+  "ownerDob", "ownerBecameDate", "ownerIdIssuedDate", "ownerIdExpiredDate", "agreementDate",
 ]);
 
 const DOC_NAME_FIELDS = new Set<RevisionFieldName>([
@@ -27,7 +27,7 @@ const DOC_NAME_FIELDS = new Set<RevisionFieldName>([
 export function toRequestSnapshot(record: BeneficiaryRequest): RequestSnapshot {
   const out = {} as RequestSnapshot;
   for (const field of REVISION_FIELDS) {
-    const value = record[field] as unknown;
+    const value = (record as unknown as Record<string, unknown>)[field];
     if (value === null || value === undefined) {
       out[field] = null;
     } else if (DATE_FIELDS.has(field)) {

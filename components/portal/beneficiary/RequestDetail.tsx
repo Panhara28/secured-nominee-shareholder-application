@@ -6,11 +6,13 @@ import { toast } from "sonner";
 import { Link, useRouter } from "@/lib/navigation";
 import { ArrowLeft, Building2, Download, FileText, GitCompare, History, MessageSquare, Pencil, Send, Users } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { UPDATE_SECTION_STEPS, type UpdateSection } from "@/lib/update-sections";
+import UpdateDraftedTag from "@/components/portal/beneficiary/UpdateDraftedTag";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn, splitReasonItems } from "@/lib/utils";
 import RequestActivityLog, { type ActivityLogEntry } from "@/components/beneficiary/RequestActivityLog";
-import RequestRevisionHistory, { type RequestRevisionEntry } from "@/components/beneficiary/RequestRevisionHistory";
+import RequestRevisionHistory, { PendingUpdateChanges, type RequestRevisionEntry } from "@/components/beneficiary/RequestRevisionHistory";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "-";
@@ -77,10 +79,12 @@ function DocList({ documents }: { documents: ApiDocument[] }) {
 function SectionCard({
   icon,
   title,
+  action,
   children,
 }: {
   icon: React.ReactNode;
   title: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -88,6 +92,7 @@ function SectionCard({
       <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100">
         <span className="text-blue-600">{icon}</span>
         <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
+        {action && <div className="ml-auto">{action}</div>}
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -115,7 +120,11 @@ type RequestDetailData = {
   id: number;
   requestNo: string;
   status: string;
+  /** "DRAFTED" while an APPROVED request has a saved, not-yet-sent update. */
+  updateStatus?: "DRAFTED" | null;
+  pendingUpdateSavedAt?: string | null;
   type: string;
+  updateType?: string | null;
   companyNameKh: string | null;
   companyNameEn: string;
   registrationNo: string;
@@ -181,6 +190,7 @@ export default function RequestDetail({ id }: { id: string }) {
   const t = useTranslations("beneficiary.allRequests");
   const tf = useTranslations("beneficiary.request");
   const trev = useTranslations("beneficiary.revisions");
+  const tu = useTranslations("updateTypes");
   const router = useRouter();
   const [request, setRequest] = useState<RequestDetailData | null | undefined>(undefined);
   const [error, setError] = useState(false);
@@ -275,6 +285,20 @@ export default function RequestDetail({ id }: { id: string }) {
         .join(", ")
     : "";
 
+  // Approved requests: each section opens its own update page that shows
+  // only that section (/update-request/{section}).
+  const sectionUpdateAction = (section: UpdateSection) =>
+    request?.status === "APPROVED" ? (
+      <button
+        type="button"
+        onClick={() => router.push(`/portal/beneficiary/all-requests/${request.id}/update-request/${section}`)}
+        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 transition-colors"
+      >
+        <Pencil className="h-3.5 w-3.5" />
+        {t("requestToUpdate")} {tf(`step${UPDATE_SECTION_STEPS[section]}Title` as Parameters<typeof tf>[0])}
+      </button>
+    ) : undefined;
+
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4">
@@ -315,8 +339,14 @@ export default function RequestDetail({ id }: { id: string }) {
               ) : request.status === "DISSOLVED" ? (
                 <p className="mt-2 text-sm text-slate-500">{t("dissolvedNotice")}</p>
               ) : (
-                <div className="flex items-center gap-2 mt-2">
-                  <StatusBadge status={request.status} label={t(`status.${request.status}` as Parameters<typeof t>[0])} />
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={request.status} label={t(`status.${request.status}` as Parameters<typeof t>[0])} />
+                    {request.updateStatus === "DRAFTED" && <UpdateDraftedTag />}
+                  </div>
+                  {request.updateStatus === "DRAFTED" && (
+                    <p className="text-sm text-slate-500">{t("updateDraftedNotice")}</p>
+                  )}
                 </div>
               )}
             </div>
@@ -357,7 +387,31 @@ export default function RequestDetail({ id }: { id: string }) {
               </div>
             )}
             {request.status === "APPROVED" && (
-              <div className="flex-shrink-0 text-right">
+              <div className="flex-shrink-0 flex flex-wrap items-start justify-end gap-2">
+                {request.updateStatus === "DRAFTED" && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/portal/beneficiary/all-requests/${request.id}/edit`)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 bg-white hover:bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition-colors"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      {t("continueDraft")}
+                    </button>
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={handleSubmitRequest}
+                        disabled={submitting}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        <Send className="h-4 w-4" />
+                        {submitting ? t("submittingRequest") : t("requestToUpdate")}
+                      </button>
+                      {submitError && <p className="mt-2 text-xs text-red-600 max-w-xs">{submitError}</p>}
+                    </div>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={() => setCertificateOpen(true)}
@@ -402,8 +456,9 @@ export default function RequestDetail({ id }: { id: string }) {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         <div className="lg:col-span-8 space-y-4">
+          {request.status === "UPDATE_REQUESTED" && <PendingUpdateChanges revisions={request.revisions} />}
           {/* 1. Company Information */}
-          <SectionCard icon={<Building2 className="h-4 w-4" />} title={`1. ${tf("step1Title")}`}>
+          <SectionCard icon={<Building2 className="h-4 w-4" />} title={`1. ${tf("step1Title")}`} action={sectionUpdateAction("company")}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Field label={t("companyNameEn")} value={request.companyNameEn} />
               <Field label={t("companyNameKh")} value={request.companyNameKh} />
@@ -417,9 +472,8 @@ export default function RequestDetail({ id }: { id: string }) {
           </SectionCard>
 
           {/* 2. Nominee Shareholder Information */}
-          <SectionCard icon={<Users className="h-4 w-4" />} title={`2. ${tf("step2Title")}`}>
+          <SectionCard icon={<Users className="h-4 w-4" />} title={`2. ${tf("step2Title")}`} action={sectionUpdateAction("nominee-shareholder")}>
             <div className="flex items-start gap-6 mb-4">
-              <PersonPhoto document={docsByCategory(request.documents, "SH_PHOTO")[0]} />
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label={t("shareholderName")} value={`${request.shLastNameEn} ${request.shFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.shLastNameKh ?? ""} ${request.shFirstNameKh ?? ""}`.trim()} />
@@ -433,6 +487,7 @@ export default function RequestDetail({ id }: { id: string }) {
                 <Field label={tf("email")} value={request.shEmail} truncate />
                 <Field label={tf("phone")} value={formatPhone(request.shPhone)} />
               </div>
+              <PersonPhoto document={docsByCategory(request.documents, "SH_PHOTO")[0]} />
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
@@ -441,9 +496,8 @@ export default function RequestDetail({ id }: { id: string }) {
           </SectionCard>
 
           {/* 3. Beneficial Owner Information */}
-          <SectionCard icon={<Users className="h-4 w-4" />} title={`3. ${tf("step3Title")}`}>
+          <SectionCard icon={<Users className="h-4 w-4" />} title={`3. ${tf("step3Title")}`} action={sectionUpdateAction("beneficial-owner")}>
             <div className="flex items-start gap-6 mb-4">
-              <PersonPhoto document={docsByCategory(request.documents, "OWNER_PHOTO")[0]} />
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label={t("ownerNameEn")} value={`${request.ownerLastNameEn} ${request.ownerFirstNameEn}`.trim()} />
                 <Field label={t("ownerNameKh")} value={`${request.ownerLastNameKh ?? ""} ${request.ownerFirstNameKh ?? ""}`.trim()} />
@@ -458,6 +512,7 @@ export default function RequestDetail({ id }: { id: string }) {
                 <Field label={tf("phone")} value={formatPhone(request.ownerPhone)} />
                 <Field label={t("shareAmount")} value={request.shareAmount} />
               </div>
+              <PersonPhoto document={docsByCategory(request.documents, "OWNER_PHOTO")[0]} />
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
@@ -466,7 +521,7 @@ export default function RequestDetail({ id }: { id: string }) {
           </SectionCard>
 
           {/* 4. Agreement */}
-          <SectionCard icon={<FileText className="h-4 w-4" />} title={`4. ${tf("step4Title")}`}>
+          <SectionCard icon={<FileText className="h-4 w-4" />} title={`4. ${tf("step4Title")}`} action={sectionUpdateAction("agreement")}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <Field label={tf("agreementDate")} value={formatDate(request.agreementDate)} />
             </div>
@@ -505,6 +560,9 @@ export default function RequestDetail({ id }: { id: string }) {
             <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Field label={t("col.submittedAt")} value={formatDate(request.submittedAt)} />
               <Field label={t("col.requestType")} value={request.type} />
+              {request.updateType && (
+                <Field label={tu("label")} value={tu(request.updateType as Parameters<typeof tu>[0])} />
+              )}
             </div>
           </SectionCard>
         </div>

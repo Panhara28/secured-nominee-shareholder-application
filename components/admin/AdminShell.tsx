@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
@@ -25,12 +25,18 @@ type Props = {
 type NavChild = { label: string; href: string; icon?: React.ElementType };
 type NavItem = { label: string; href?: string; icon: React.ElementType; children?: NavChild[]; module: string };
 
+const subscribeNoop = () => () => {};
+
 export default function AdminShell({ fullName, permissions, children }: Props) {
   const t = useTranslations("admin.nav");
   const trev = useTranslations("beneficiary.revisions");
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
-  const currentSearch = searchParams.toString();
+  // The server render of this layout doesn't see the query string, so the
+  // first client render ignores it too (otherwise the `?status=` items'
+  // active styles mismatch on hydration); the real value applies right after.
+  const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
+  const currentSearch = hydrated ? searchParams.toString() : "";
   // New/Update/Dissolve Request all share the same pathname, distinguished only
   // by `?status=`, so plain pathname matching can't tell them apart.
   const currentFull = currentSearch ? `${pathname}?${currentSearch}` : pathname;

@@ -15,7 +15,9 @@ export type RequestRevisionEntry = {
   editedByRole: string;
   previousData: RequestSnapshot;
   newData: RequestSnapshot;
+  updateType?: string | null;
   createdAt: string;
+  approvedAt?: string | null;
 };
 
 function formatDateTime(iso: string): string {
@@ -52,7 +54,7 @@ const FIELD_SECTIONS: { section: "company" | "shareholder" | "owner" | "agreemen
   },
   {
     section: "agreement",
-    fields: ["shareholderContractDocNames", "otherDocNames", "consentAgreed"],
+    fields: ["shareholderContractDocNames", "otherDocNames", "agreementDate", "consentAgreed"],
   },
 ];
 
@@ -69,7 +71,7 @@ const FIELD_LABEL_KEYS: Record<RevisionFieldName, string> = {
   ownerDob: "dob", ownerBecameDate: "becameDate", ownerNationality: "nationality", ownerGender: "gender", ownerIdCard: "idCard",
   ownerIdIssuedDate: "issueDate", ownerIdExpiredDate: "expiryDate", ownerEmail: "email", ownerPhone: "phone",
   ownerPhotoName: "photo", ownerIdDocNames: "idDocuments", shareAmount: "shareAmount",
-  shareholderContractDocNames: "contractDocuments", otherDocNames: "otherDocuments", consentAgreed: "consentAgreed",
+  shareholderContractDocNames: "contractDocuments", otherDocNames: "otherDocuments", agreementDate: "agreementDate", consentAgreed: "consentAgreed",
 };
 
 const FIELD_LABEL_NAMESPACE: Record<string, "request" | "revisions"> = {
@@ -78,7 +80,7 @@ const FIELD_LABEL_NAMESPACE: Record<string, "request" | "revisions"> = {
   companyPhone: "request", companyOfficePhone: "request", companyEmail: "request",
   lastNameKh: "request", firstNameKh: "request", lastNameEn: "request", firstNameEn: "request",
   dob: "request", becameDate: "request", shBecameDate: "request", nationality: "request", gender: "request", idCard: "request",
-  issueDate: "request", expiryDate: "request", email: "request", phone: "request", shareAmount: "request",
+  issueDate: "request", expiryDate: "request", email: "request", phone: "request", shareAmount: "request", agreementDate: "request",
   photo: "revisions", idDocuments: "revisions", contractDocuments: "revisions", otherDocuments: "revisions", consentAgreed: "revisions",
 };
 
@@ -173,6 +175,7 @@ export function RevisionDiffTable({ diffs, tf, tr }: { diffs: FieldDiff[]; tf: R
 export default function RequestRevisionHistory({ revisions = [] }: { revisions?: RequestRevisionEntry[] }) {
   const tr = useTranslations("beneficiary.revisions");
   const tf = useTranslations("beneficiary.request");
+  const tu = useTranslations("updateTypes");
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   const toggle = (id: number) => {
@@ -207,6 +210,9 @@ export default function RequestRevisionHistory({ revisions = [] }: { revisions?:
                 <p className="text-sm font-medium text-slate-800">
                   {tr("editedBy", { name: entry.editedByName, date: formatDateTime(entry.createdAt) })}
                 </p>
+                {entry.updateType && (
+                  <p className="text-xs text-amber-700">{tu(entry.updateType as Parameters<typeof tu>[0])}</p>
+                )}
               </div>
               <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-200 flex-shrink-0", isOpen && "rotate-180")} />
             </button>
@@ -219,5 +225,28 @@ export default function RequestRevisionHistory({ revisions = [] }: { revisions?:
         );
       })}
     </ul>
+  );
+}
+
+// While a request is UPDATE_REQUESTED: what the applicant changed, i.e. the
+// latest not-yet-approved revision (revisions come newest first).
+export function PendingUpdateChanges({ revisions }: { revisions: RequestRevisionEntry[] }) {
+  const tr = useTranslations("beneficiary.revisions");
+  const tf = useTranslations("beneficiary.request");
+  const pending = revisions.find((r) => !r.approvedAt);
+  if (!pending) return null;
+  return (
+    <div className="bg-white rounded-xl border border-amber-200 shadow-sm">
+      <div className="flex items-center gap-2 px-5 py-3.5 border-b border-amber-100 bg-amber-50/60 rounded-t-xl">
+        <Pencil className="h-4 w-4 text-amber-600" />
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-slate-700">{tr("pendingChangesTitle")}</h3>
+          <p className="text-xs text-slate-500">{tr("pendingChangesHint")}</p>
+        </div>
+      </div>
+      <div className="p-5">
+        <RevisionDiffTable diffs={diffSnapshots(pending.previousData, pending.newData)} tf={tf} tr={tr} />
+      </div>
+    </div>
   );
 }

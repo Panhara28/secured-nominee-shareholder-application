@@ -9,6 +9,8 @@ import { cn, splitReasonItems } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { COUNTRIES } from "@/lib/countries";
+import AddressCascadeSelects, { type AddressField } from "@/components/portal/beneficiary/AddressCascadeSelects";
+import { UPDATE_TYPE_BY_STEP } from "@/lib/update-sections";
 
 function StepTabs({
   steps,
@@ -164,12 +166,17 @@ function isValidIdDateRange(issued: string, expired: string): boolean {
   return issued < expired;
 }
 
-const PROVINCES_KH = [
-  "ភ្នំពេញ", "កណ្តាល", "កំពង់ចាម", "កំពង់ឆ្នាំង", "កំពង់ស្ពឺ", "កំពង់ធំ", "កំពត",
-  "កោះកុង", "ក្រចេះ", "មណ្ឌលគិរី", "ឧត្តរមានជ័យ", "បន្ទាយមានជ័យ", "បាត់ដំបង",
-  "ព្រៃវែង", "ព្រះវិហារ", "ពោធិ៍សាត់", "រតនគិរី", "សៀមរាប", "ស្ទឹងត្រែង", "ស្វាយរៀង",
-  "តាកែវ", "ត្បូងឃ្មុំ", "ប៉ៃលិន", "ព្រះសីហនុ",
+// Real province → district → commune → village chains from the gazetteer, so
+// demo-filled addresses line up with the cascading dropdowns.
+const DEMO_ADDRESSES = [
+  { companyProvince: "ភ្នំពេញ", companyDistrict: "ចំការមន", companyCommune: "ទន្លេបាសាក់", companyVillage: "ភូមិ ១" },
+  { companyProvince: "សៀមរាប", companyDistrict: "អង្គរជុំ", companyCommune: "ចារឈូក", companyVillage: "ប្រាសាទ" },
+  { companyProvince: "ព្រះសីហនុ", companyDistrict: "ព្រះសីហនុ", companyCommune: "លេខ១", companyVillage: "ភូមិ១" },
 ];
+
+const ADDRESS_FORM_KEYS: Record<AddressField, "companyProvince" | "companyDistrict" | "companyCommune" | "companyVillage"> = {
+  province: "companyProvince", district: "companyDistrict", commune: "companyCommune", village: "companyVillage",
+};
 
 type FormData = {
   /* Step 1 — Company */
@@ -339,10 +346,7 @@ function generateFakeFormData(): FormData {
     companyNameEn: company.en,
     registrationNo: `CO-${randomDigits(5)}`,
     registrationDate: randomDateBetween(2015, 2024),
-    companyProvince: randomOf(PROVINCES_KH),
-    companyDistrict: "ស្រុកសាកល្បង",
-    companyCommune: "ឃុំសាកល្បង",
-    companyVillage: "ភូមិសាកល្បង",
+    ...randomOf(DEMO_ADDRESSES),
     companyStreet: `ផ្លូវលេខ ${randomDigits(2)}`,
     companyHouse: `#${randomDigits(3)}`,
     companyPhone: `${Math.floor(Math.random() * 90) + 10} ${randomDigits(3)} ${randomDigits(3)}`,
@@ -614,7 +618,36 @@ function PersonFields({
   );
 }
 
-export default function BeneficiaryRequestForm({ editId }: { editId?: string } = {}) {
+// Every form field of a wizard step (the per-section update pages check
+// these for changes). idType/shIdType are UI-only and never saved.
+const SECTION_FIELDS: Record<number, (keyof FormData)[]> = (() => {
+  const keys = (Object.keys(EMPTY) as (keyof FormData)[]).filter((k) => k !== "idType" && k !== "shIdType");
+  const stepOf = (k: string) =>
+    k.startsWith("company") || k.startsWith("registration") ? 1 : k.startsWith("sh") ? 2 : k === "agreementDate" ? 4 : 3;
+  return { 1: keys.filter((k) => stepOf(k) === 1), 2: keys.filter((k) => stepOf(k) === 2), 3: keys.filter((k) => stepOf(k) === 3), 4: keys.filter((k) => stepOf(k) === 4) };
+})();
+
+type SectionDocs = {
+  shPhotoDocId: number | null; shPhotoFile: File | null; shIdDocs: UploadedDoc[];
+  ownerPhotoDocId: number | null; ownerPhotoFile: File | null; ownerIdDocs: UploadedDoc[];
+  shareholderContractDocs: UploadedDoc[]; supportingDocs: UploadedDoc[];
+};
+
+// A comparable key for a step's uploads: saved document ids, plus any
+// not-yet-uploaded files.
+function sectionDocsKey(step: number, d: SectionDocs): string {
+  const ids = (docs: UploadedDoc[]) => docs.map((doc) => doc.documentId ?? `new:${doc.name}`).sort().join(",");
+  const photo = (id: number | null, file: File | null) => (file ? `new:${file.name}` : String(id ?? ""));
+  if (step === 2) return `${photo(d.shPhotoDocId, d.shPhotoFile)}|${ids(d.shIdDocs)}`;
+  if (step === 3) return `${photo(d.ownerPhotoDocId, d.ownerPhotoFile)}|${ids(d.ownerIdDocs)}`;
+  if (step === 4) return `${ids(d.shareholderContractDocs)}|${ids(d.supportingDocs)}`;
+  return "";
+}
+
+// `sectionOnly` (1-4): the detail page's per-section "Request To Update"
+// buttons open just that step, without the step tabs or Previous/Next. The
+// full request is still loaded and saved, so the payload stays complete.
+export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId?: string; sectionOnly?: number } = {}) {
   const t = useTranslations("beneficiary.request");
   const router = useRouter();
   const pathname = usePathname() ?? "/en";
@@ -662,12 +695,15 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
   const [loading, setLoading] = useState(!!editId);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [notAllowed, setNotAllowed] = useState(false);
-  const [activeStep, setActiveStep] = useState(1);
+  const [activeStep, setActiveStep] = useState(sectionOnly ?? 1);
   const [draftRestored, setDraftRestored] = useState(!editId ? false : true);
   const [returnReason, setReturnReason] = useState<string | null>(null);
   const [returnSteps, setReturnSteps] = useState<number[]>([]);
   const [flaggedFields, setFlaggedFields] = useState<string[]>([]);
   const [originalFlaggedValues, setOriginalFlaggedValues] = useState<Record<string, string>>({});
+  // Approved values of the section being updated (sectionOnly mode), to
+  // refuse an update that changes nothing.
+  const [originalSection, setOriginalSection] = useState<{ form: FormData; docsKey: string } | null>(null);
   const [unchangedFields, setUnchangedFields] = useState<string[]>([]);
   const [loadedStatus, setLoadedStatus] = useState<string | null>(null);
 
@@ -741,18 +777,24 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           setLoadError(t("editLoadError"));
           return;
         }
-        const data = await res.json();
+        const loaded = await res.json();
+        // A saved update to an APPROVED request lives in `pendingUpdate`
+        // (the approved values stay untouched) — edit the draft, not them.
+        const data = loaded.updateStatus === "DRAFTED" && loaded.pendingUpdate
+          ? { ...loaded, ...loaded.pendingUpdate }
+          : loaded;
         if (
-          data.status !== "APPROVED" &&
-          data.status !== "RETURNED" &&
-          data.status !== "DRAFT"
+          sectionOnly
+            ? data.status !== "APPROVED"
+            : data.status !== "APPROVED" && data.status !== "RETURNED" && data.status !== "DRAFT"
         ) {
           setNotAllowed(true);
           return;
         }
         setLoadedStatus(data.status);
         const dateOnly = (iso: string | null) => (iso ? iso.slice(0, 10) : "");
-        const mappedForm: FormData = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const toForm = (data: any): FormData => ({
           companyNameKh: data.companyNameKh ?? "", companyNameEn: data.companyNameEn ?? "",
           registrationNo: data.registrationNo ?? "", registrationDate: dateOnly(data.registrationDate),
           companyProvince: data.companyProvince ?? "", companyDistrict: data.companyDistrict ?? "",
@@ -773,7 +815,8 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           shIdType: "ID", shIdCard: data.shIdCard ?? "", shIdIssuedDate: dateOnly(data.shIdIssuedDate), shIdExpiredDate: dateOnly(data.shIdExpiredDate),
           shEmail: data.shEmail ?? "", shPhone: data.shPhone ?? "",
           agreementDate: dateOnly(data.agreementDate),
-        };
+        });
+        const mappedForm = toForm(data);
         if (data.status === "RETURNED" && data.rejectionReason) {
           setReturnReason(data.rejectionReason);
           const { fields, steps } = guessFieldsFromReason(data.rejectionReason);
@@ -797,6 +840,17 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             .map((d) => ({ name: d.media.filename, documentId: d.id, url: documentDownloadUrl(d.id) }));
         const shPhotoDoc = byCategory("SH_PHOTO")[0];
         const ownerPhotoDoc = byCategory("OWNER_PHOTO")[0];
+        if (sectionOnly) {
+          // `loaded`, not `data`: an update draft's values already count as changes.
+          setOriginalSection({
+            form: toForm(loaded),
+            docsKey: sectionDocsKey(sectionOnly, {
+              shPhotoDocId: shPhotoDoc?.documentId ?? null, shPhotoFile: null, shIdDocs: byCategory("SH_ID_DOC"),
+              ownerPhotoDocId: ownerPhotoDoc?.documentId ?? null, ownerPhotoFile: null, ownerIdDocs: byCategory("OWNER_ID_DOC"),
+              shareholderContractDocs: byCategory("SHAREHOLDER_CONTRACT"), supportingDocs: byCategory("OTHER"),
+            }),
+          });
+        }
 
         // If a language switch remounted this page mid-edit, restore the
         // in-progress (unsaved) edits over the freshly-fetched server data
@@ -814,7 +868,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
         setShareholderContractDocs(saved?.shareholderContractDocs ?? byCategory("SHAREHOLDER_CONTRACT"));
         setSupportingDocs(saved?.supportingDocs ?? byCategory("OTHER"));
         setConsentAgreed(saved ? !!saved.consentAgreed : !!data.consentAgreed);
-        if (saved?.activeStep) setActiveStep(saved.activeStep);
+        if (saved?.activeStep && !sectionOnly) setActiveStep(saved.activeStep);
       } catch {
         if (!cancelled) setLoadError(t("editLoadError"));
       } finally {
@@ -925,7 +979,30 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
   const isStepComplete = (step: number) =>
     (STEP_REQUIRED_FIELDS[step] ?? []).every((f) => !!form[f]) && stepExtraValid(step);
 
+  // In single-section mode a problem in another step can't be shown on this
+  // page, so say so instead of silently switching to a hidden step.
+  const focusStep = (step: number) => {
+    if (sectionOnly && step !== sectionOnly) {
+      toast.error(t("otherSectionIncomplete", { section: t(`step${step}Title` as "step1Title") }));
+      return;
+    }
+    setActiveStep(step);
+  };
+
+  const sectionHasChanges = () => {
+    if (!sectionOnly || !originalSection) return true;
+    const fieldChanged = SECTION_FIELDS[sectionOnly].some((k) => form[k] !== originalSection.form[k]);
+    const docsKey = sectionDocsKey(sectionOnly, {
+      shPhotoDocId, shPhotoFile, shIdDocs, ownerPhotoDocId, ownerPhotoFile, ownerIdDocs, shareholderContractDocs, supportingDocs,
+    });
+    return fieldChanged || docsKey !== originalSection.docsKey;
+  };
+
   const validateAndFocusStep = () => {
+    if (!sectionHasChanges()) {
+      toast.error(t("noChanges", { section: t(`step${sectionOnly}Title` as "step1Title") }));
+      return false;
+    }
     const required: (keyof FormData)[] = [
       "companyNameEn", "registrationNo", "registrationDate",
       "companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse",
@@ -941,12 +1018,12 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     const missing = required.filter((k) => !form[k]);
     if (missing.length > 0) {
       const missingSteps = missing.map((k) => STEP_OF_FIELD[k] ?? 1);
-      setActiveStep(Math.min(...missingSteps));
+      focusStep(Math.min(...missingSteps));
       return false;
     }
     for (const step of [1, 2, 3, 4]) {
       if (!stepExtraValid(step)) {
-        setActiveStep(step);
+        focusStep(step);
         return false;
       }
     }
@@ -954,19 +1031,23 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
       const stillUnchanged = flaggedFields.filter((f) => form[f as keyof FormData] === originalFlaggedValues[f]);
       if (stillUnchanged.length > 0) {
         setUnchangedFields(stillUnchanged);
-        if (returnSteps.length > 0) setActiveStep(returnSteps[0]);
+        if (returnSteps.length > 0) focusStep(returnSteps[0]);
         toast.error(t("unchangedFlaggedFieldError"));
         return false;
       }
     }
     if (!consentAgreed) {
-      setActiveStep(4);
+      focusStep(4);
       return false;
     }
     return true;
   };
 
-  const saveRequest = async (): Promise<string | null> => {
+  // Updating an already-approved request: "Save Drafted" keeps the edit as a
+  // draft (request stays Approved), only "Request To Update" submits it.
+  const isApprovedUpdate = !!editId && loadedStatus === "APPROVED";
+
+  const saveRequest = async (asDraft = false): Promise<string | null> => {
     const url = editId ? `/api/portal/beneficiary/requests/${editId}` : "/api/portal/beneficiary/requests";
     // Document/photo attachments are no longer sent inline here — they're
     // real uploads (item 39), handled by uploadPendingDocuments() once we
@@ -981,7 +1062,8 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
     const payload = {
       ...formForApi,
       consentAgreed,
-      ...(editId && { action: "edit" }),
+      ...(editId && { action: asDraft && isApprovedUpdate ? "draft" : "edit" }),
+      ...(sectionOnly && isApprovedUpdate && { updateType: UPDATE_TYPE_BY_STEP[sectionOnly] }),
     };
     const res = await fetch(url, {
       method: editId ? "PATCH" : "POST",
@@ -1069,7 +1151,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
       if (editId && loadedStatus !== "DRAFT") {
         await uploadPendingDocuments(editId);
       }
-      const id = await saveRequest();
+      const id = await saveRequest(true);
       if (!id) return;
       if (!editId || loadedStatus === "DRAFT") {
         await uploadPendingDocuments(id);
@@ -1190,7 +1272,13 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             </button>
           )}
         </div>
-        <h1 className="text-lg font-semibold text-slate-800">{editId ? t("editRequestTitle") : t("pageTitle")}</h1>
+        <h1 className="text-lg font-semibold text-slate-800">
+          {sectionOnly
+            ? t("updateSectionTitle", { section: t(`step${sectionOnly}Title` as "step1Title") })
+            : editId
+              ? t("editRequestTitle")
+              : t("pageTitle")}
+        </h1>
       </div>
 
       {returnReason && (
@@ -1217,6 +1305,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
       <form onSubmit={handleSaveDraft} className="space-y-4">
 
         <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden bg-white">
+          {!sectionOnly && (
           <StepTabs
             steps={[1, 2, 3, 4].map((n) => ({
               number: n,
@@ -1227,6 +1316,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
             activeStep={activeStep}
             onChange={setActiveStep}
           />
+          )}
 
         {/* Step 1 — Company Information */}
         <StepPanel stepNumber={1} activeStep={activeStep}>
@@ -1255,31 +1345,14 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           <div className="mt-5 pt-5 border-t border-slate-200">
             <p className="text-xs font-bold text-blue-700 uppercase tracking-wide mb-3">{t("addressLabel")}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("province")} <span className="text-red-500">*</span></label>
-                <select value={form.companyProvince} onChange={(e) => set({ companyProvince: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyProvince: true }))} className={cn(inputCls("companyProvince"), "bg-white")}>
-                  <option value="">{t("select")}</option>
-                  {PROVINCES_KH.map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-                {fieldError("companyProvince") && <p className="mt-1 text-xs text-red-600">{fieldError("companyProvince")}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("district")} <span className="text-red-500">*</span></label>
-                <input type="text" value={form.companyDistrict} onChange={(e) => set({ companyDistrict: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyDistrict: true }))} className={inputCls("companyDistrict")} />
-                {fieldError("companyDistrict") && <p className="mt-1 text-xs text-red-600">{fieldError("companyDistrict")}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("commune")} <span className="text-red-500">*</span></label>
-                <input type="text" value={form.companyCommune} onChange={(e) => set({ companyCommune: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyCommune: true }))} className={inputCls("companyCommune")} />
-                {fieldError("companyCommune") && <p className="mt-1 text-xs text-red-600">{fieldError("companyCommune")}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("village")} <span className="text-red-500">*</span></label>
-                <input type="text" value={form.companyVillage} onChange={(e) => set({ companyVillage: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyVillage: true }))} className={inputCls("companyVillage")} />
-                {fieldError("companyVillage") && <p className="mt-1 text-xs text-red-600">{fieldError("companyVillage")}</p>}
-              </div>
+              <AddressCascadeSelects
+                values={{ province: form.companyProvince, district: form.companyDistrict, commune: form.companyCommune, village: form.companyVillage }}
+                onChange={(patch) => set(Object.fromEntries(Object.entries(patch).map(([k, v]) => [ADDRESS_FORM_KEYS[k as AddressField], v])))}
+                onBlur={(f) => setTouched((p) => ({ ...p, [ADDRESS_FORM_KEYS[f]]: true }))}
+                labels={{ province: t("province"), district: t("district"), commune: t("commune"), village: t("village") }}
+                className={(f) => inputCls(ADDRESS_FORM_KEYS[f])}
+                error={(f) => fieldError(ADDRESS_FORM_KEYS[f])}
+              />
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t("street")} <span className="text-red-500">*</span></label>
                 <input type="text" value={form.companyStreet} onChange={(e) => set({ companyStreet: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyStreet: true }))} className={inputCls("companyStreet")} />
@@ -1484,6 +1557,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
 
         {/* Step navigation / Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          {sectionOnly ? <span className="hidden sm:block" /> : (
           <button
             type="button"
             onClick={() => setActiveStep((s) => Math.max(1, s - 1))}
@@ -1492,10 +1566,11 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
           >
             {t("previous")}
           </button>
+          )}
 
           {submitError && <p className="order-2 sm:order-2 text-sm text-red-600">{submitError}</p>}
 
-          {activeStep < 4 ? (
+          {!sectionOnly && activeStep < 4 ? (
             <button
               type="button"
               onClick={() => setActiveStep((s) => Math.min(4, s + 1))}
@@ -1513,7 +1588,7 @@ export default function BeneficiaryRequestForm({ editId }: { editId?: string } =
                 className="order-1 sm:order-3 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Send className="h-4 w-4" />
-                {submitting ? t("submittingRequest") : t("submitRequest")}
+                {submitting ? t("submittingRequest") : isApprovedUpdate ? t("requestToUpdate") : t("submitRequest")}
               </button>
               <button
                 type="submit"

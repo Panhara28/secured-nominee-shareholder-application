@@ -5,12 +5,13 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/lib/navigation";
 import { AlertTriangle, ArrowLeft, Building2, CheckCircle2, FileText, GitCompare, History, Loader2, MessageSquare, PanelRightClose, PanelRightOpen, Pencil, RotateCcw, ShieldCheck, Users, X, XCircle } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { STEP_BY_UPDATE_TYPE } from "@/lib/update-sections";
 import { splitReasonItems } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import RequestActivityLog, { type ActivityLogEntry } from "@/components/beneficiary/RequestActivityLog";
-import RequestRevisionHistory, { type RequestRevisionEntry } from "@/components/beneficiary/RequestRevisionHistory";
+import RequestRevisionHistory, { PendingUpdateChanges, type RequestRevisionEntry } from "@/components/beneficiary/RequestRevisionHistory";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "-";
@@ -79,6 +80,7 @@ type RequestDetailData = {
   requestNo: string;
   status: string;
   type: string;
+  updateType?: string | null;
   companyNameKh: string | null;
   companyNameEn: string;
   registrationNo: string;
@@ -151,6 +153,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
   const tf = useTranslations("beneficiary.request");
   const ta = useTranslations("admin.requests");
   const trev = useTranslations("beneficiary.revisions");
+  const tu = useTranslations("updateTypes");
   const router = useRouter();
   const [request, setRequest] = useState<RequestDetailData | null | undefined>(undefined);
   const [error, setError] = useState(false);
@@ -296,6 +299,14 @@ export default function AdminRequestDetail({ id }: { id: string }) {
         .join(", ")
     : "";
 
+  // A pending per-section update is reviewed on its own: show only the
+  // section the applicant changed (see updateType / lib/update-sections.ts).
+  const reviewStep =
+    request?.status === "UPDATE_REQUESTED" && request.updateType
+      ? STEP_BY_UPDATE_TYPE[request.updateType]
+      : undefined;
+  const showSection = (step: number) => !reviewStep || step === reviewStep;
+
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4">
@@ -308,6 +319,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
           {t("backToList")}
         </button>
         {request ? (
+          <>
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs text-slate-500 mb-0.5">{t("detailTitle")}</p>
@@ -321,18 +333,6 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                   {ta("submittedBy")}: {request.user.fullName} (@{request.user.username})
                 </p>
               )}
-              <div className="flex items-center gap-2 mt-2">
-                <StatusBadge status={request.status} label={t(`status.${request.status}` as Parameters<typeof t>[0])} />
-                {request.status === "UPDATE_REQUESTED" && (
-                  <Link
-                    href={`/secured/admin/revisions?requestId=${request.id}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700 transition-colors"
-                  >
-                    <GitCompare className="h-3.5 w-3.5" />
-                    {trev("diffCompare")}
-                  </Link>
-                )}
-              </div>
             </div>
             <div className="flex-shrink-0 text-right space-y-2">
               {(request.status === "PENDING" || request.status === "IN_REVIEW" || request.status === "UPDATE_REQUESTED") && (
@@ -374,13 +374,28 @@ export default function AdminRequestDetail({ id }: { id: string }) {
                   </button>
                 </div>
               )}
-              <p className="text-xs text-slate-500">
-                {t("col.submittedAt")}: <span className="font-medium text-slate-700">{formatDate(request.submittedAt)}</span>
-              </p>
               {actionError && <p className="mt-1 text-xs text-red-600 max-w-xs">{actionError}</p>}
               {verifyError && <p className="mt-1 text-xs text-red-600 max-w-xs">{verifyError}</p>}
             </div>
           </div>
+          <div className="flex items-center justify-between gap-4 mt-2">
+            <div className="flex items-center gap-2">
+              <StatusBadge status={request.status} label={t(`status.${request.status}` as Parameters<typeof t>[0])} />
+              {request.status === "UPDATE_REQUESTED" && (
+                <Link
+                  href={`/secured/admin/revisions?requestId=${request.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700 transition-colors"
+                >
+                  <GitCompare className="h-3.5 w-3.5" />
+                  {trev("diffCompare")}
+                </Link>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 flex-shrink-0">
+              {t("col.submittedAt")}: <span className="font-medium text-slate-700">{formatDate(request.submittedAt)}</span>
+            </p>
+          </div>
+          </>
         ) : (
           <h1 className="text-lg font-semibold text-slate-800">{t("detailTitle")}</h1>
         )}
@@ -545,7 +560,18 @@ export default function AdminRequestDetail({ id }: { id: string }) {
               </button>
             </div>
           )}
+          {reviewStep && (
+            <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-3">
+              <Pencil className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-amber-800">{tu(request.updateType as Parameters<typeof tu>[0])}</p>
+                <p className="text-xs text-amber-700">{tu("reviewSectionOnly")}</p>
+              </div>
+            </div>
+          )}
+          {request.status === "UPDATE_REQUESTED" && <PendingUpdateChanges revisions={request.revisions} />}
           {/* 1. Company Information */}
+          {showSection(1) && (
           <SectionCard icon={<Building2 className="h-4 w-4" />} title={`1. ${tf("step1Title")}`}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Field label={t("companyNameEn")} value={request.companyNameEn} />
@@ -558,8 +584,10 @@ export default function AdminRequestDetail({ id }: { id: string }) {
               <Field label={tf("companyEmail")} value={request.companyEmail} />
             </div>
           </SectionCard>
+          )}
 
           {/* 2. Nominee Shareholder Information */}
+          {showSection(2) && (
           <SectionCard icon={<Users className="h-4 w-4" />} title={`2. ${tf("step2Title")}`}>
             <div className="flex items-start gap-6 mb-4">
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -582,8 +610,10 @@ export default function AdminRequestDetail({ id }: { id: string }) {
               <DocList names={request.shIdDocNames ?? []} />
             </div>
           </SectionCard>
+          )}
 
           {/* 3. Beneficial Owner Information */}
+          {showSection(3) && (
           <SectionCard icon={<Users className="h-4 w-4" />} title={`3. ${tf("step3Title")}`}>
             <div className="flex items-start gap-6 mb-4">
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -607,8 +637,10 @@ export default function AdminRequestDetail({ id }: { id: string }) {
               <DocList names={request.ownerIdDocNames ?? []} />
             </div>
           </SectionCard>
+          )}
 
           {/* 4. Agreement */}
+          {showSection(4) && (
           <SectionCard icon={<FileText className="h-4 w-4" />} title={`4. ${tf("step4Title")}`}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
@@ -634,8 +666,12 @@ export default function AdminRequestDetail({ id }: { id: string }) {
             <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Field label={tf("agreementDate")} value={formatDate(request.agreementDate)} />
               <Field label={t("col.requestType")} value={request.type} />
+              {request.updateType && (
+                <Field label={tu("label")} value={tu(request.updateType as Parameters<typeof tu>[0])} />
+              )}
             </div>
           </SectionCard>
+          )}
 
           {(request.status === "PENDING" || request.status === "IN_REVIEW" || request.status === "UPDATE_REQUESTED" || request.status === "DISSOLVE_REQUESTED") && (
             <div className="text-right">

@@ -34,11 +34,13 @@ type RequestRow = {
   submittedByUsername: string;
   submittedAt: string;
   status: string;
+  updateType?: string | null;
 };
 
 export default function AdminRequestsList() {
   const t = useTranslations("admin.requests");
   const ta = useTranslations("beneficiary.allRequests");
+  const tu = useTranslations("updateTypes");
   const router = useRouter();
   const searchParams = useSearchParams();
   // Deep-links from the sidebar/dashboard (New/Update Request) pre-select a status filter.
@@ -280,6 +282,10 @@ export default function AdminRequestsList() {
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(req.submittedAt)}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={req.status} label={ta(`status.${req.status}` as Parameters<typeof ta>[0])} />
+                      {/* Which section a pending update covers. */}
+                      {req.status === "UPDATE_REQUESTED" && req.updateType && (
+                        <div className="mt-1 text-xs text-slate-500">{tu(req.updateType as Parameters<typeof tu>[0])}</div>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <button

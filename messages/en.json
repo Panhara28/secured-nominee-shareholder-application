@@ -107,10 +107,7 @@
       "search": "Search",
       "searchHint": "You can only update requests that have already been approved.",
       "searchPrompt": "Search for an approved request above to update it.",
-      "pendingUpdatesTitle": "Pending Updates",
-      "pendingUpdatesEmpty": "You have no updates awaiting review.",
-      "noResults": "No approved requests matched your search.",
-      "update": "Update"
+      "noResults": "No approved requests matched your search."
     },
     "requestDissolve": {
       "searchLabel": "Search Approved Requests",
@@ -155,6 +152,9 @@
     "request": {
       "pageTitle": "Online Filing Information and Nominee Shareholder Agreement Request",
       "editRequestTitle": "Edit Request",
+      "updateSectionTitle": "Update {section}",
+      "otherSectionIncomplete": "{section} is incomplete. Please complete it before requesting an update.",
+      "noChanges": "No changes were made to {section}. Please update at least one field before submitting.",
       "editNotAllowed": "Only approved or returned requests can be edited.",
       "editLoadError": "Failed to load the request. Please try again.",
       "saveChanges": "Save Changes",
@@ -236,6 +236,7 @@
       "submitting": "Saving…",
       "submitError": "Failed to save draft. Please try again.",
       "submitRequest": "Submit Request",
+      "requestToUpdate": "Request To Update",
       "submittingRequest": "Submitting…",
       "draftSaved": "Draft saved successfully.",
       "draftUpdated": "Draft updated successfully.",
@@ -251,6 +252,8 @@
       "columnPrevious": "Previous",
       "columnNew": "New",
       "noFieldChanges": "No field changes recorded.",
+      "pendingChangesTitle": "Changes in this update",
+      "pendingChangesHint": "Approved values compared with the values submitted in this update.",
       "yes": "Yes",
       "no": "No",
       "diffCompare": "Diff & Compare",
@@ -319,7 +322,6 @@
         "requestType": "Request Type"
       },
       "view": "View",
-      "requestUpdate": "Request Update",
       "empty": "No requests submitted yet.",
       "loadError": "Failed to load requests. Please try again.",
       "retry": "Retry",
@@ -335,6 +337,7 @@
       "shareholderName": "Shareholder Name",
       "shareAmount": "Amount of Share",
       "submitRequest": "Submit The Request",
+      "requestToUpdate": "Request To Update",
       "submittingRequest": "Submitting…",
       "submitRequestError": "Failed to submit request. Please try again.",
       "incompleteFields": "Please complete all required fields before submitting.",
@@ -370,7 +373,9 @@
           "DISSOLVE_REQUESTED": "Dissolution requested",
           "DISSOLVED": "Dissolved"
         }
-      }
+      },
+      "updateDrafted": "Update Drafted",
+      "updateDraftedNotice": "You have an update to this request saved as a draft. It has not been sent for review yet — the approved details below still apply."
     }
   },
   "admin": {
@@ -719,5 +724,13 @@
       "headline": "Online Filing Information, and Nominee Shareholder Agreements",
       "copyright": "© 2026 Ministry of Commerce. All rights reserved by Ministry of Commerce"
     }
+  },
+  "updateTypes": {
+    "COMPANY_INFORMATION": "Request Update Company Information",
+    "NOMINEE_SHAREHOLDER": "Request Update Nominee Shareholder Information",
+    "BENEFICIAL_OWNER": "Request Update Beneficial Owner Information",
+    "AGREEMENT": "Request Update Agreement of Nominees and Beneficial Owner",
+    "label": "Update Type",
+    "reviewSectionOnly": "Only the section this update covers is shown."
   }
 }
