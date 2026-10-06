@@ -11,6 +11,7 @@ import {
   requestNotificationPermission,
 } from "@/lib/browser-notifications";
 import { notifyStatusStyle } from "@/lib/notification-status";
+import { sharedEventSource } from "@/lib/shared-event-source";
 
 type NotifyRow = {
   id: number;
@@ -148,7 +149,7 @@ export default function NotificationBell() {
 
     // Real-time push: the server notifies this stream the instant a relevant
     // status change happens, and we just re-run the same fetch immediately.
-    const source = new EventSource("/api/portal/notifications/stream");
+    const source = sharedEventSource("/api/portal/notifications/stream");
     source.onmessage = () => fetchNotifications();
 
     return () => {

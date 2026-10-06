@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { sharedEventSource } from "@/lib/shared-event-source";
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return "-";
@@ -102,7 +103,7 @@ export default function AdminUserDetail({ id }: { id: string }) {
 
     // Real-time: refetch if this registration is acted on from elsewhere
     // (e.g. another admin, or the same admin in another tab).
-    const source = new EventSource("/api/secured/admin/users/stream");
+    const source = sharedEventSource("/api/secured/admin/users/stream");
     source.onmessage = () => load();
 
     return () => {

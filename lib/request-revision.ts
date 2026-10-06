@@ -1,45 +1,20 @@
-import type { BeneficiaryRequest } from "@/lib/generated/prisma";
-
+// Mirrors REVISION_FIELDS in secured-nominee-shareholder-api's
+// src/revisions/revision-snapshot.ts: company fields stay flat scalars,
+// while Section 2 (nominee shareholders / beneficial owners / agreements) is
+// repeatable and snapshotted as a single JSON-stringified array per group —
+// a change anywhere in the array shows as one changed field rather than a
+// per-scalar diff.
 export const REVISION_FIELDS = [
   "companyNameKh", "companyNameEn", "registrationNo", "registrationDate",
   "companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse",
   "companyPhone", "companyOfficePhone", "companyEmail",
-  "shLastNameKh", "shFirstNameKh", "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
-  "shIdCard", "shIdIssuedDate", "shIdExpiredDate", "shEmail", "shPhone", "shPhotoName", "shIdDocNames",
-  "ownerLastNameKh", "ownerFirstNameKh", "ownerLastNameEn", "ownerFirstNameEn", "ownerDob", "ownerBecameDate", "ownerNationality", "ownerGender",
-  "ownerIdCard", "ownerIdIssuedDate", "ownerIdExpiredDate", "ownerEmail", "ownerPhone", "ownerPhotoName", "ownerIdDocNames",
-  "shareAmount",
-  "shareholderContractDocNames", "otherDocNames", "agreementDate", "consentAgreed",
+  "nomineeShareholders", "beneficialOwners", "agreements",
 ] as const;
 
 export type RevisionFieldName = (typeof REVISION_FIELDS)[number];
 export type RequestSnapshot = Record<RevisionFieldName, string | boolean | string[] | null>;
 
-const DATE_FIELDS = new Set<RevisionFieldName>([
-  "registrationDate", "shDob", "shBecameDate", "shIdIssuedDate", "shIdExpiredDate",
-  "ownerDob", "ownerBecameDate", "ownerIdIssuedDate", "ownerIdExpiredDate", "agreementDate",
-]);
-
-const DOC_NAME_FIELDS = new Set<RevisionFieldName>([
-  "shIdDocNames", "ownerIdDocNames", "shareholderContractDocNames", "otherDocNames",
-]);
-
-export function toRequestSnapshot(record: BeneficiaryRequest): RequestSnapshot {
-  const out = {} as RequestSnapshot;
-  for (const field of REVISION_FIELDS) {
-    const value = (record as unknown as Record<string, unknown>)[field];
-    if (value === null || value === undefined) {
-      out[field] = null;
-    } else if (DATE_FIELDS.has(field)) {
-      out[field] = (value as Date).toISOString().slice(0, 10);
-    } else if (DOC_NAME_FIELDS.has(field)) {
-      out[field] = JSON.parse(value as string) as string[];
-    } else {
-      out[field] = value as string | boolean;
-    }
-  }
-  return out;
-}
+const ARRAY_FIELDS = new Set<RevisionFieldName>(["nomineeShareholders", "beneficialOwners", "agreements"]);
 
 export type FieldDiff = { field: RevisionFieldName; previous: string | boolean | string[] | null; next: string | boolean | string[] | null };
 
@@ -48,14 +23,15 @@ export function diffSnapshots(previous: RequestSnapshot, next: RequestSnapshot):
   for (const field of REVISION_FIELDS) {
     const a = previous[field];
     const b = next[field];
-    const changed = DOC_NAME_FIELDS.has(field)
-      ? JSON.stringify(a) !== JSON.stringify(b)
-      : a !== b;
-    if (changed) diffs.push({ field, previous: a, next: b });
+    if (a !== b) diffs.push({ field, previous: a, next: b });
   }
   return diffs;
 }
 
-export function isDocNameField(field: RevisionFieldName): boolean {
-  return DOC_NAME_FIELDS.has(field);
+// The nomineeShareholders/beneficialOwners/agreements fields hold a
+// JSON-stringified array of entries rather than a single scalar value, so
+// the diff UI renders them as a list summary instead of a plain before/after
+// string (mirrors the old isDocNameField special-casing for doc arrays).
+export function isArrayField(field: RevisionFieldName): boolean {
+  return ARRAY_FIELDS.has(field);
 }

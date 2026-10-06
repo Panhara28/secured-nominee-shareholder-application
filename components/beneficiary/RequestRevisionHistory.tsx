@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { ChevronDown, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  diffSnapshots, isDocNameField,
+  diffSnapshots, isArrayField,
   type RequestSnapshot, type RevisionFieldName, type FieldDiff,
 } from "@/lib/request-revision";
 
@@ -37,25 +37,9 @@ const FIELD_SECTIONS: { section: "company" | "shareholder" | "owner" | "agreemen
       "companyPhone", "companyOfficePhone", "companyEmail",
     ],
   },
-  {
-    section: "shareholder",
-    fields: [
-      "shLastNameKh", "shFirstNameKh", "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
-      "shIdCard", "shIdIssuedDate", "shIdExpiredDate", "shEmail", "shPhone", "shPhotoName", "shIdDocNames",
-    ],
-  },
-  {
-    section: "owner",
-    fields: [
-      "ownerLastNameKh", "ownerFirstNameKh", "ownerLastNameEn", "ownerFirstNameEn", "ownerDob", "ownerBecameDate", "ownerNationality", "ownerGender",
-      "ownerIdCard", "ownerIdIssuedDate", "ownerIdExpiredDate", "ownerEmail", "ownerPhone", "ownerPhotoName", "ownerIdDocNames",
-      "shareAmount",
-    ],
-  },
-  {
-    section: "agreement",
-    fields: ["shareholderContractDocNames", "otherDocNames", "agreementDate", "consentAgreed"],
-  },
+  { section: "shareholder", fields: ["nomineeShareholders"] },
+  { section: "owner", fields: ["beneficialOwners"] },
+  { section: "agreement", fields: ["agreements"] },
 ];
 
 const FIELD_LABEL_KEYS: Record<RevisionFieldName, string> = {
@@ -63,25 +47,14 @@ const FIELD_LABEL_KEYS: Record<RevisionFieldName, string> = {
   registrationDate: "registrationDate", companyProvince: "province", companyDistrict: "district",
   companyCommune: "commune", companyVillage: "village", companyStreet: "street", companyHouse: "houseNo",
   companyPhone: "companyPhone", companyOfficePhone: "companyOfficePhone", companyEmail: "companyEmail",
-  shLastNameKh: "lastNameKh", shFirstNameKh: "firstNameKh", shLastNameEn: "lastNameEn", shFirstNameEn: "firstNameEn",
-  shDob: "dob", shBecameDate: "shBecameDate", shNationality: "nationality", shGender: "gender", shIdCard: "idCard",
-  shIdIssuedDate: "issueDate", shIdExpiredDate: "expiryDate", shEmail: "email", shPhone: "phone",
-  shPhotoName: "photo", shIdDocNames: "idDocuments",
-  ownerLastNameKh: "lastNameKh", ownerFirstNameKh: "firstNameKh", ownerLastNameEn: "lastNameEn", ownerFirstNameEn: "firstNameEn",
-  ownerDob: "dob", ownerBecameDate: "becameDate", ownerNationality: "nationality", ownerGender: "gender", ownerIdCard: "idCard",
-  ownerIdIssuedDate: "issueDate", ownerIdExpiredDate: "expiryDate", ownerEmail: "email", ownerPhone: "phone",
-  ownerPhotoName: "photo", ownerIdDocNames: "idDocuments", shareAmount: "shareAmount",
-  shareholderContractDocNames: "contractDocuments", otherDocNames: "otherDocuments", agreementDate: "agreementDate", consentAgreed: "consentAgreed",
+  nomineeShareholders: "nomineeGroupTitle", beneficialOwners: "ownerGroupTitle", agreements: "agreementGroupTitle",
 };
 
 const FIELD_LABEL_NAMESPACE: Record<string, "request" | "revisions"> = {
   companyNameKh: "request", companyNameEn: "request", registrationNo: "request", registrationDate: "request",
   province: "request", district: "request", commune: "request", village: "request", street: "request", houseNo: "request",
   companyPhone: "request", companyOfficePhone: "request", companyEmail: "request",
-  lastNameKh: "request", firstNameKh: "request", lastNameEn: "request", firstNameEn: "request",
-  dob: "request", becameDate: "request", shBecameDate: "request", nationality: "request", gender: "request", idCard: "request",
-  issueDate: "request", expiryDate: "request", email: "request", phone: "request", shareAmount: "request", agreementDate: "request",
-  photo: "revisions", idDocuments: "revisions", contractDocuments: "revisions", otherDocuments: "revisions", consentAgreed: "revisions",
+  nomineeGroupTitle: "request", ownerGroupTitle: "request", agreementGroupTitle: "request",
 };
 
 function DiffValue({ value, tr }: { value: FieldDiff["previous"]; tr: ReturnType<typeof useTranslations> }) {
@@ -90,14 +63,35 @@ function DiffValue({ value, tr }: { value: FieldDiff["previous"]; tr: ReturnType
   return <span className="break-words">{value}</span>;
 }
 
-function DocDiffValue({ names, sign }: { names: string[]; sign: "+" | "-" }) {
-  if (names.length === 0) return <span className="text-slate-400">-</span>;
+// Parses one repeatable-entry array field's JSON blob (see revision-snapshot.ts
+// on the API side); falls back to an empty list for malformed/empty input.
+function parseEntries(value: FieldDiff["previous"]): Record<string, unknown>[] {
+  if (typeof value !== "string" || !value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function entryLabel(e: Record<string, unknown>, field: RevisionFieldName): string {
+  if (field === "agreements") {
+    return e.agreementDate ? `${e.agreementDate}` : "-";
+  }
+  return `${e.firstNameEn ?? ""} ${e.lastNameEn ?? ""}`.trim() || "-";
+}
+
+// Entries carry no stable id in the snapshot, so "added"/"removed" is
+// whole-entry-value diffing rather than per-field diffing within one entry.
+function ArrayDiffValue({ entries, sign, field }: { entries: Record<string, unknown>[]; sign: "+" | "-"; field: RevisionFieldName }) {
+  if (entries.length === 0) return <span className="text-slate-400">-</span>;
   return (
     <ul className="space-y-0.5">
-      {names.map((n, i) => (
+      {entries.map((e, i) => (
         <li key={i} className="flex items-center gap-1 truncate">
           <span className={cn("font-bold", sign === "+" ? "text-green-500" : "text-red-500")}>{sign}</span>
-          {n}
+          {entryLabel(e, field)}
         </li>
       ))}
     </ul>
@@ -135,24 +129,20 @@ export function RevisionDiffTable({ diffs, tf, tr }: { diffs: FieldDiff[]; tf: R
                   const labelKey = FIELD_LABEL_KEYS[d.field];
                   const ns = FIELD_LABEL_NAMESPACE[labelKey] ?? "revisions";
                   const label = ns === "request" ? tf(labelKey as Parameters<typeof tf>[0]) : tr(`fields.${labelKey}` as Parameters<typeof tr>[0]);
-                  const docField = isDocNameField(d.field);
+                  const arrayField = isArrayField(d.field);
+                  const prevEntries = arrayField ? parseEntries(d.previous) : [];
+                  const nextEntries = arrayField ? parseEntries(d.next) : [];
+                  const prevKeys = prevEntries.map((e) => JSON.stringify(e));
+                  const nextKeys = nextEntries.map((e) => JSON.stringify(e));
+                  const removed = prevEntries.filter((_, i) => !nextKeys.includes(prevKeys[i]));
+                  const added = nextEntries.filter((_, i) => !prevKeys.includes(nextKeys[i]));
                   return (
                     <tr key={d.field} className="border-b border-slate-100 last:border-b-0">
                       <td className="px-3 py-2 text-slate-700 font-medium whitespace-nowrap align-top">{label}</td>
-                      {docField ? (
+                      {arrayField ? (
                         <>
-                          <td className="px-3 py-2 align-top max-w-[200px]">
-                            <DocDiffValue
-                              names={(d.previous as string[]).filter((n) => !(d.next as string[]).includes(n))}
-                              sign="-"
-                            />
-                          </td>
-                          <td className="px-3 py-2 align-top max-w-[200px]">
-                            <DocDiffValue
-                              names={(d.next as string[]).filter((n) => !(d.previous as string[]).includes(n))}
-                              sign="+"
-                            />
-                          </td>
+                          <td className="px-3 py-2 align-top max-w-[240px]"><ArrayDiffValue entries={removed} sign="-" field={d.field} /></td>
+                          <td className="px-3 py-2 align-top max-w-[240px]"><ArrayDiffValue entries={added} sign="+" field={d.field} /></td>
                         </>
                       ) : (
                         <>
@@ -175,7 +165,7 @@ export function RevisionDiffTable({ diffs, tf, tr }: { diffs: FieldDiff[]; tf: R
 export default function RequestRevisionHistory({ revisions = [] }: { revisions?: RequestRevisionEntry[] }) {
   const tr = useTranslations("beneficiary.revisions");
   const tf = useTranslations("beneficiary.request");
-  const tu = useTranslations("updateTypes");
+  const tu = useTranslations("requestTypes");
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   const toggle = (id: number) => {

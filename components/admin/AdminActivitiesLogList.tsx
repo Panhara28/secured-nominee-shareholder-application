@@ -9,6 +9,7 @@ import {
 import EmptyState from "@/components/ui/EmptyState";
 import TablePagination from "@/components/ui/TablePagination";
 import { cn } from "@/lib/utils";
+import { sharedEventSource } from "@/lib/shared-event-source";
 
 const ACTION_OPTIONS = [
   "LOGIN", "LOGOUT", "REGISTER", "PASSWORD_RESET_REQUESTED", "PASSWORD_RESET",
@@ -106,7 +107,7 @@ export default function AdminActivitiesLogList() {
     // Real-time: refetch the instant any new activity is logged, instead of
     // waiting for a manual refresh. Skip the loading spinner for these quiet
     // background refreshes so the table doesn't flicker.
-    const source = new EventSource("/api/secured/admin/activities-logs/stream");
+    const source = sharedEventSource("/api/secured/admin/activities-logs/stream");
     source.onmessage = () => fetchLogs(false);
 
     return () => {

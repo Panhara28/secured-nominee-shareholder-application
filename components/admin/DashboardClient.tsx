@@ -6,6 +6,7 @@ import { Users, FileText, CheckCircle2, XCircle, ShieldCheck, RotateCcw, Loader2
 import { Link, useRouter } from "@/lib/navigation";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
+import { sharedEventSource } from "@/lib/shared-event-source";
 
 const STATUS_OPTIONS = ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED", "DISSOLVE_REQUESTED", "DISSOLVED"];
 
@@ -108,7 +109,7 @@ export default function DashboardClient({ totalShareholders, totalRequests, tota
     // Real-time: refetch the instant a shareholder submits/edits a request.
     // Also refreshes the top stat cards, sharing this one connection instead
     // of opening a second one just for that.
-    const source = new EventSource("/api/secured/admin/notifications/stream");
+    const source = sharedEventSource("/api/secured/admin/notifications/stream");
     source.onmessage = () => {
       fetchRecent();
       fetchStats();
@@ -149,7 +150,7 @@ export default function DashboardClient({ totalShareholders, totalRequests, tota
     // Real-time: refetch the instant a registration is approved/rejected/returned.
     // Also refreshes the top stat cards, sharing this one connection instead
     // of opening a second one just for that.
-    const source = new EventSource("/api/secured/admin/users/stream");
+    const source = sharedEventSource("/api/secured/admin/users/stream");
     source.onmessage = () => {
       fetchRecentUsers();
       fetchStats();

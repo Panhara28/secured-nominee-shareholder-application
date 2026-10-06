@@ -9,6 +9,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import StatusBadge from "@/components/ui/StatusBadge";
 import TablePagination from "@/components/ui/TablePagination";
 import { cn } from "@/lib/utils";
+import { sharedEventSource } from "@/lib/shared-event-source";
 
 function formatDate(iso: string): string {
   if (!iso) return "-";
@@ -17,8 +18,28 @@ function formatDate(iso: string): string {
   return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
 }
 
-const STATUS_OPTIONS = ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED", "UPDATE_REQUESTED", "DISSOLVE_REQUESTED", "DISSOLVED"];
-const DEFAULT_STATUS = "PENDING,UPDATE_REQUESTED";
+// The sidebar's New / Update / Dissolve Request pages share this route: the
+// bare route is New Request, the others add `?type=`. Each lists the requests
+// of its request type(s) in any status, so its status filter offers only the
+// statuses such a request can be in.
+const VIEWS = {
+  new: {
+    types: "NEW_REQUEST",
+    statuses: ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED"],
+  },
+  update: {
+    types:
+      "UPDATE_REQUEST,UPDATE_REQUEST_COMPANY_INFO,UPDATE_REQUEST_NOMINEE_SHAREHOLDER_INFO,UPDATE_REQUEST_BENEFICIAL_OWNER,UPDATE_REQUEST_AGREEMENT",
+    statuses: ["UPDATE_REQUESTED", "PENDING", "IN_REVIEW", "APPROVED", "REJECTED", "RETURNED"],
+    // Several types share this page, so each row says which one it is.
+    showType: true,
+  },
+  dissolve: {
+    types: "DISSOLVE_REQUEST",
+    statuses: ["DISSOLVE_REQUESTED", "DISSOLVED", "APPROVED"],
+  },
+} as const;
+const DEFAULT_STATUS = "";
 
 type SortKey = "requestNo" | "companyNameEn" | "submittedAt" | "status";
 type SortDir = "asc" | "desc";
@@ -34,21 +55,22 @@ type RequestRow = {
   submittedByUsername: string;
   submittedAt: string;
   status: string;
-  updateType?: string | null;
+  type: string;
 };
 
 export default function AdminRequestsList() {
   const t = useTranslations("admin.requests");
   const ta = useTranslations("beneficiary.allRequests");
-  const tu = useTranslations("updateTypes");
+  const tu = useTranslations("requestTypes");
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Deep-links from the sidebar/dashboard (New/Update Request) pre-select a status filter.
-  const initialStatus = searchParams.get("status");
+  const viewParam = searchParams.get("type");
+  const view = VIEWS[viewParam === "update" || viewParam === "dissolve" ? viewParam : "new"];
+  const showType = "showType" in view;
 
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
-  const [status, setStatus] = useState(initialStatus || DEFAULT_STATUS);
+  const [status, setStatus] = useState(DEFAULT_STATUS);
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>("submittedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -60,14 +82,12 @@ export default function AdminRequestsList() {
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
 
-  // Sidebar/dashboard links (New/Update/Dissolve Request) navigate client-side
-  // to this same route with a different `?status=`. Since that doesn't remount
-  // the component, the status filter has to react to searchParams changing,
-  // not just read it once at mount.
+  // Sidebar links (New/Update/Dissolve Request) navigate client-side to this
+  // same route with a different `?type=`. Since that doesn't remount the
+  // component, the status filter has to be reset when searchParams change.
   useEffect(() => {
-    const urlStatus = searchParams.get("status");
     // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from the URL, an external source, not derived render state
-    setStatus(urlStatus || DEFAULT_STATUS);
+    setStatus(DEFAULT_STATUS);
     setPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -84,6 +104,7 @@ export default function AdminRequestsList() {
           status,
           sortKey,
           sortDir,
+          type: view.types,
           page: String(page),
           limit: String(limit),
         });
@@ -104,7 +125,7 @@ export default function AdminRequestsList() {
 
     // Real-time: refetch the instant a shareholder submits/edits a request,
     // instead of waiting for a manual refresh.
-    const source = new EventSource("/api/secured/admin/notifications/stream");
+    const source = sharedEventSource("/api/secured/admin/notifications/stream");
     source.onmessage = () => fetchRequests();
 
     return () => {
@@ -115,7 +136,7 @@ export default function AdminRequestsList() {
     // including a translation function here would tear down/recreate the
     // EventSource on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appliedQuery, status, page, sortKey, sortDir, retryToken]);
+  }, [appliedQuery, status, view, page, sortKey, sortDir, retryToken]);
 
   const handleSearch = () => {
     setAppliedQuery(query);
@@ -186,8 +207,7 @@ export default function AdminRequestsList() {
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               <option value="">{ta("statusAll")}</option>
-              <option value={DEFAULT_STATUS}>{ta("statusAwaitingReview")}</option>
-              {STATUS_OPTIONS.map((s) => (
+              {view.statuses.map((s) => (
                 <option key={s} value={s}>
                   {ta(`status.${s}` as Parameters<typeof ta>[0])}
                 </option>
@@ -237,6 +257,11 @@ export default function AdminRequestsList() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide whitespace-nowrap">
                   {ta("col.owner")}
                 </th>
+                {showType && (
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide whitespace-nowrap">
+                    {ta("col.requestType")}
+                  </th>
+                )}
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide whitespace-nowrap">
                   {t("submittedBy")}
                 </th>
@@ -250,13 +275,13 @@ export default function AdminRequestsList() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center">
+                  <td colSpan={showType ? 8 : 7} className="py-16 text-center">
                     <Loader2 className="h-5 w-5 animate-spin text-slate-400 inline-block" />
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7}>
+                  <td colSpan={showType ? 8 : 7}>
                     <EmptyState message={ta("empty")} />
                   </td>
                 </tr>
@@ -275,6 +300,11 @@ export default function AdminRequestsList() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-slate-700">{req.ownerNameEn}</td>
+                    {showType && (
+                      <td className="px-4 py-3 text-slate-700">
+                        {tu.has(req.type) ? tu(req.type as Parameters<typeof tu>[0]) : req.type}
+                      </td>
+                    )}
                     <td className="px-4 py-3 text-slate-700">
                       <div>{req.submittedByName}</div>
                       <div className="text-xs text-slate-400">@{req.submittedByUsername}</div>
@@ -282,10 +312,6 @@ export default function AdminRequestsList() {
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(req.submittedAt)}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={req.status} label={ta(`status.${req.status}` as Parameters<typeof ta>[0])} />
-                      {/* Which section a pending update covers. */}
-                      {req.status === "UPDATE_REQUESTED" && req.updateType && (
-                        <div className="mt-1 text-xs text-slate-500">{tu(req.updateType as Parameters<typeof tu>[0])}</div>
-                      )}
                     </td>
                     <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <button

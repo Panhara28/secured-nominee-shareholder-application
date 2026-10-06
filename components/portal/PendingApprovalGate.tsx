@@ -8,6 +8,7 @@ import { useRouter } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { sharedEventSource } from "@/lib/shared-event-source";
 
 type Props = {
   fullName: string;
@@ -42,7 +43,7 @@ export default function PendingApprovalGate({ fullName, companyName, firstName, 
     // Real-time: the moment an admin approves/returns/rejects this
     // registration, refresh so the shareholder doesn't have to sit here
     // clicking "Refresh" manually.
-    const source = new EventSource("/api/portal/notifications/stream");
+    const source = sharedEventSource("/api/portal/notifications/stream");
     source.onmessage = () => router.refresh();
 
     return () => {

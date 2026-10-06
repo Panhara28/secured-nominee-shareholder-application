@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import RequestActivityLog, { type ActivityLogEntry } from "@/components/beneficiary/RequestActivityLog";
 import RequestRevisionHistory, { PendingUpdateChanges, type RequestRevisionEntry } from "@/components/beneficiary/RequestRevisionHistory";
+import { sharedEventSource } from "@/lib/shared-event-source";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "-";
@@ -29,14 +30,17 @@ function Field({ label, value }: { label: string; value: string | null | undefin
   );
 }
 
-function DocList({ names }: { names: string[] }) {
-  if (names.length === 0) return <p className="text-sm text-slate-400">-</p>;
+// No admin-authenticated document download route exists yet (a pre-existing
+// gap — the admin detail previously read non-existent shIdDocNames/etc.
+// fields for this), so filenames are shown as plain text rather than links.
+function DocList({ documents }: { documents: ApiDocument[] }) {
+  if (documents.length === 0) return <p className="text-sm text-slate-400">-</p>;
   return (
     <ul className="space-y-0.5">
-      {names.map((n, i) => (
-        <li key={i} className="flex items-center gap-1 text-sm text-slate-800 truncate">
+      {documents.map((d) => (
+        <li key={d.id} className="flex items-center gap-1 text-sm text-slate-800 truncate">
           <span className="text-green-500 font-bold">✓</span>
-          {n}
+          {d.media.filename}
         </li>
       ))}
     </ul>
@@ -66,11 +70,19 @@ function SectionCard({
   );
 }
 
-function PersonPhoto({ name }: { name: string | null }) {
+function PersonPhoto({ document }: { document: ApiDocument | undefined }) {
   return (
     <div className="flex-shrink-0 w-36 h-44 border-2 border-blue-300 rounded-xl overflow-hidden bg-slate-100 text-slate-400 flex flex-col items-center justify-center gap-1">
-      <Users className="h-12 w-12" />
-      {name && <p className="text-[10px] text-slate-500 px-2 truncate max-w-full">{name}</p>}
+      {document ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/api/secured/admin/documents/${document.id}/download`}
+          alt={document.media.filename}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <Users className="h-12 w-12" />
+      )}
     </div>
   );
 }
@@ -94,49 +106,15 @@ type RequestDetailData = {
   companyPhone: string;
   companyOfficePhone: string | null;
   companyEmail: string;
-  shLastNameKh: string | null;
-  shFirstNameKh: string | null;
-  shLastNameEn: string;
-  shFirstNameEn: string;
-  shDob: string;
-  shBecameDate: string;
-  shNationality: string;
-  shGender: "M" | "F";
-  shIdCard: string | null;
-  shIdIssuedDate: string | null;
-  shIdExpiredDate: string | null;
-  shEmail: string | null;
-  shPhone: string | null;
-  // The NestJS API's schema has no doc-filename columns, so these are never
-  // present in the response — optional here, defaulted to null/[] at the
-  // call sites below.
-  shPhotoName?: string | null;
-  shIdDocNames?: string[];
-  ownerLastNameKh: string | null;
-  ownerFirstNameKh: string | null;
-  ownerLastNameEn: string;
-  ownerFirstNameEn: string;
-  ownerDob: string;
-  ownerBecameDate: string;
-  ownerNationality: string;
-  ownerGender: "M" | "F";
-  ownerIdCard: string | null;
-  ownerIdIssuedDate: string | null;
-  ownerIdExpiredDate: string | null;
-  ownerEmail: string | null;
-  ownerPhone: string | null;
-  ownerPhotoName?: string | null;
-  ownerIdDocNames?: string[];
-  shareAmount: string;
-  shareholderContractDocNames?: string[];
-  otherDocNames?: string[];
-  consentAgreed: boolean;
-  agreementDate: string | null;
+  nomineeShareholders: PersonEntryData[];
+  beneficialOwners: OwnerEntryData[];
+  agreements: AgreementEntryData[];
   submittedAt: string;
   updatedAt: string;
   rejectionReason: string | null;
   logs: ActivityLogEntry[];
   revisions: RequestRevisionEntry[];
+  documents?: ApiDocument[];
   // FLAG: BeneficiaryRequestsService.loadDetail() (shared by findOneAdmin and
   // findOnePortal) only includes { logs, revisions, documents } — no `user`
   // relation — so GET /secured/admin/requests/:id never actually returns a
@@ -148,12 +126,41 @@ type RequestDetailData = {
   user?: { fullName: string; username: string };
 };
 
+type PersonEntryData = {
+  id: number;
+  lastNameKh: string | null; firstNameKh: string | null; lastNameEn: string; firstNameEn: string;
+  dob: string; becameDate: string; nationality: string; gender: "M" | "F";
+  idCard: string | null; idIssuedDate: string | null; idExpiredDate: string | null;
+  email: string | null; phone: string | null;
+};
+type OwnerEntryData = PersonEntryData & { shareAmount: string };
+type AgreementEntryData = { id: number; agreementDate: string | null; consentAgreed: boolean };
+
+type DocCategory = "SH_PHOTO" | "SH_ID_DOC" | "OWNER_PHOTO" | "OWNER_ID_DOC" | "SHAREHOLDER_CONTRACT" | "OTHER";
+type ApiDocument = {
+  id: number;
+  category: DocCategory;
+  media: { filename: string };
+  nomineeShareholderId?: number | null;
+  beneficialOwnerId?: number | null;
+  agreementId?: number | null;
+};
+
+function docsByCategory(documents: ApiDocument[] | undefined, category: DocCategory, entityId?: number) {
+  return (documents ?? []).filter((d) => {
+    if (d.category !== category) return false;
+    if (entityId === undefined) return true;
+    return d.nomineeShareholderId === entityId || d.beneficialOwnerId === entityId || d.agreementId === entityId;
+  });
+}
+
 export default function AdminRequestDetail({ id }: { id: string }) {
   const t = useTranslations("beneficiary.allRequests");
   const tf = useTranslations("beneficiary.request");
   const ta = useTranslations("admin.requests");
   const trev = useTranslations("beneficiary.revisions");
   const tu = useTranslations("updateTypes");
+  const trt = useTranslations("requestTypes");
   const router = useRouter();
   const [request, setRequest] = useState<RequestDetailData | null | undefined>(undefined);
   const [error, setError] = useState(false);
@@ -207,7 +214,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
 
     // Real-time: refetch (status, logs, revisions, etc.) the instant this
     // or any other request changes, instead of only on page load.
-    const source = new EventSource("/api/secured/admin/notifications/stream");
+    const source = sharedEventSource("/api/secured/admin/notifications/stream");
     source.onmessage = () => fetchDetail();
 
     return () => {
@@ -564,7 +571,7 @@ export default function AdminRequestDetail({ id }: { id: string }) {
             <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-3">
               <Pencil className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
               <div className="min-w-0">
-                <p className="text-sm font-medium text-amber-800">{tu(request.updateType as Parameters<typeof tu>[0])}</p>
+                <p className="text-sm font-medium text-amber-800">{trt(request.updateType as Parameters<typeof trt>[0])}</p>
                 <p className="text-xs text-amber-700">{tu("reviewSectionOnly")}</p>
               </div>
             </div>
@@ -586,88 +593,120 @@ export default function AdminRequestDetail({ id }: { id: string }) {
           </SectionCard>
           )}
 
-          {/* 2. Nominee Shareholder Information */}
+          {/* 2. Nominee Shareholder Information (repeatable) */}
           {showSection(2) && (
-          <SectionCard icon={<Users className="h-4 w-4" />} title={`2. ${tf("step2Title")}`}>
-            <div className="flex items-start gap-6 mb-4">
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field label={t("shareholderName")} value={`${request.shLastNameEn} ${request.shFirstNameEn}`.trim()} />
-                <Field label={t("ownerNameKh")} value={`${request.shLastNameKh ?? ""} ${request.shFirstNameKh ?? ""}`.trim()} />
-                <Field label={tf("dob")} value={formatDate(request.shDob)} />
-                <Field label={tf("nationality")} value={request.shNationality} />
-                <Field label={tf("gender")} value={genderLabel(request.shGender)} />
-                <Field label={tf("idCard")} value={request.shIdCard} />
-                <Field label={tf("issueDate")} value={formatDate(request.shIdIssuedDate)} />
-                <Field label={tf("expiryDate")} value={formatDate(request.shIdExpiredDate)} />
-                <Field label={tf("email")} value={request.shEmail} />
-                <Field label={tf("shBecameDate")} value={formatDate(request.shBecameDate)} />
-                <Field label={tf("phone")} value={request.shPhone} />
-              </div>
-              <PersonPhoto name={request.shPhotoName ?? null} />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
-              <DocList names={request.shIdDocNames ?? []} />
+          <SectionCard icon={<Users className="h-4 w-4" />} title={`2. ${tf("nomineeGroupTitle")}`}>
+            <div className="space-y-5">
+              {request.nomineeShareholders.map((sh, idx) => (
+                <div key={sh.id} className={idx > 0 ? "pt-5 border-t border-slate-100" : undefined}>
+                  {request.nomineeShareholders.length > 1 && (
+                    <p className="text-xs font-semibold text-blue-600 mb-2">{tf("entryNumber", { number: idx + 1 })}</p>
+                  )}
+                  <div className="flex items-start gap-6 mb-4">
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <Field label={t("shareholderName")} value={`${sh.lastNameEn} ${sh.firstNameEn}`.trim()} />
+                      <Field label={t("ownerNameKh")} value={`${sh.lastNameKh ?? ""} ${sh.firstNameKh ?? ""}`.trim()} />
+                      <Field label={tf("dob")} value={formatDate(sh.dob)} />
+                      <Field label={tf("nationality")} value={sh.nationality} />
+                      <Field label={tf("gender")} value={genderLabel(sh.gender)} />
+                      <Field label={tf("idCard")} value={sh.idCard} />
+                      <Field label={tf("issueDate")} value={formatDate(sh.idIssuedDate)} />
+                      <Field label={tf("expiryDate")} value={formatDate(sh.idExpiredDate)} />
+                      <Field label={tf("email")} value={sh.email} />
+                      <Field label={tf("shBecameDate")} value={formatDate(sh.becameDate)} />
+                      <Field label={tf("phone")} value={sh.phone} />
+                    </div>
+                    <PersonPhoto document={docsByCategory(request.documents, "SH_PHOTO", sh.id)[0]} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
+                    <DocList documents={docsByCategory(request.documents, "SH_ID_DOC", sh.id)} />
+                  </div>
+                </div>
+              ))}
             </div>
           </SectionCard>
           )}
 
-          {/* 3. Beneficial Owner Information */}
+          {/* 3. Beneficial Owner Information (repeatable) */}
           {showSection(3) && (
-          <SectionCard icon={<Users className="h-4 w-4" />} title={`3. ${tf("step3Title")}`}>
-            <div className="flex items-start gap-6 mb-4">
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field label={t("ownerNameEn")} value={`${request.ownerLastNameEn} ${request.ownerFirstNameEn}`.trim()} />
-                <Field label={t("ownerNameKh")} value={`${request.ownerLastNameKh ?? ""} ${request.ownerFirstNameKh ?? ""}`.trim()} />
-                <Field label={tf("dob")} value={formatDate(request.ownerDob)} />
-                <Field label={tf("nationality")} value={request.ownerNationality} />
-                <Field label={tf("gender")} value={genderLabel(request.ownerGender)} />
-                <Field label={tf("idCard")} value={request.ownerIdCard} />
-                <Field label={tf("issueDate")} value={formatDate(request.ownerIdIssuedDate)} />
-                <Field label={tf("expiryDate")} value={formatDate(request.ownerIdExpiredDate)} />
-                <Field label={tf("email")} value={request.ownerEmail} />
-                <Field label={tf("becameDate")} value={formatDate(request.ownerBecameDate)} />
-                <Field label={tf("phone")} value={request.ownerPhone} />
-                <Field label={t("shareAmount")} value={request.shareAmount} />
-              </div>
-              <PersonPhoto name={request.ownerPhotoName ?? null} />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
-              <DocList names={request.ownerIdDocNames ?? []} />
+          <SectionCard icon={<Users className="h-4 w-4" />} title={`3. ${tf("ownerGroupTitle")}`}>
+            <div className="space-y-5">
+              {request.beneficialOwners.map((o, idx) => (
+                <div key={o.id} className={idx > 0 ? "pt-5 border-t border-slate-100" : undefined}>
+                  {request.beneficialOwners.length > 1 && (
+                    <p className="text-xs font-semibold text-blue-600 mb-2">{tf("entryNumber", { number: idx + 1 })}</p>
+                  )}
+                  <div className="flex items-start gap-6 mb-4">
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <Field label={t("ownerNameEn")} value={`${o.lastNameEn} ${o.firstNameEn}`.trim()} />
+                      <Field label={t("ownerNameKh")} value={`${o.lastNameKh ?? ""} ${o.firstNameKh ?? ""}`.trim()} />
+                      <Field label={tf("dob")} value={formatDate(o.dob)} />
+                      <Field label={tf("nationality")} value={o.nationality} />
+                      <Field label={tf("gender")} value={genderLabel(o.gender)} />
+                      <Field label={tf("idCard")} value={o.idCard} />
+                      <Field label={tf("issueDate")} value={formatDate(o.idIssuedDate)} />
+                      <Field label={tf("expiryDate")} value={formatDate(o.idExpiredDate)} />
+                      <Field label={tf("email")} value={o.email} />
+                      <Field label={tf("becameDate")} value={formatDate(o.becameDate)} />
+                      <Field label={tf("phone")} value={o.phone} />
+                      <Field label={t("shareAmount")} value={o.shareAmount} />
+                    </div>
+                    <PersonPhoto document={docsByCategory(request.documents, "OWNER_PHOTO", o.id)[0]} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">{tf("idDocLabel")}</p>
+                    <DocList documents={docsByCategory(request.documents, "OWNER_ID_DOC", o.id)} />
+                  </div>
+                </div>
+              ))}
             </div>
           </SectionCard>
           )}
 
-          {/* 4. Agreement */}
+          {/* 4. Agreement (repeatable) */}
           {showSection(4) && (
-          <SectionCard icon={<FileText className="h-4 w-4" />} title={`4. ${tf("step4Title")}`}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-xs text-slate-500 mb-1">{tf("shareholderContractLabel")}</p>
-                <DocList names={request.shareholderContractDocNames ?? []} />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 mb-1">{tf("otherDocsLabel")}</p>
-                <DocList names={request.otherDocNames ?? []} />
-              </div>
-            </div>
-            <div className="pt-4 border-t border-slate-100">
-              <label className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={request.consentAgreed}
-                  disabled
-                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 accent-blue-600"
-                />
-                <span className="text-sm text-slate-700">{tf("consentText")}</span>
-              </label>
+          <SectionCard icon={<FileText className="h-4 w-4" />} title={`4. ${tf("agreementGroupTitle")}`}>
+            <div className="space-y-5">
+              {request.agreements.map((a, idx) => (
+                <div key={a.id} className={idx > 0 ? "pt-5 border-t border-slate-100" : undefined}>
+                  {request.agreements.length > 1 && (
+                    <p className="text-xs font-semibold text-blue-600 mb-2">{tf("entryNumber", { number: idx + 1 })}</p>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">{tf("shareholderContractLabel")}</p>
+                      <DocList documents={docsByCategory(request.documents, "SHAREHOLDER_CONTRACT", a.id)} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">{tf("otherDocsLabel")}</p>
+                      <DocList documents={docsByCategory(request.documents, "OTHER", a.id)} />
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t border-slate-100">
+                    <label className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={a.consentAgreed}
+                        disabled
+                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 accent-blue-600"
+                      />
+                      <span className="text-sm text-slate-700">{tf("consentText")}</span>
+                    </label>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Field label={tf("agreementDate")} value={formatDate(a.agreementDate)} />
+                  </div>
+                </div>
+              ))}
             </div>
             <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Field label={tf("agreementDate")} value={formatDate(request.agreementDate)} />
-              <Field label={t("col.requestType")} value={request.type} />
-              {request.updateType && (
-                <Field label={tu("label")} value={tu(request.updateType as Parameters<typeof tu>[0])} />
+              <Field
+                label={t("col.requestType")}
+                value={trt.has(request.type) ? trt(request.type as Parameters<typeof trt>[0]) : request.type}
+              />
+              {request.updateType && request.updateType !== request.type && (
+                <Field label={tu("label")} value={trt(request.updateType as Parameters<typeof trt>[0])} />
               )}
             </div>
           </SectionCard>

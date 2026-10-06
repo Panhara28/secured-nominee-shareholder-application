@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, Eye, FileText, Loader2, Paperclip, RotateCcw, Save, Send, Sparkles, Upload, X, XCircle } from "lucide-react";
+import { ArrowLeft, Check, Eye, FileText, Loader2, Paperclip, Plus, RotateCcw, Save, Send, Sparkles, Trash2, Upload, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn, splitReasonItems } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,45 +16,65 @@ function StepTabs({
   steps,
   activeStep,
   onChange,
+  trailing,
 }: {
-  steps: { number: number; title: string; disabled: boolean; flagged?: boolean }[];
+  steps: { number: number; title: string; disabled: boolean; flagged?: boolean; onRemove?: () => void; removeLabel?: string }[];
   activeStep: number;
   onChange: (step: number) => void;
+  trailing?: React.ReactNode;
 }) {
   return (
-    <div className="flex overflow-x-auto border-b border-slate-200">
+    <div className="flex items-center overflow-x-auto border-b border-slate-200">
       {steps.map((s) => {
         const isActive = s.number === activeStep;
         return (
-          <button
+          <div
             key={s.number}
-            type="button"
-            onClick={() => !s.disabled && onChange(s.number)}
-            disabled={s.disabled}
             className={cn(
-              "relative flex items-center gap-2 px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors",
+              "relative flex items-center gap-1.5 whitespace-nowrap border-b-2 -mb-px transition-colors pr-2",
               s.disabled
-                ? "border-transparent text-slate-300 cursor-not-allowed"
+                ? "border-transparent text-slate-300"
                 : isActive
                 ? "border-blue-600 text-blue-700"
                 : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
             )}
           >
-            <span
+            <button
+              type="button"
+              onClick={() => !s.disabled && onChange(s.number)}
+              disabled={s.disabled}
               className={cn(
-                "flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold",
-                s.disabled ? "bg-slate-100 text-slate-300" : isActive ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500"
+                "flex items-center gap-2 py-3 pl-5 text-sm font-medium",
+                s.disabled && "cursor-not-allowed"
               )}
             >
-              {s.number}
-            </span>
-            {s.title}
-            {s.flagged && (
-              <span className="h-2 w-2 rounded-full bg-orange-500 flex-shrink-0" />
+              <span
+                className={cn(
+                  "flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold",
+                  s.disabled ? "bg-slate-100 text-slate-300" : isActive ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500"
+                )}
+              >
+                {s.number}
+              </span>
+              {s.title}
+              {s.flagged && (
+                <span className="h-2 w-2 rounded-full bg-orange-500 flex-shrink-0" />
+              )}
+            </button>
+            {s.onRemove && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); s.onRemove!(); }}
+                title={s.removeLabel}
+                className="text-slate-400 hover:text-red-600 transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
             )}
-          </button>
+          </div>
         );
       })}
+      {trailing && <div className="flex-shrink-0 px-3">{trailing}</div>}
     </div>
   );
 }
@@ -72,60 +92,59 @@ function StepPanel({
   return <div className="bg-white px-5 py-5">{children}</div>;
 }
 
-function guessFieldsFromReason(reason: string): { fields: string[]; steps: number[] } {
+// Best-effort guess at which step(s) a RETURNED request's free-text
+// rejection reason relates to. Section 2 (nominee/owner/agreement) is now
+// repeatable, so per-field orange highlighting only applies to the flat
+// Company step below — for Section 2 we just point at the right group via
+// the returned banner instead of highlighting a specific array entry.
+function guessReturnSteps(reason: string): number[] {
   const text = reason.toLowerCase();
-  const fields: string[] = [];
   const steps = new Set<number>();
-
-  // Company-level (step 1) keywords
-  if (text.includes("registration") || text.includes("business registry")) {
-    fields.push("registrationNo");
+  if (
+    text.includes("registration") ||
+    text.includes("business registry") ||
+    text.includes("company email") ||
+    text.includes("company phone") ||
+    text.includes("company address") ||
+    text.includes("addresses could not be cross-verified")
+  ) {
     steps.add(1);
   }
-  if (text.includes("company email")) {
-    fields.push("companyEmail");
-    steps.add(1);
-  }
-  if (text.includes("company phone")) {
-    fields.push("companyPhone");
-    steps.add(1);
-  }
-  if (text.includes("company address") || text.includes("addresses could not be cross-verified")) {
-    fields.push("companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse");
-    steps.add(1);
-  }
-
-  // Person-level (step 2/3) keywords — if the reason doesn't say which person, flag both.
   const mentionsShareholder = text.includes("shareholder") || text.includes("nominee");
   const mentionsOwner = text.includes("beneficial owner") || text.includes("beneficiary owner") || text.includes(" owner");
-  const targets: (2 | 3)[] = [];
-  if (mentionsShareholder) targets.push(2);
-  if (mentionsOwner) targets.push(3);
-  if (targets.length === 0) targets.push(2, 3);
-
-  const personField = (suffix: string, step: 2 | 3) =>
-    step === 2 ? `sh${suffix}` : `${suffix.charAt(0).toLowerCase()}${suffix.slice(1)}`;
-
-  const mentionsIdCard = text.includes("id card") || text.includes("passport") || text.includes("id number") || text.includes("id issue") || text.includes("issuing province");
-  const mentionsDob = text.includes("date of birth") || text.includes("dob");
-  const mentionsPersonEmail = !text.includes("company") && text.includes("email");
-  const mentionsPersonPhone = !text.includes("company") && text.includes("phone");
-
-  if (mentionsIdCard || mentionsDob || mentionsPersonEmail || mentionsPersonPhone) {
-    for (const step of targets) {
-      if (mentionsIdCard) fields.push(personField("IdCard", step), personField("IdIssuedDate", step), personField("IdExpiredDate", step));
-      if (mentionsDob) fields.push(personField("Dob", step));
-      if (mentionsPersonEmail) fields.push(personField("Email", step));
-      if (mentionsPersonPhone) fields.push(personField("Phone", step));
-      steps.add(step);
-    }
+  if (mentionsShareholder) steps.add(2);
+  if (mentionsOwner) steps.add(3);
+  const mentionsPersonDetail =
+    text.includes("id card") ||
+    text.includes("passport") ||
+    text.includes("id number") ||
+    text.includes("id issue") ||
+    text.includes("issuing province") ||
+    text.includes("date of birth") ||
+    text.includes("dob") ||
+    (!text.includes("company") && (text.includes("email") || text.includes("phone")));
+  if (mentionsPersonDetail && !mentionsShareholder && !mentionsOwner) {
+    steps.add(2);
+    steps.add(3);
   }
-
-  return { fields, steps: [...steps].sort((a, b) => a - b) };
+  if (steps.size === 0) steps.add(1);
+  return [...steps].sort((a, b) => a - b);
 }
 
-// Item 30/31 validation helpers, shared by PersonFields and the top-level
-// step-completion checks.
+function guessCompanyFlaggedFields(reason: string): string[] {
+  const text = reason.toLowerCase();
+  const fields: string[] = [];
+  if (text.includes("registration") || text.includes("business registry")) fields.push("registrationNo");
+  if (text.includes("company email")) fields.push("companyEmail");
+  if (text.includes("company phone")) fields.push("companyPhone");
+  if (text.includes("company address") || text.includes("addresses could not be cross-verified")) {
+    fields.push("companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse");
+  }
+  return fields;
+}
+
+// Item 30/31 validation helpers, shared across the company step and every
+// repeatable Section 2 entry.
 const KHMER_NAME_REGEX = /^[ក-៿᧠-᧿\s]+$/;
 const LATIN_NAME_REGEX = /^[A-Za-z\s.'-]+$/;
 const PHONE_REGEX = /^[0-9\s]{8,12}$/;
@@ -178,56 +197,49 @@ const ADDRESS_FORM_KEYS: Record<AddressField, "companyProvince" | "companyDistri
   province: "companyProvince", district: "companyDistrict", commune: "companyCommune", village: "companyVillage",
 };
 
-type FormData = {
-  /* Step 1 — Company */
+type CompanyData = {
   companyNameKh: string; companyNameEn: string; registrationNo: string; registrationDate: string;
   companyProvince: string; companyDistrict: string; companyCommune: string; companyVillage: string;
   companyStreet: string; companyHouse: string; companyPhone: string; companyOfficePhone: string; companyEmail: string;
-  /* Step 2 — Beneficiary Owner */
-  lastNameKh: string; firstNameKh: string; lastNameEn: string; firstNameEn: string;
-  dob: string; becameDate: string; nationality: string; gender: string;
-  idType: "ID" | "PASSPORT"; idCard: string; idIssuedDate: string; idExpiredDate: string;
-  email: string; phone: string; shareAmount: string;
-  /* Step 3 — Shareholder */
-  shLastNameKh: string; shFirstNameKh: string; shLastNameEn: string; shFirstNameEn: string;
-  shDob: string; shBecameDate: string; shNationality: string; shGender: string;
-  shIdType: "ID" | "PASSPORT"; shIdCard: string; shIdIssuedDate: string; shIdExpiredDate: string;
-  shEmail: string; shPhone: string;
-  /* Step 4 — Agreement */
-  agreementDate: string;
 };
 
-const EMPTY: FormData = {
+const EMPTY_COMPANY: CompanyData = {
   companyNameKh: "", companyNameEn: "", registrationNo: "", registrationDate: "",
   companyProvince: "", companyDistrict: "", companyCommune: "", companyVillage: "",
   companyStreet: "", companyHouse: "", companyPhone: "", companyOfficePhone: "", companyEmail: "",
-  lastNameKh: "", firstNameKh: "", lastNameEn: "", firstNameEn: "",
-  dob: "", becameDate: "", nationality: "", gender: "", idType: "ID", idCard: "", idIssuedDate: "", idExpiredDate: "",
-  email: "", phone: "", shareAmount: "",
-  shLastNameKh: "", shFirstNameKh: "", shLastNameEn: "", shFirstNameEn: "",
-  shDob: "", shBecameDate: "", shNationality: "", shGender: "", shIdType: "ID", shIdCard: "", shIdIssuedDate: "", shIdExpiredDate: "",
-  shEmail: "", shPhone: "",
-  agreementDate: "",
 };
 
+const COMPANY_REQUIRED: (keyof CompanyData)[] = [
+  "companyNameEn", "registrationNo", "registrationDate",
+  "companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse",
+  "companyPhone", "companyEmail",
+];
+
 // `file` is the raw picked File, kept in memory only, until it's uploaded to
-// the real Document/Media backend once a requestId exists (item 39). `url`
-// is either a local preview blob (while `file` is still pending) or a real
-// `/api/portal/documents/:id/download` link once `documentId` is set.
+// the real Document/Media backend once a requestId (and, for Section 2, the
+// entity's own id) exists. `url` is either a local preview blob (while
+// `file` is still pending) or a real `/api/portal/documents/:id/download`
+// link once `documentId` is set.
 type UploadedDoc = { name: string; url?: string; file?: File; documentId?: number };
 
 // Matches the API's DocumentCategory enum (prisma/schema.prisma).
 type DocCategory = "SH_PHOTO" | "SH_ID_DOC" | "OWNER_PHOTO" | "OWNER_ID_DOC" | "SHAREHOLDER_CONTRACT" | "OTHER";
 
+type UploadEntity = { nomineeShareholderId?: number; beneficialOwnerId?: number; agreementId?: number };
+
 async function uploadDocument(
   requestId: string,
   category: DocCategory,
   file: File,
+  entity?: UploadEntity,
 ): Promise<{ documentId: number; filename: string }> {
   const formData = new FormData();
   formData.append("requestId", requestId);
   formData.append("category", category);
   formData.append("file", file);
+  if (entity?.nomineeShareholderId) formData.append("nomineeShareholderId", String(entity.nomineeShareholderId));
+  if (entity?.beneficialOwnerId) formData.append("beneficialOwnerId", String(entity.beneficialOwnerId));
+  if (entity?.agreementId) formData.append("agreementId", String(entity.agreementId));
   const res = await fetch("/api/portal/documents/upload", { method: "POST", body: formData });
   if (!res.ok) throw new Error("Document upload failed.");
   const data = await res.json();
@@ -238,24 +250,92 @@ function documentDownloadUrl(documentId: number): string {
   return `/api/portal/documents/${documentId}/download`;
 }
 
+// One repeatable nominee shareholder / beneficial owner entry (Section 2).
+// `id` is the real server-side row id once known (undefined for a
+// not-yet-saved new entry); `localKey` is a stable React key independent of
+// that, since a brand-new entry has no id yet.
+type PersonEntry = {
+  localKey: string;
+  id?: number;
+  lastNameKh: string; firstNameKh: string; lastNameEn: string; firstNameEn: string;
+  dob: string; becameDate: string; nationality: string; gender: string;
+  idType: "ID" | "PASSPORT"; idCard: string; idIssuedDate: string; idExpiredDate: string;
+  email: string; phone: string;
+  photoDocId: number | null; photo: string | null; photoFile: File | null; photoName: string | null;
+  idDocs: UploadedDoc[];
+};
+type OwnerEntry = PersonEntry & { shareAmount: string };
+type AgreementEntryUI = {
+  localKey: string;
+  id?: number;
+  agreementDate: string;
+  consentAgreed: boolean;
+  contractDocs: UploadedDoc[];
+  supportingDocs: UploadedDoc[];
+};
+
+let localKeySeq = 0;
+function nextLocalKey(prefix: string): string {
+  localKeySeq += 1;
+  return `${prefix}-${localKeySeq}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function emptyPerson(): PersonEntry {
+  return {
+    localKey: nextLocalKey("nominee"),
+    lastNameKh: "", firstNameKh: "", lastNameEn: "", firstNameEn: "",
+    dob: "", becameDate: "", nationality: "", gender: "",
+    idType: "ID", idCard: "", idIssuedDate: "", idExpiredDate: "",
+    email: "", phone: "",
+    photoDocId: null, photo: null, photoFile: null, photoName: null,
+    idDocs: [],
+  };
+}
+function emptyOwner(): OwnerEntry {
+  return { ...emptyPerson(), localKey: nextLocalKey("owner"), shareAmount: "" };
+}
+function emptyAgreement(): AgreementEntryUI {
+  return { localKey: nextLocalKey("agreement"), agreementDate: "", consentAgreed: false, contractDocs: [], supportingDocs: [] };
+}
+
+const NOMINEE_REQUIRED: (keyof PersonEntry)[] = ["lastNameEn", "firstNameEn", "dob", "becameDate", "nationality", "gender"];
+const OWNER_REQUIRED: (keyof OwnerEntry)[] = [...NOMINEE_REQUIRED, "shareAmount"];
+
+function isPersonEntryValid<T extends PersonEntry>(e: T, required: (keyof T)[], requireIdDoc: boolean): boolean {
+  return (
+    required.every((f) => !!e[f]) &&
+    isValidKhmerName(e.lastNameKh) &&
+    isValidKhmerName(e.firstNameKh) &&
+    isValidLatinName(e.lastNameEn) &&
+    isValidLatinName(e.firstNameEn) &&
+    !isFutureDate(e.dob) &&
+    !isUnder18(e.dob) &&
+    isValidBecameDate(e.becameDate, e.dob) &&
+    isValidIdDateRange(e.idIssuedDate, e.idExpiredDate) &&
+    isValidPhone(e.phone) &&
+    (!requireIdDoc || e.idDocs.length > 0)
+  );
+}
+function isAgreementEntryValid(a: AgreementEntryUI, requireDocs: boolean): boolean {
+  return !!a.agreementDate && a.consentAgreed === true && (!requireDocs || a.contractDocs.length > 0);
+}
+
 // Item 42: in-progress form state persisted to sessionStorage so a language
 // switch (which remounts this component) doesn't lose what the user typed.
-// Raw `File` objects aren't serializable, so persisted doc entries never
-// carry one — an in-flight (not-yet-uploaded) attachment picked just before
-// a language switch is a known, accepted gap (its filename/preview survive,
-// re-attaching the file itself doesn't).
+// Raw `File`/photo-file objects aren't serializable, so persisted entries
+// never carry one.
 type PersistedDoc = Omit<UploadedDoc, "file">;
-type PersistedDraft = {
-  form: Partial<FormData>;
-  ownerPhotoName: string | null;
-  shPhotoName: string | null;
-  ownerPhotoDocId: number | null;
-  shPhotoDocId: number | null;
-  ownerIdDocs: PersistedDoc[];
-  shIdDocs: PersistedDoc[];
-  shareholderContractDocs: PersistedDoc[];
+type PersistedPerson = Omit<PersonEntry, "photoFile" | "idDocs"> & { idDocs: PersistedDoc[] };
+type PersistedOwner = Omit<OwnerEntry, "photoFile" | "idDocs"> & { idDocs: PersistedDoc[] };
+type PersistedAgreement = Omit<AgreementEntryUI, "contractDocs" | "supportingDocs"> & {
+  contractDocs: PersistedDoc[];
   supportingDocs: PersistedDoc[];
-  consentAgreed: boolean;
+};
+type PersistedDraft = {
+  company: CompanyData;
+  nominees: PersistedPerson[];
+  owners: PersistedOwner[];
+  agreements: PersistedAgreement[];
   activeStep: number;
 };
 
@@ -290,13 +370,11 @@ const FAKE_COMPANIES: { en: string; kh: string }[] = [
 function randomOf<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
-
 function randomDigits(len: number): string {
   let s = "";
   for (let i = 0; i < len; i++) s += Math.floor(Math.random() * 10);
   return s;
 }
-
 function randomDateBetween(startYear: number, endYear: number): string {
   const year = startYear + Math.floor(Math.random() * (endYear - startYear + 1));
   const month = String(1 + Math.floor(Math.random() * 12)).padStart(2, "0");
@@ -314,31 +392,36 @@ function makeFakePdfFile(name: string): File {
   return new File([content], name, { type: "application/pdf" });
 }
 
-function generateFakePerson(prefix: "sh" | "") {
-  const key = (f: string) => (prefix ? `${prefix}${f}` : `${f.charAt(0).toLowerCase()}${f.slice(1)}`);
-  return {
-    [key("LastNameKh")]: randomOf(FAKE_LAST_KH),
-    [key("FirstNameKh")]: randomOf(FAKE_FIRST_KH),
-    [key("LastNameEn")]: randomOf(FAKE_LAST_EN),
-    [key("FirstNameEn")]: randomOf(FAKE_FIRST_EN),
-    [key("Dob")]: randomDateBetween(1970, 2000),
-    [key("BecameDate")]: randomDateBetween(2018, 2026),
-    [key("Nationality")]: randomOf(NATIONALITIES),
-    [key("Gender")]: randomOf(GENDERS),
-    [key("IdCard")]: randomDigits(9),
-    [key("IdIssuedDate")]: randomDateBetween(2018, 2023),
-    [key("IdExpiredDate")]: randomDateBetween(2026, 2033),
-    [key("Email")]: `${randomOf(FAKE_FIRST_EN).toLowerCase()}.${randomOf(FAKE_LAST_EN).toLowerCase()}${Math.floor(Math.random() * 100)}@example.com`,
-    [key("Phone")]: `${Math.floor(Math.random() * 90) + 10} ${randomDigits(3)} ${randomDigits(3)}`,
-  };
-}
-
 const FAKE_PROFILE_PHOTO = "/profile-manager.jpg";
+
+// The photo needs a real file as well: with only the preview URL it shows in
+// the form but is never uploaded, so the saved request has no photo.
+async function loadFakePhotoFile(): Promise<File | null> {
+  try {
+    const res = await fetch(FAKE_PROFILE_PHOTO);
+    if (!res.ok) return null;
+    return new File([await res.blob()], "profile-manager.jpg", { type: "image/jpeg" });
+  } catch {
+    return null;
+  }
+}
 const FAKE_ID_DOC_NAME = "sample_passport.pdf";
 const FAKE_CONTRACT_DOC_NAME = "Nominee shareholder agreement KHM.pdf";
 const FAKE_OTHER_DOC_NAME = "This is  other documents.pdf";
 
-function generateFakeFormData(): FormData {
+function fakePersonFields() {
+  return {
+    lastNameKh: randomOf(FAKE_LAST_KH), firstNameKh: randomOf(FAKE_FIRST_KH),
+    lastNameEn: randomOf(FAKE_LAST_EN), firstNameEn: randomOf(FAKE_FIRST_EN),
+    dob: randomDateBetween(1970, 2000), becameDate: randomDateBetween(2018, 2026),
+    nationality: randomOf(NATIONALITIES), gender: randomOf(GENDERS),
+    idCard: randomDigits(9), idIssuedDate: randomDateBetween(2018, 2023), idExpiredDate: randomDateBetween(2026, 2033),
+    email: `${randomOf(FAKE_FIRST_EN).toLowerCase()}.${randomOf(FAKE_LAST_EN).toLowerCase()}${Math.floor(Math.random() * 100)}@example.com`,
+    phone: `${Math.floor(Math.random() * 90) + 10} ${randomDigits(3)} ${randomDigits(3)}`,
+  };
+}
+
+function generateFakeCompany(): CompanyData {
   const company = randomOf(FAKE_COMPANIES);
   const emailSlug = company.en.toLowerCase().replace(/[^a-z0-9]/g, "");
   return {
@@ -352,97 +435,71 @@ function generateFakeFormData(): FormData {
     companyPhone: `${Math.floor(Math.random() * 90) + 10} ${randomDigits(3)} ${randomDigits(3)}`,
     companyOfficePhone: `${Math.floor(Math.random() * 90) + 10} ${randomDigits(3)} ${randomDigits(3)}`,
     companyEmail: `${emailSlug}@example.com`,
-    shareAmount: String(Math.floor(Math.random() * 9000) + 1000),
-    ...generateFakePerson(""),
-    ...generateFakePerson("sh"),
-    agreementDate: randomDateBetween(2024, 2026),
-  } as unknown as FormData;
+  };
 }
 
 function PersonFields({
   t,
-  prefix,
-  form,
-  set,
+  idPrefix,
+  value,
+  onChange,
   touched,
   setTouched,
-  photo,
-  setPhoto,
-  setPhotoName,
-  setPhotoFile,
-  idDocs,
-  setIdDocs,
   requiredFields,
+  becameDateLabelKey,
   extraContent,
-  flaggedFields = [],
-  unchangedFields = [],
 }: {
   t: ReturnType<typeof useTranslations>;
-  prefix: string;
-  form: Record<string, string>;
-  set: (patch: Record<string, string>) => void;
+  idPrefix: string;
+  value: PersonEntry;
+  onChange: (patch: Partial<PersonEntry>) => void;
   touched: Record<string, boolean>;
   setTouched: (patch: Record<string, boolean>) => void;
-  photo: string | null;
-  setPhoto: (v: string | null) => void;
-  setPhotoName: (v: string | null) => void;
-  setPhotoFile: (v: File | null) => void;
-  idDocs: UploadedDoc[];
-  setIdDocs: React.Dispatch<React.SetStateAction<UploadedDoc[]>>;
-  requiredFields: string[];
+  requiredFields: readonly string[];
+  becameDateLabelKey: "shBecameDate" | "becameDate";
   extraContent?: React.ReactNode;
-  flaggedFields?: string[];
-  unchangedFields?: string[];
 }) {
-  const key = (f: string) => (prefix ? `${prefix}${f}` : `${f.charAt(0).toLowerCase()}${f.slice(1)}`);
-  const isFlagged = (f: string) => flaggedFields.includes(key(f));
-  const isUnchanged = (f: string) => unchangedFields.includes(key(f));
-  const fieldError = (f: string) => {
-    if (isUnchanged(f)) return t("unchangedFieldInline");
-    if (!touched[key(f)]) return "";
-    const val = form[key(f)] ?? "";
-    if (!val) return requiredFields.includes(key(f)) ? t("required") : "";
-    if ((f === "LastNameKh" || f === "FirstNameKh") && !isValidKhmerName(val)) return t("invalidNameKh");
-    if ((f === "LastNameEn" || f === "FirstNameEn") && !isValidLatinName(val)) return t("invalidNameEn");
-    if (f === "Dob" && isFutureDate(val)) return t("invalidDobFuture");
-    if (f === "Dob" && isUnder18(val)) return t("invalidDobUnder18");
-    if (f === "BecameDate" && !isValidBecameDate(val, form[key("Dob")] ?? "")) return t("invalidBecameDate");
-    if (f === "IdExpiredDate" && !isValidIdDateRange(form[key("IdIssuedDate")] ?? "", val)) return t("invalidIdDates");
-    if (f === "Phone" && !isValidPhone(val)) return t("invalidPhone");
+  const tk = (f: string) => `${idPrefix}.${f}`;
+  const fieldError = (f: keyof PersonEntry): string => {
+    if (!touched[tk(f as string)]) return "";
+    const val = (value[f] as string) ?? "";
+    if (!val) return requiredFields.includes(f) ? t("required") : "";
+    if ((f === "lastNameKh" || f === "firstNameKh") && !isValidKhmerName(val)) return t("invalidNameKh");
+    if ((f === "lastNameEn" || f === "firstNameEn") && !isValidLatinName(val)) return t("invalidNameEn");
+    if (f === "dob" && isFutureDate(val)) return t("invalidDobFuture");
+    if (f === "dob" && isUnder18(val)) return t("invalidDobUnder18");
+    if (f === "becameDate" && !isValidBecameDate(val, value.dob)) return t("invalidBecameDate");
+    if (f === "idExpiredDate" && !isValidIdDateRange(value.idIssuedDate, val)) return t("invalidIdDates");
+    if (f === "phone" && !isValidPhone(val)) return t("invalidPhone");
     return "";
   };
-  const inputCls = (f: string) =>
-    cn("w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
-      isUnchanged(f)
-        ? "border-red-400 ring-2 ring-red-100"
-        : fieldError(f)
-        ? "border-red-400"
-        : isFlagged(f)
-        ? "border-orange-400 ring-2 ring-orange-100"
-        : "border-slate-300");
+  const inputCls = (f: keyof PersonEntry) =>
+    cn(
+      "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+      fieldError(f) ? "border-red-400" : "border-slate-300",
+    );
 
   return (
     <div className="space-y-5">
       <div className="flex items-start gap-6">
         {/* Names */}
         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {(["LastNameKh", "FirstNameKh", "LastNameEn", "FirstNameEn"] as const).map((f) => {
-            const field = f;
-            const isRequired = requiredFields.includes(key(field));
+          {(["lastNameKh", "firstNameKh", "lastNameEn", "firstNameEn"] as const).map((f) => {
+            const isRequired = requiredFields.includes(f);
             return (
               <div key={f}>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t(field.charAt(0).toLowerCase() + field.slice(1) as Parameters<typeof t>[0])}
+                  {t(f)}
                   {isRequired && <span className="text-red-500 ml-0.5">*</span>}
                 </label>
                 <input
                   type="text"
-                  value={form[key(field)] ?? ""}
-                  onChange={(e) => set({ [key(field)]: e.target.value })}
-                  onBlur={() => setTouched({ [key(field)]: true })}
-                  className={inputCls(field)}
+                  value={value[f] ?? ""}
+                  onChange={(e) => onChange({ [f]: e.target.value })}
+                  onBlur={() => setTouched({ [tk(f)]: true })}
+                  className={inputCls(f)}
                 />
-                {fieldError(field) && <p className="mt-1 text-xs text-red-600">{fieldError(field)}</p>}
+                {fieldError(f) && <p className="mt-1 text-xs text-red-600">{fieldError(f)}</p>}
               </div>
             );
           })}
@@ -451,8 +508,8 @@ function PersonFields({
         {/* Photo — moved to the right side (item 10) */}
         <div className="flex flex-col items-center gap-2 shrink-0">
           <div className="h-44 w-36 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-300 overflow-hidden">
-            {photo ? (
-              <img src={photo} alt="person" className="h-full w-full object-cover" />
+            {value.photo ? (
+              <img src={value.photo} alt="person" className="h-full w-full object-cover" />
             ) : (
               <svg className="h-16 w-16" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
@@ -462,7 +519,15 @@ function PersonFields({
           <label className="w-full inline-flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-blue-500 py-1.5 text-xs font-medium text-white hover:bg-blue-600 transition-colors">
             <Upload className="h-3.5 w-3.5" />
             {t("uploadPhoto")}
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setPhoto(URL.createObjectURL(f)); setPhotoName(f.name); setPhotoFile(f); } }} />
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onChange({ photo: URL.createObjectURL(f), photoName: f.name, photoFile: f });
+              }}
+            />
           </label>
         </div>
       </div>
@@ -471,29 +536,29 @@ function PersonFields({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("dob")} <span className="text-red-500">*</span></label>
-          <input type="date" max={maxDobFor18()} value={form[key("Dob")] ?? ""} onChange={(e) => set({ [key("Dob")]: e.target.value })} onBlur={() => setTouched({ [key("Dob")]: true })} className={inputCls("Dob")} />
-          {fieldError("Dob") && <p className="mt-1 text-xs text-red-600">{fieldError("Dob")}</p>}
+          <input type="date" max={maxDobFor18()} value={value.dob} onChange={(e) => onChange({ dob: e.target.value })} onBlur={() => setTouched({ [tk("dob")]: true })} className={inputCls("dob")} />
+          {fieldError("dob") && <p className="mt-1 text-xs text-red-600">{fieldError("dob")}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("nationality")} <span className="text-red-500">*</span></label>
           <SearchableSelect
-            value={form[key("Nationality")] ?? ""}
-            onChange={(code) => set({ [key("Nationality")]: code })}
-            onBlur={() => setTouched({ [key("Nationality")]: true })}
+            value={value.nationality}
+            onChange={(code) => onChange({ nationality: code })}
+            onBlur={() => setTouched({ [tk("nationality")]: true })}
             options={COUNTRIES}
             placeholder={t("select")}
-            className={cn(inputCls("Nationality"), "bg-white")}
+            className={cn(inputCls("nationality"), "bg-white")}
           />
-          {fieldError("Nationality") && <p className="mt-1 text-xs text-red-600">{fieldError("Nationality")}</p>}
+          {fieldError("nationality") && <p className="mt-1 text-xs text-red-600">{fieldError("nationality")}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("gender")} <span className="text-red-500">*</span></label>
-          <select value={form[key("Gender")] ?? ""} onChange={(e) => set({ [key("Gender")]: e.target.value })} onBlur={() => setTouched({ [key("Gender")]: true })} className={cn(inputCls("Gender"), "bg-white")}>
+          <select value={value.gender} onChange={(e) => onChange({ gender: e.target.value })} onBlur={() => setTouched({ [tk("gender")]: true })} className={cn(inputCls("gender"), "bg-white")}>
             <option value="">{t("select")}</option>
             <option value="M">{t("genderMale")}</option>
             <option value="F">{t("genderFemale")}</option>
           </select>
-          {fieldError("Gender") && <p className="mt-1 text-xs text-red-600">{fieldError("Gender")}</p>}
+          {fieldError("gender") && <p className="mt-1 text-xs text-red-600">{fieldError("gender")}</p>}
         </div>
       </div>
 
@@ -502,44 +567,30 @@ function PersonFields({
         <div>
           <div className="mb-1.5 flex items-center gap-4">
             <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
-              <input
-                type="radio"
-                name={key("IdType")}
-                value="ID"
-                checked={(form[key("IdType")] ?? "ID") === "ID"}
-                onChange={() => set({ [key("IdType")]: "ID" })}
-                className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500"
-              />
+              <input type="radio" name={tk("idType")} value="ID" checked={value.idType === "ID"} onChange={() => onChange({ idType: "ID" })} className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500" />
               {t("idTypeId")}
             </label>
             <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
-              <input
-                type="radio"
-                name={key("IdType")}
-                value="PASSPORT"
-                checked={form[key("IdType")] === "PASSPORT"}
-                onChange={() => set({ [key("IdType")]: "PASSPORT" })}
-                className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500"
-              />
+              <input type="radio" name={tk("idType")} value="PASSPORT" checked={value.idType === "PASSPORT"} onChange={() => onChange({ idType: "PASSPORT" })} className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500" />
               {t("idTypePassport")}
             </label>
           </div>
           <input
             type="text"
-            value={form[key("IdCard")] ?? ""}
-            onChange={(e) => set({ [key("IdCard")]: e.target.value })}
-            placeholder={form[key("IdType")] === "PASSPORT" ? t("passportPlaceholder") : t("idCardPlaceholder")}
-            className={inputCls("IdCard")}
+            value={value.idCard}
+            onChange={(e) => onChange({ idCard: e.target.value })}
+            placeholder={value.idType === "PASSPORT" ? t("passportPlaceholder") : t("idCardPlaceholder")}
+            className={inputCls("idCard")}
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("issueDate")}</label>
-          <input type="date" value={form[key("IdIssuedDate")] ?? ""} onChange={(e) => set({ [key("IdIssuedDate")]: e.target.value })} onBlur={() => setTouched({ [key("IdIssuedDate")]: true })} className={inputCls("IdIssuedDate")} />
+          <input type="date" value={value.idIssuedDate} onChange={(e) => onChange({ idIssuedDate: e.target.value })} onBlur={() => setTouched({ [tk("idIssuedDate")]: true })} className={inputCls("idIssuedDate")} />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("expiryDate")}</label>
-          <input type="date" value={form[key("IdExpiredDate")] ?? ""} onChange={(e) => set({ [key("IdExpiredDate")]: e.target.value })} onBlur={() => setTouched({ [key("IdExpiredDate")]: true })} className={inputCls("IdExpiredDate")} />
-          {fieldError("IdExpiredDate") && <p className="mt-1 text-xs text-red-600">{fieldError("IdExpiredDate")}</p>}
+          <input type="date" value={value.idExpiredDate} onChange={(e) => onChange({ idExpiredDate: e.target.value })} onBlur={() => setTouched({ [tk("idExpiredDate")]: true })} className={inputCls("idExpiredDate")} />
+          {fieldError("idExpiredDate") && <p className="mt-1 text-xs text-red-600">{fieldError("idExpiredDate")}</p>}
         </div>
       </div>
 
@@ -547,16 +598,16 @@ function PersonFields({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("email")}</label>
-          <input type="email" value={form[key("Email")] ?? ""} onChange={(e) => set({ [key("Email")]: e.target.value })} placeholder="email@example.com" className={inputCls("Email")} />
+          <input type="email" value={value.email} onChange={(e) => onChange({ email: e.target.value })} placeholder="email@example.com" className={inputCls("email")} />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t("phone")}</label>
-          <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500", fieldError("Phone") ? "border-red-400" : "border-slate-300")}>
+          <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500", fieldError("phone") ? "border-red-400" : "border-slate-300")}>
             <span className="text-base leading-none">🇰🇭</span>
             <span className="text-slate-400 text-xs">+855</span>
-            <input type="tel" value={form[key("Phone")] ?? ""} onChange={(e) => set({ [key("Phone")]: e.target.value })} onBlur={() => setTouched({ [key("Phone")]: true })} placeholder="23 756 789" className="flex-1 outline-none text-sm bg-transparent" />
+            <input type="tel" value={value.phone} onChange={(e) => onChange({ phone: e.target.value })} onBlur={() => setTouched({ [tk("phone")]: true })} placeholder="23 756 789" className="flex-1 outline-none text-sm bg-transparent" />
           </div>
-          {fieldError("Phone") && <p className="mt-1 text-xs text-red-600">{fieldError("Phone")}</p>}
+          {fieldError("phone") && <p className="mt-1 text-xs text-red-600">{fieldError("phone")}</p>}
         </div>
       </div>
 
@@ -564,10 +615,10 @@ function PersonFields({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
-            {t(prefix === "sh" ? "shBecameDate" : "becameDate")} <span className="text-red-500">*</span>
+            {t(becameDateLabelKey)} <span className="text-red-500">*</span>
           </label>
-          <input type="date" value={form[key("BecameDate")] ?? ""} onChange={(e) => set({ [key("BecameDate")]: e.target.value })} onBlur={() => setTouched({ [key("BecameDate")]: true })} className={inputCls("BecameDate")} />
-          {fieldError("BecameDate") && <p className="mt-1 text-xs text-red-600">{fieldError("BecameDate")}</p>}
+          <input type="date" value={value.becameDate} onChange={(e) => onChange({ becameDate: e.target.value })} onBlur={() => setTouched({ [tk("becameDate")]: true })} className={inputCls("becameDate")} />
+          {fieldError("becameDate") && <p className="mt-1 text-xs text-red-600">{fieldError("becameDate")}</p>}
         </div>
       </div>
 
@@ -582,9 +633,9 @@ function PersonFields({
             <div className="min-w-0">
               <p className="text-sm text-slate-700">{t("idDocLabel")} <span className="text-red-500">*</span></p>
               <p className="text-xs text-slate-400 mt-0.5">{t("idDocHint")}</p>
-              {idDocs.length > 0 ? (
+              {value.idDocs.length > 0 ? (
                 <ul className="mt-1 space-y-0.5">
-                  {idDocs.map((d, i) => (
+                  {value.idDocs.map((d, i) => (
                     <li key={i} className="flex items-center gap-1 text-xs text-slate-500">
                       {d.url ? (
                         <a href={d.url} target="_blank" rel="noreferrer" className="truncate text-blue-500 hover:text-blue-700 hover:underline" title={t("preview")}>
@@ -598,7 +649,7 @@ function PersonFields({
                           <Eye className="h-3 w-3" />
                         </a>
                       )}
-                      <button type="button" onClick={() => setIdDocs((p) => p.filter((_, idx) => idx !== i))} className="ml-1 text-red-400 hover:text-red-600"><X className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => onChange({ idDocs: value.idDocs.filter((_, idx) => idx !== i) })} className="ml-1 text-red-400 hover:text-red-600"><X className="h-3 w-3" /></button>
                     </li>
                   ))}
                 </ul>
@@ -610,7 +661,7 @@ function PersonFields({
           <label className="inline-flex items-center gap-1.5 cursor-pointer flex-shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
             <Paperclip className="h-3.5 w-3.5" />
             {t("attach")}
-            <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setIdDocs((p) => [...p, { name: f.name, url: URL.createObjectURL(f), file: f }]); } e.target.value = ""; }} className="hidden" />
+            <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange({ idDocs: [...value.idDocs, { name: f.name, url: URL.createObjectURL(f), file: f }] }); e.target.value = ""; }} className="hidden" />
           </label>
         </div>
       </div>
@@ -618,48 +669,352 @@ function PersonFields({
   );
 }
 
-// Every form field of a wizard step (the per-section update pages check
-// these for changes). idType/shIdType are UI-only and never saved.
-const SECTION_FIELDS: Record<number, (keyof FormData)[]> = (() => {
-  const keys = (Object.keys(EMPTY) as (keyof FormData)[]).filter((k) => k !== "idType" && k !== "shIdType");
-  const stepOf = (k: string) =>
-    k.startsWith("company") || k.startsWith("registration") ? 1 : k.startsWith("sh") ? 2 : k === "agreementDate" ? 4 : 3;
-  return { 1: keys.filter((k) => stepOf(k) === 1), 2: keys.filter((k) => stepOf(k) === 2), 3: keys.filter((k) => stepOf(k) === 3), 4: keys.filter((k) => stepOf(k) === 4) };
-})();
+function AgreementFields({
+  t,
+  idPrefix,
+  value,
+  onChange,
+  touched,
+  setTouched,
+}: {
+  t: ReturnType<typeof useTranslations>;
+  idPrefix: string;
+  value: AgreementEntryUI;
+  onChange: (patch: Partial<AgreementEntryUI>) => void;
+  touched: Record<string, boolean>;
+  setTouched: (patch: Record<string, boolean>) => void;
+}) {
+  const tk = (f: string) => `${idPrefix}.${f}`;
+  const dateError = !value.agreementDate && touched[tk("agreementDate")] ? t("required") : "";
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm text-slate-700">{t("shareholderContractLabel")} <span className="text-red-500">*</span></p>
+            <p className="text-xs text-slate-400 mt-0.5">{t("supportingDocHint")}</p>
+            {value.contractDocs.length > 0 ? (
+              <ul className="mt-1 space-y-0.5">
+                {value.contractDocs.map((d, i) => (
+                  <li key={i} className="flex items-center gap-1 text-xs text-slate-500">
+                    {d.url ? (
+                      <a href={d.url} target="_blank" rel="noreferrer" className="truncate text-blue-500 hover:text-blue-700 hover:underline" title={t("preview")}>{d.name}</a>
+                    ) : (
+                      <span className="truncate">{d.name}</span>
+                    )}
+                    {d.url && <a href={d.url} target="_blank" rel="noreferrer" className="ml-1 text-blue-500 hover:text-blue-700" title={t("preview")}><Eye className="h-3 w-3" /></a>}
+                    <button type="button" onClick={() => onChange({ contractDocs: value.contractDocs.filter((_, idx) => idx !== i) })} className="ml-1 text-red-400 hover:text-red-600"><X className="h-3 w-3" /></button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-1 text-xs text-red-600">{t("requiredDoc")}</p>
+            )}
+          </div>
+        </div>
+        <label className="inline-flex items-center gap-1.5 cursor-pointer flex-shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+          <Paperclip className="h-3.5 w-3.5" />
+          {t("attach")}
+          <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange({ contractDocs: [...value.contractDocs, { name: f.name, url: URL.createObjectURL(f), file: f }] }); e.target.value = ""; }} className="hidden" />
+        </label>
+      </div>
 
-type SectionDocs = {
-  shPhotoDocId: number | null; shPhotoFile: File | null; shIdDocs: UploadedDoc[];
-  ownerPhotoDocId: number | null; ownerPhotoFile: File | null; ownerIdDocs: UploadedDoc[];
-  shareholderContractDocs: UploadedDoc[]; supportingDocs: UploadedDoc[];
-};
+      <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm text-slate-700">{t("otherDocsLabel")}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{t("supportingDocHint")}</p>
+            {value.supportingDocs.length > 0 && (
+              <ul className="mt-1 space-y-0.5">
+                {value.supportingDocs.map((d, i) => (
+                  <li key={i} className="flex items-center gap-1 text-xs text-slate-500">
+                    {d.url ? (
+                      <a href={d.url} target="_blank" rel="noreferrer" className="truncate text-blue-500 hover:text-blue-700 hover:underline" title={t("preview")}>{d.name}</a>
+                    ) : (
+                      <span className="truncate">{d.name}</span>
+                    )}
+                    {d.url && <a href={d.url} target="_blank" rel="noreferrer" className="ml-1 text-blue-500 hover:text-blue-700" title={t("preview")}><Eye className="h-3 w-3" /></a>}
+                    <button type="button" onClick={() => onChange({ supportingDocs: value.supportingDocs.filter((_, idx) => idx !== i) })} className="ml-1 text-red-400 hover:text-red-600"><X className="h-3 w-3" /></button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+        <label className="inline-flex items-center gap-1.5 cursor-pointer flex-shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+          <Paperclip className="h-3.5 w-3.5" />
+          {t("attach")}
+          <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange({ supportingDocs: [...value.supportingDocs, { name: f.name, url: URL.createObjectURL(f), file: f }] }); e.target.value = ""; }} className="hidden" />
+        </label>
+      </div>
 
-// A comparable key for a step's uploads: saved document ids, plus any
-// not-yet-uploaded files.
-function sectionDocsKey(step: number, d: SectionDocs): string {
-  const ids = (docs: UploadedDoc[]) => docs.map((doc) => doc.documentId ?? `new:${doc.name}`).sort().join(",");
-  const photo = (id: number | null, file: File | null) => (file ? `new:${file.name}` : String(id ?? ""));
-  if (step === 2) return `${photo(d.shPhotoDocId, d.shPhotoFile)}|${ids(d.shIdDocs)}`;
-  if (step === 3) return `${photo(d.ownerPhotoDocId, d.ownerPhotoFile)}|${ids(d.ownerIdDocs)}`;
-  if (step === 4) return `${ids(d.shareholderContractDocs)}|${ids(d.supportingDocs)}`;
-  return "";
+      <div>
+        <div className="inline-flex flex-col w-full sm:w-auto">
+          <label className="block text-sm font-medium text-slate-700 mb-1 whitespace-nowrap">{t("agreementDate")} <span className="text-red-500">*</span></label>
+          <input type="date" value={value.agreementDate} onChange={(e) => onChange({ agreementDate: e.target.value })} onBlur={() => setTouched({ [tk("agreementDate")]: true })} className={cn("w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-full", dateError ? "border-red-400" : "border-slate-300")} />
+          {dateError && <p className="mt-1 text-xs text-red-600">{dateError}</p>}
+        </div>
+      </div>
+
+      <div className="pt-2 border-t border-slate-200">
+        <label className="flex items-start gap-3 cursor-pointer pt-4">
+          <input
+            type="checkbox"
+            checked={value.consentAgreed}
+            onChange={(e) => { onChange({ consentAgreed: e.target.checked }); setTouched({ [tk("consentAgreed")]: true }); }}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500 accent-blue-600"
+          />
+          <span className="text-sm text-slate-700">{t("consentText")}</span>
+        </label>
+        {touched[tk("consentAgreed")] && !value.consentAgreed && (
+          <p className="mt-2 text-xs text-red-600">{t("consentRequired")}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GroupHeader({ title, onAdd, addLabel }: { title: string; onAdd?: () => void; addLabel?: string }) {
+  return (
+    <div className="flex items-center justify-between border-t border-slate-200 pt-5 first:border-t-0 first:pt-0">
+      <p className="text-sm font-bold text-blue-700 uppercase tracking-wide">{title}</p>
+      {onAdd && (
+        <button type="button" onClick={onAdd} className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors">
+          <Plus className="h-3.5 w-3.5" />
+          {addLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function EntryCard({ index, onRemove, removeLabel, canRemove, children }: { index: number; onRemove: () => void; removeLabel: string; canRemove: boolean; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-blue-100 px-2 text-xs font-semibold text-blue-700">{index + 1}</span>
+        {canRemove && (
+          <button type="button" onClick={onRemove} className="inline-flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700">
+            <Trash2 className="h-3.5 w-3.5" />
+            {removeLabel}
+          </button>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// A single-entry group's card (no index badge / remove button) — used for the
+// per-set panels below, where "add another" happens at the whole-set (tab)
+// level rather than per group.
+function PlainCard({ children }: { children: React.ReactNode }) {
+  return <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 space-y-4">{children}</div>;
+}
+
+// Every DTO-relevant scalar field of one repeatable entry, used both to build
+// the API payload and to diff against a loaded snapshot (sectionOnly mode).
+function toApiPerson(e: PersonEntry) {
+  return {
+    ...(e.id ? { id: e.id } : {}),
+    lastNameKh: e.lastNameKh || undefined,
+    firstNameKh: e.firstNameKh || undefined,
+    lastNameEn: e.lastNameEn,
+    firstNameEn: e.firstNameEn,
+    dob: e.dob,
+    becameDate: e.becameDate,
+    nationality: e.nationality,
+    gender: e.gender,
+    idCard: e.idCard || undefined,
+    idIssuedDate: e.idIssuedDate || undefined,
+    idExpiredDate: e.idExpiredDate || undefined,
+    email: e.email || undefined,
+    phone: e.phone || undefined,
+  };
+}
+function toApiOwner(e: OwnerEntry) {
+  return { ...toApiPerson(e), shareAmount: e.shareAmount };
+}
+function toApiAgreement(a: AgreementEntryUI) {
+  return {
+    ...(a.id ? { id: a.id } : {}),
+    agreementDate: a.agreementDate || undefined,
+    consentAgreed: a.consentAgreed,
+  };
+}
+
+// Step 3 — read-only summary of everything entered, shown before the request
+// can be submitted.
+function previewDate(value: string): string {
+  const [y, m, d] = value.split("-");
+  return y && m && d ? `${d}-${m}-${y}` : "-";
+}
+
+function PreviewField({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div>
+      <p className="text-xs text-slate-500 mb-0.5">{label}</p>
+      <p className="text-sm font-medium text-slate-800 break-words">{value || "-"}</p>
+    </div>
+  );
+}
+
+function PreviewDocs({ label, docs }: { label: string; docs: UploadedDoc[] }) {
+  return (
+    <div>
+      <p className="text-xs text-slate-500 mb-1">{label}</p>
+      {docs.length === 0 ? (
+        <p className="text-sm font-medium text-slate-800">-</p>
+      ) : (
+        <ul className="space-y-1">
+          {docs.map((d, i) => (
+            <li key={`${d.name}-${i}`} className="flex items-center gap-1.5 text-sm text-slate-800 min-w-0">
+              <FileText className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
+              {d.url ? (
+                <a href={d.url} target="_blank" rel="noreferrer" className="truncate text-blue-600 hover:underline">{d.name}</a>
+              ) : (
+                <span className="truncate">{d.name}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function PreviewPerson({
+  t,
+  title,
+  becameLabel,
+  person,
+  shareAmount,
+}: {
+  t: ReturnType<typeof useTranslations>;
+  title: string;
+  becameLabel: string;
+  person: PersonEntry;
+  shareAmount?: string;
+}) {
+  return (
+    <div>
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-3">{title}</h4>
+      <div className="flex items-start gap-6">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <PreviewField label={t("lastNameKh")} value={person.lastNameKh} />
+          <PreviewField label={t("firstNameKh")} value={person.firstNameKh} />
+          <PreviewField label={t("dob")} value={previewDate(person.dob)} />
+          <PreviewField label={t("lastNameEn")} value={person.lastNameEn} />
+          <PreviewField label={t("firstNameEn")} value={person.firstNameEn} />
+          <PreviewField label={t("gender")} value={person.gender === "M" ? t("genderMale") : person.gender === "F" ? t("genderFemale") : ""} />
+          <PreviewField label={t("nationality")} value={COUNTRIES.find((c) => c.code === person.nationality)?.name ?? person.nationality} />
+          <PreviewField label={person.idType === "PASSPORT" ? t("idTypePassport") : t("idTypeId")} value={person.idCard} />
+          <PreviewField label={becameLabel} value={previewDate(person.becameDate)} />
+          <PreviewField label={t("issueDate")} value={previewDate(person.idIssuedDate)} />
+          <PreviewField label={t("expiryDate")} value={previewDate(person.idExpiredDate)} />
+          <PreviewField label={t("phone")} value={person.phone} />
+          <PreviewField label={t("email")} value={person.email} />
+          {shareAmount !== undefined && <PreviewField label={t("shareAmount")} value={shareAmount} />}
+          <PreviewDocs label={t("idDocLabel")} docs={person.idDocs} />
+        </div>
+        <div className="flex-shrink-0 w-28 h-36 border-2 border-blue-300 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center">
+          {person.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={person.photo} alt={person.photoName ?? "photo"} className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-xs text-slate-400">-</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RequestPreview({
+  t,
+  company,
+  nominees,
+  owners,
+  agreements,
+}: {
+  t: ReturnType<typeof useTranslations>;
+  company: CompanyData;
+  nominees: PersonEntry[];
+  owners: OwnerEntry[];
+  agreements: AgreementEntryUI[];
+}) {
+  const address = [company.companyHouse, company.companyStreet, company.companyVillage, company.companyCommune, company.companyDistrict, company.companyProvince]
+    .filter(Boolean)
+    .join(", ");
+  return (
+    <div className="space-y-6">
+      <p className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">{t("previewHint")}</p>
+
+      <section>
+        <h3 className="text-sm font-semibold text-slate-700 border-b border-slate-200 pb-2 mb-4">1. {t("step1Title")}</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <PreviewField label={t("companyNameEn")} value={company.companyNameEn} />
+          <PreviewField label={t("companyNameKh")} value={company.companyNameKh} />
+          <PreviewField label={t("registrationNo")} value={company.registrationNo} />
+          <PreviewField label={t("registrationDate")} value={previewDate(company.registrationDate)} />
+          <PreviewField label={t("addressLabel")} value={address} />
+          <PreviewField label={t("companyPhone")} value={company.companyPhone} />
+          <PreviewField label={t("companyOfficePhone")} value={company.companyOfficePhone} />
+          <PreviewField label={t("companyEmail")} value={company.companyEmail} />
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-sm font-semibold text-slate-700 border-b border-slate-200 pb-2 mb-4">2. {t("step2CombinedTitle")}</h3>
+        <div className="space-y-6">
+          {nominees.map((nominee, i) => {
+            const owner = owners[i];
+            const agreement = agreements[i];
+            return (
+              <div key={nominee.localKey} className="rounded-xl border border-slate-200 p-4 space-y-5">
+                {nominees.length > 1 && (
+                  <p className="text-sm font-semibold text-slate-700">{t("agreementTabTitle", { number: i + 1 })}</p>
+                )}
+                <PreviewPerson t={t} title={t("nomineeGroupTitle")} becameLabel={t("shBecameDate")} person={nominee} />
+                {owner && (
+                  <PreviewPerson t={t} title={t("ownerGroupTitle")} becameLabel={t("becameDate")} person={owner} shareAmount={owner.shareAmount} />
+                )}
+                {agreement && (
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-3">{t("agreementGroupTitle")}</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <PreviewField label={t("agreementDate")} value={previewDate(agreement.agreementDate)} />
+                      <PreviewDocs label={t("shareholderContractLabel")} docs={agreement.contractDocs} />
+                      <PreviewDocs label={t("otherDocsLabel")} docs={agreement.supportingDocs} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <p className="flex items-start gap-2 text-sm text-slate-700">
+        <Check className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-600" />
+        {t("consentText")}
+      </p>
+    </div>
+  );
 }
 
 // `sectionOnly` (1-4): the detail page's per-section "Request To Update"
-// buttons open just that step, without the step tabs or Previous/Next. The
-// full request is still loaded and saved, so the payload stays complete.
+// buttons open just that step, without the step tabs or Previous/Next. Steps
+// 2/3/4 all live inside the merged Section 2 panel; `sectionOnly` there
+// restricts which one of the three repeatable groups is shown.
 export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId?: string; sectionOnly?: number } = {}) {
   const t = useTranslations("beneficiary.request");
   const router = useRouter();
   const pathname = usePathname() ?? "/en";
   const locale = pathname.split("/")[1] || "en";
 
-  // Item 42: switching language re-mounts this component (the [locale]
-  // route segment changes), which would otherwise wipe in-progress form
-  // state. Persist to sessionStorage (same tab/session only) and restore via
-  // lazy state initializers so a language switch doesn't lose what the user
-  // typed. For a brand-new (non-edit) request this is the full initial
-  // state; for an edit it's merged over the fetched record once that loads
-  // (see loadExisting below).
   const storageKey = `beneficiary-request-draft:${editId ?? "new"}`;
   const clearPersisted = () => {
     try {
@@ -674,88 +1029,88 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
   // access to it), causing a hydration mismatch. So every field below starts
   // at its plain server-safe default and the persisted draft, if any, is
   // applied in an effect after mount instead (see the restore effect below).
-  const [form, setForm] = useState<FormData>(EMPTY);
-  const [ownerPhotoDocId, setOwnerPhotoDocId] = useState<number | null>(null);
-  const [ownerPhoto, setOwnerPhoto] = useState<string | null>(null);
-  const [ownerPhotoFile, setOwnerPhotoFile] = useState<File | null>(null);
-  const [ownerPhotoName, setOwnerPhotoName] = useState<string | null>(null);
-  const [ownerIdDocs, setOwnerIdDocs] = useState<UploadedDoc[]>([]);
-  const [shPhotoDocId, setShPhotoDocId] = useState<number | null>(null);
-  const [shPhoto, setShPhoto] = useState<string | null>(null);
-  const [shPhotoFile, setShPhotoFile] = useState<File | null>(null);
-  const [shPhotoName, setShPhotoName] = useState<string | null>(null);
-  const [shIdDocs, setShIdDocs] = useState<UploadedDoc[]>([]);
-  const [supportingDocs, setSupportingDocs] = useState<UploadedDoc[]>([]);
-  const [shareholderContractDocs, setShareholderContractDocs] = useState<UploadedDoc[]>([]);
+  const [company, setCompany] = useState<CompanyData>(EMPTY_COMPANY);
+  const [nominees, setNominees] = useState<PersonEntry[]>([emptyPerson()]);
+  const [owners, setOwners] = useState<OwnerEntry[]>([emptyOwner()]);
+  const [agreements, setAgreements] = useState<AgreementEntryUI[]>([emptyAgreement()]);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [consentAgreed, setConsentAgreed] = useState(false);
-  const [consentTouched, setConsentTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!editId);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [notAllowed, setNotAllowed] = useState(false);
-  const [activeStep, setActiveStep] = useState(sectionOnly ?? 1);
+  const [activeStep, setActiveStep] = useState(sectionOnly ? (sectionOnly === 1 ? 1 : 2) : 1);
+  // Which "Agreement N" set is shown inside the (always single) "2. Nominee
+  // Shareholder Agreement" tab — a sub-tab bar nested inside that one tab,
+  // not separate top-level tabs.
+  const [activeSetIndex, setActiveSetIndex] = useState(0);
   const [draftRestored, setDraftRestored] = useState(!editId ? false : true);
   const [returnReason, setReturnReason] = useState<string | null>(null);
   const [returnSteps, setReturnSteps] = useState<number[]>([]);
-  const [flaggedFields, setFlaggedFields] = useState<string[]>([]);
-  const [originalFlaggedValues, setOriginalFlaggedValues] = useState<Record<string, string>>({});
-  // Approved values of the section being updated (sectionOnly mode), to
-  // refuse an update that changes nothing.
-  const [originalSection, setOriginalSection] = useState<{ form: FormData; docsKey: string } | null>(null);
-  const [unchangedFields, setUnchangedFields] = useState<string[]>([]);
+  const [companyFlaggedFields, setCompanyFlaggedFields] = useState<string[]>([]);
   const [loadedStatus, setLoadedStatus] = useState<string | null>(null);
+  // Snapshot of the approved section being updated (sectionOnly mode), to
+  // refuse an update that changes nothing.
+  const [originalSection, setOriginalSection] = useState<{
+    company: CompanyData;
+    nominees: ReturnType<typeof toApiPerson>[];
+    owners: ReturnType<typeof toApiOwner>[];
+    agreements: ReturnType<typeof toApiAgreement>[];
+  } | null>(null);
 
-  // Runs once after mount to apply any sessionStorage draft — deferred out of
-  // the useState initializers above so the first client render matches the
-  // server-rendered HTML (see the comment there).
+  const GROUP_BY_STEP: Record<number, "nominee" | "owner" | "agreement"> = { 2: "nominee", 3: "owner", 4: "agreement" };
+  const visibleGroups: ("nominee" | "owner" | "agreement")[] =
+    sectionOnly && sectionOnly !== 1 ? [GROUP_BY_STEP[sectionOnly]] : ["nominee", "owner", "agreement"];
+
+  // Main (non-sectionOnly) flow: the single "2. Nominee Shareholder Agreement"
+  // tab contains a nested sub-tab bar — "Agreement 1", "Agreement 2", ... —
+  // each one a full { nominee, owner, agreement } trio, added/removed
+  // together via "Add More Agreement". The three arrays are always kept the
+  // same length by addSet/removeSet below.
+  const setCount = nominees.length;
+  const isSetValid = (i: number) =>
+    isPersonEntryValid(nominees[i], NOMINEE_REQUIRED, true) &&
+    isPersonEntryValid(owners[i], OWNER_REQUIRED, true) &&
+    isAgreementEntryValid(agreements[i], true);
+  const addSet = () => {
+    setNominees((p) => [...p, emptyPerson()]);
+    setOwners((p) => [...p, emptyOwner()]);
+    setAgreements((p) => [...p, emptyAgreement()]);
+    setActiveSetIndex(setCount);
+  };
+  const removeSet = (i: number) => {
+    setNominees((p) => p.filter((_, idx) => idx !== i));
+    setOwners((p) => p.filter((_, idx) => idx !== i));
+    setAgreements((p) => p.filter((_, idx) => idx !== i));
+    setActiveSetIndex((s) => Math.min(s, Math.max(0, setCount - 2)));
+  };
+
+  // Runs once after mount to apply any sessionStorage draft.
   useEffect(() => {
     if (editId) return;
     const persistedDraft = readPersistedDraft(storageKey);
     if (persistedDraft) {
-      setForm((f) => ({ ...f, ...persistedDraft.form }));
-      setOwnerPhotoDocId(persistedDraft.ownerPhotoDocId ?? null);
-      setOwnerPhoto(persistedDraft.ownerPhotoDocId ? documentDownloadUrl(persistedDraft.ownerPhotoDocId) : null);
-      setOwnerPhotoName(persistedDraft.ownerPhotoName ?? null);
-      setOwnerIdDocs(persistedDraft.ownerIdDocs ?? []);
-      setShPhotoDocId(persistedDraft.shPhotoDocId ?? null);
-      setShPhoto(persistedDraft.shPhotoDocId ? documentDownloadUrl(persistedDraft.shPhotoDocId) : null);
-      setShPhotoName(persistedDraft.shPhotoName ?? null);
-      setShIdDocs(persistedDraft.shIdDocs ?? []);
-      setSupportingDocs(persistedDraft.supportingDocs ?? []);
-      setShareholderContractDocs(persistedDraft.shareholderContractDocs ?? []);
-      setConsentAgreed(!!persistedDraft.consentAgreed);
-      setActiveStep(persistedDraft.activeStep ?? 1);
+      setCompany((c) => ({ ...c, ...persistedDraft.company }));
+      if (persistedDraft.nominees?.length) setNominees(persistedDraft.nominees.map((n) => ({ ...n, photoFile: null })));
+      if (persistedDraft.owners?.length) setOwners(persistedDraft.owners.map((o) => ({ ...o, photoFile: null })));
+      if (persistedDraft.agreements?.length) setAgreements(persistedDraft.agreements);
+      setActiveStep(Math.min(2, persistedDraft.activeStep ?? (sectionOnly ? (sectionOnly === 1 ? 1 : 2) : 1)));
     }
     setDraftRestored(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Keep the persisted snapshot in sync with in-progress edits. `file` is
-  // stripped from doc entries since raw File objects aren't serializable —
-  // only already-uploaded (documentId) or filename/preview info survives.
-  const stripFile = (docs: UploadedDoc[]): PersistedDoc[] =>
-    docs.map((d) => ({ name: d.name, url: d.url, documentId: d.documentId }));
+  // Keep the persisted snapshot in sync with in-progress edits.
+  const stripDoc = (docs: UploadedDoc[]): PersistedDoc[] => docs.map((d) => ({ name: d.name, url: d.url, documentId: d.documentId }));
   useEffect(() => {
-    // Skip persisting until the mount-time draft restore above has settled
-    // (otherwise it would overwrite the just-read draft with the pre-restore
-    // empty defaults), and, for an edit, while the initial fetch is still in
-    // flight (see loadExisting below) for the same reason.
     if (!draftRestored) return;
     if (editId && loading) return;
     try {
       const snapshot: PersistedDraft = {
-        form,
-        ownerPhotoName,
-        shPhotoName,
-        ownerPhotoDocId,
-        shPhotoDocId,
-        ownerIdDocs: stripFile(ownerIdDocs),
-        shIdDocs: stripFile(shIdDocs),
-        shareholderContractDocs: stripFile(shareholderContractDocs),
-        supportingDocs: stripFile(supportingDocs),
-        consentAgreed,
+        company,
+        nominees: nominees.map((n) => ({ ...n, photoFile: undefined, idDocs: stripDoc(n.idDocs) }) as PersistedPerson),
+        owners: owners.map((o) => ({ ...o, photoFile: undefined, idDocs: stripDoc(o.idDocs) }) as PersistedOwner),
+        agreements: agreements.map((a) => ({ ...a, contractDocs: stripDoc(a.contractDocs), supportingDocs: stripDoc(a.supportingDocs) })),
         activeStep,
       };
       sessionStorage.setItem(storageKey, JSON.stringify(snapshot));
@@ -763,11 +1118,16 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
       // ignore (e.g. private browsing storage quota)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form, ownerPhotoName, shPhotoName, ownerPhotoDocId, shPhotoDocId, ownerIdDocs, shIdDocs, shareholderContractDocs, supportingDocs, consentAgreed, activeStep, editId, loading, draftRestored]);
+  }, [company, nominees, owners, agreements, activeStep, editId, loading, draftRestored]);
 
   useEffect(() => {
     if (!editId) return;
     let cancelled = false;
+
+    type ApiDocument = { id: number; category: DocCategory; media: { filename: string }; nomineeShareholderId?: number | null; beneficialOwnerId?: number | null; agreementId?: number | null };
+    type ApiPerson = { id: number; lastNameKh?: string; firstNameKh?: string; lastNameEn: string; firstNameEn: string; dob: string; becameDate: string; nationality: string; gender: string; idCard?: string; idIssuedDate?: string | null; idExpiredDate?: string | null; email?: string; phone?: string };
+    type ApiOwner = ApiPerson & { shareAmount: string };
+    type ApiAgreement = { id: number; agreementDate: string | null; consentAgreed: boolean };
 
     async function loadExisting() {
       try {
@@ -777,12 +1137,8 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
           setLoadError(t("editLoadError"));
           return;
         }
-        const loaded = await res.json();
-        // A saved update to an APPROVED request lives in `pendingUpdate`
-        // (the approved values stay untouched) — edit the draft, not them.
-        const data = loaded.updateStatus === "DRAFTED" && loaded.pendingUpdate
-          ? { ...loaded, ...loaded.pendingUpdate }
-          : loaded;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data: any = await res.json();
         if (
           sectionOnly
             ? data.status !== "APPROVED"
@@ -792,9 +1148,9 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
           return;
         }
         setLoadedStatus(data.status);
-        const dateOnly = (iso: string | null) => (iso ? iso.slice(0, 10) : "");
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const toForm = (data: any): FormData => ({
+        const dateOnly = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) : "");
+
+        const mappedCompany: CompanyData = {
           companyNameKh: data.companyNameKh ?? "", companyNameEn: data.companyNameEn ?? "",
           registrationNo: data.registrationNo ?? "", registrationDate: dateOnly(data.registrationDate),
           companyProvince: data.companyProvince ?? "", companyDistrict: data.companyDistrict ?? "",
@@ -802,53 +1158,53 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
           companyStreet: data.companyStreet ?? "", companyHouse: data.companyHouse ?? "",
           companyPhone: data.companyPhone ?? "", companyOfficePhone: data.companyOfficePhone ?? "",
           companyEmail: data.companyEmail ?? "",
-          lastNameKh: data.ownerLastNameKh ?? "", firstNameKh: data.ownerFirstNameKh ?? "",
-          lastNameEn: data.ownerLastNameEn ?? "", firstNameEn: data.ownerFirstNameEn ?? "",
-          dob: dateOnly(data.ownerDob), becameDate: dateOnly(data.ownerBecameDate), nationality: data.ownerNationality ?? "", gender: data.ownerGender ?? "",
-          // idType/shIdType (ID Card vs Passport) aren't persisted server-side
-          // yet — always resets to "ID" on load, see the note in saveRequest().
-          idType: "ID", idCard: data.ownerIdCard ?? "", idIssuedDate: dateOnly(data.ownerIdIssuedDate), idExpiredDate: dateOnly(data.ownerIdExpiredDate),
-          email: data.ownerEmail ?? "", phone: data.ownerPhone ?? "", shareAmount: data.shareAmount ?? "",
-          shLastNameKh: data.shLastNameKh ?? "", shFirstNameKh: data.shFirstNameKh ?? "",
-          shLastNameEn: data.shLastNameEn ?? "", shFirstNameEn: data.shFirstNameEn ?? "",
-          shDob: dateOnly(data.shDob), shBecameDate: dateOnly(data.shBecameDate), shNationality: data.shNationality ?? "", shGender: data.shGender ?? "",
-          shIdType: "ID", shIdCard: data.shIdCard ?? "", shIdIssuedDate: dateOnly(data.shIdIssuedDate), shIdExpiredDate: dateOnly(data.shIdExpiredDate),
-          shEmail: data.shEmail ?? "", shPhone: data.shPhone ?? "",
-          agreementDate: dateOnly(data.agreementDate),
-        });
-        const mappedForm = toForm(data);
+        };
+
+        const documents = (data.documents ?? []) as ApiDocument[];
+        const toPerson = (e: ApiPerson, photoCat: DocCategory, idCat: DocCategory): PersonEntry => {
+          const idDocs = documents
+            .filter((d) => d.category === idCat && (photoCat === "SH_PHOTO" ? d.nomineeShareholderId === e.id : d.beneficialOwnerId === e.id))
+            .map((d) => ({ name: d.media.filename, documentId: d.id, url: documentDownloadUrl(d.id) }));
+          const photoDoc = documents.find((d) => d.category === photoCat && (photoCat === "SH_PHOTO" ? d.nomineeShareholderId === e.id : d.beneficialOwnerId === e.id));
+          return {
+            localKey: `p-${e.id}`,
+            id: e.id,
+            lastNameKh: e.lastNameKh ?? "", firstNameKh: e.firstNameKh ?? "",
+            lastNameEn: e.lastNameEn ?? "", firstNameEn: e.firstNameEn ?? "",
+            dob: dateOnly(e.dob), becameDate: dateOnly(e.becameDate), nationality: e.nationality ?? "", gender: e.gender ?? "",
+            idType: "ID", idCard: e.idCard ?? "", idIssuedDate: dateOnly(e.idIssuedDate), idExpiredDate: dateOnly(e.idExpiredDate),
+            email: e.email ?? "", phone: e.phone ?? "",
+            photoDocId: photoDoc?.id ?? null, photo: photoDoc ? documentDownloadUrl(photoDoc.id) : null, photoFile: null, photoName: photoDoc?.media.filename ?? null,
+            idDocs,
+          };
+        };
+        const mappedNominees: PersonEntry[] = ((data.nomineeShareholders ?? []) as ApiPerson[]).map((e) => toPerson(e, "SH_PHOTO", "SH_ID_DOC"));
+        const mappedOwners: OwnerEntry[] = ((data.beneficialOwners ?? []) as ApiOwner[]).map((e) => ({ ...toPerson(e, "OWNER_PHOTO", "OWNER_ID_DOC"), shareAmount: e.shareAmount ?? "" }));
+        const mappedAgreements: AgreementEntryUI[] = ((data.agreements ?? []) as ApiAgreement[]).map((a) => ({
+          localKey: `a-${a.id}`,
+          id: a.id,
+          agreementDate: dateOnly(a.agreementDate),
+          consentAgreed: !!a.consentAgreed,
+          contractDocs: documents.filter((d) => d.category === "SHAREHOLDER_CONTRACT" && d.agreementId === a.id).map((d) => ({ name: d.media.filename, documentId: d.id, url: documentDownloadUrl(d.id) })),
+          supportingDocs: documents.filter((d) => d.category === "OTHER" && d.agreementId === a.id).map((d) => ({ name: d.media.filename, documentId: d.id, url: documentDownloadUrl(d.id) })),
+        }));
+
         if (data.status === "RETURNED" && data.rejectionReason) {
           setReturnReason(data.rejectionReason);
-          const { fields, steps } = guessFieldsFromReason(data.rejectionReason);
+          const steps = guessReturnSteps(data.rejectionReason);
           setReturnSteps(steps);
           if (steps.length > 0) {
-            setActiveStep(steps[0]);
-            setFlaggedFields(fields);
-            const snapshot: Record<string, string> = {};
-            fields.forEach((f) => { snapshot[f] = mappedForm[f as keyof FormData] ?? ""; });
-            setOriginalFlaggedValues(snapshot);
+            setActiveStep(steps[0] === 1 ? 1 : 2);
+            if (steps.includes(1)) setCompanyFlaggedFields(guessCompanyFlaggedFields(data.rejectionReason));
           }
         }
-        // Real uploaded documents (item 39) — grouped by category into the
-        // same shape the wizard already works with, using the authenticated
-        // download proxy as `url` so photos/previews render immediately.
-        type ApiDocument = { id: number; category: DocCategory; media: { filename: string } };
-        const documents = (data.documents ?? []) as ApiDocument[];
-        const byCategory = (cat: DocCategory) =>
-          documents
-            .filter((d) => d.category === cat)
-            .map((d) => ({ name: d.media.filename, documentId: d.id, url: documentDownloadUrl(d.id) }));
-        const shPhotoDoc = byCategory("SH_PHOTO")[0];
-        const ownerPhotoDoc = byCategory("OWNER_PHOTO")[0];
+
         if (sectionOnly) {
-          // `loaded`, not `data`: an update draft's values already count as changes.
           setOriginalSection({
-            form: toForm(loaded),
-            docsKey: sectionDocsKey(sectionOnly, {
-              shPhotoDocId: shPhotoDoc?.documentId ?? null, shPhotoFile: null, shIdDocs: byCategory("SH_ID_DOC"),
-              ownerPhotoDocId: ownerPhotoDoc?.documentId ?? null, ownerPhotoFile: null, ownerIdDocs: byCategory("OWNER_ID_DOC"),
-              shareholderContractDocs: byCategory("SHAREHOLDER_CONTRACT"), supportingDocs: byCategory("OTHER"),
-            }),
+            company: mappedCompany,
+            nominees: mappedNominees.map(toApiPerson),
+            owners: mappedOwners.map(toApiOwner),
+            agreements: mappedAgreements.map(toApiAgreement),
           });
         }
 
@@ -856,19 +1212,11 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
         // in-progress (unsaved) edits over the freshly-fetched server data
         // (item 42).
         const saved = readPersistedDraft(storageKey);
-        setForm(saved ? { ...mappedForm, ...saved.form } : mappedForm);
-        setOwnerPhotoName((saved ? saved.ownerPhotoName : ownerPhotoDoc?.name) ?? null);
-        setOwnerPhotoDocId(saved ? saved.ownerPhotoDocId : (ownerPhotoDoc?.documentId ?? null));
-        setOwnerPhoto(saved?.ownerPhotoDocId ? documentDownloadUrl(saved.ownerPhotoDocId) : (ownerPhotoDoc ? ownerPhotoDoc.url : null));
-        setShPhotoName((saved ? saved.shPhotoName : shPhotoDoc?.name) ?? null);
-        setShPhotoDocId(saved ? saved.shPhotoDocId : (shPhotoDoc?.documentId ?? null));
-        setShPhoto(saved?.shPhotoDocId ? documentDownloadUrl(saved.shPhotoDocId) : (shPhotoDoc ? shPhotoDoc.url : null));
-        setOwnerIdDocs(saved?.ownerIdDocs ?? byCategory("OWNER_ID_DOC"));
-        setShIdDocs(saved?.shIdDocs ?? byCategory("SH_ID_DOC"));
-        setShareholderContractDocs(saved?.shareholderContractDocs ?? byCategory("SHAREHOLDER_CONTRACT"));
-        setSupportingDocs(saved?.supportingDocs ?? byCategory("OTHER"));
-        setConsentAgreed(saved ? !!saved.consentAgreed : !!data.consentAgreed);
-        if (saved?.activeStep && !sectionOnly) setActiveStep(saved.activeStep);
+        setCompany(saved ? { ...mappedCompany, ...saved.company } : mappedCompany);
+        setNominees(saved?.nominees?.length ? saved.nominees.map((n) => ({ ...n, photoFile: null })) : mappedNominees.length ? mappedNominees : [emptyPerson()]);
+        setOwners(saved?.owners?.length ? saved.owners.map((o) => ({ ...o, photoFile: null })) : mappedOwners.length ? mappedOwners : [emptyOwner()]);
+        setAgreements(saved?.agreements?.length ? saved.agreements : mappedAgreements.length ? mappedAgreements : [emptyAgreement()]);
+        if (saved?.activeStep && !sectionOnly) setActiveStep(Math.min(2, saved.activeStep));
       } catch {
         if (!cancelled) setLoadError(t("editLoadError"));
       } finally {
@@ -883,185 +1231,158 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
-  const clearResolvedUnchangedFields = (patch: Record<string, string>) => {
-    if (unchangedFields.length === 0) return;
-    const resolved = Object.keys(patch).filter((k) => unchangedFields.includes(k) && patch[k] !== originalFlaggedValues[k]);
-    if (resolved.length > 0) setUnchangedFields((prev) => prev.filter((f) => !resolved.includes(f)));
-  };
-  const set = (patch: Partial<FormData>) => {
-    clearResolvedUnchangedFields(patch as Record<string, string>);
-    setForm((p) => ({ ...p, ...patch }));
-  };
-  const setAny = (patch: Record<string, string>) => {
-    clearResolvedUnchangedFields(patch);
-    setForm((p) => ({ ...p, ...patch }));
-  };
+  const setCompanyPatch = (patch: Partial<CompanyData>) => setCompany((p) => ({ ...p, ...patch }));
   const setTouchedPatch = (patch: Record<string, boolean>) => setTouched((p) => ({ ...p, ...patch }));
 
+  const patchEntry = <T,>(setList: React.Dispatch<React.SetStateAction<T[]>>, idx: number, patch: Partial<T>) =>
+    setList((prev) => prev.map((e, i) => (i === idx ? { ...e, ...patch } : e)));
+
+  // Fills the company step and every agreement set with fake data. A new
+  // request is topped up to two sets, so the multi-agreement flow gets
+  // exercised; existing sets are filled in place and never dropped, which
+  // would leave `activeSetIndex` pointing at a tab that no longer exists.
   const fillFakeData = () => {
-    const fake = generateFakeFormData();
-    setForm(fake);
-    setOwnerPhoto(FAKE_PROFILE_PHOTO);
-    setOwnerPhotoName("profile-manager.jpg");
-    setShPhoto(FAKE_PROFILE_PHOTO);
-    setShPhotoName("profile-manager.jpg");
-    const ownerIdFile = makeFakePdfFile(FAKE_ID_DOC_NAME);
-    const shIdFile = makeFakePdfFile(FAKE_ID_DOC_NAME);
-    const contractFile = makeFakePdfFile(FAKE_CONTRACT_DOC_NAME);
-    const otherFile = makeFakePdfFile(FAKE_OTHER_DOC_NAME);
-    setOwnerIdDocs([{ name: ownerIdFile.name, url: URL.createObjectURL(ownerIdFile), file: ownerIdFile }]);
-    setShIdDocs([{ name: shIdFile.name, url: URL.createObjectURL(shIdFile), file: shIdFile }]);
-    setShareholderContractDocs([{ name: contractFile.name, url: URL.createObjectURL(contractFile), file: contractFile }]);
-    setSupportingDocs([{ name: otherFile.name, url: URL.createObjectURL(otherFile), file: otherFile }]);
-    setConsentAgreed(true);
+    const fakeDoc = (name: string): UploadedDoc => {
+      const file = makeFakePdfFile(name);
+      return { name: file.name, url: URL.createObjectURL(file), file };
+    };
+    const fakePerson = () => ({
+      ...fakePersonFields(),
+      idType: "ID" as const,
+      photo: FAKE_PROFILE_PHOTO,
+      photoName: "profile-manager.jpg",
+      photoFile: null,
+      photoDocId: null,
+      idDocs: [fakeDoc(FAKE_ID_DOC_NAME)],
+    });
+    const fillSets = <T,>(make: () => T, fake: () => Partial<T>) => (prev: T[]) => {
+      const count = Math.max(prev.length, editId ? 1 : 2);
+      return Array.from({ length: count }, (_, i) => ({ ...(prev[i] ?? make()), ...fake() }));
+    };
+
+    setCompany(generateFakeCompany());
+    setNominees(fillSets<PersonEntry>(emptyPerson, fakePerson));
+    setOwners(
+      fillSets<OwnerEntry>(emptyOwner, () => ({ ...fakePerson(), shareAmount: String(Math.floor(Math.random() * 9000) + 1000) })),
+    );
+    setAgreements(
+      fillSets<AgreementEntryUI>(emptyAgreement, () => ({
+        agreementDate: randomDateBetween(2024, 2026),
+        consentAgreed: true,
+        contractDocs: [fakeDoc(FAKE_CONTRACT_DOC_NAME)],
+        supportingDocs: [fakeDoc(FAKE_OTHER_DOC_NAME)],
+      })),
+    );
+    // The photo file is attached once loaded, so a slow request can't hold up
+    // the fill itself; skipped where the user has swapped the photo meanwhile.
+    void loadFakePhotoFile().then((photoFile) => {
+      if (!photoFile) return;
+      const attach = <T extends PersonEntry>(entries: T[]) =>
+        entries.map((e) => (e.photo === FAKE_PROFILE_PHOTO && !e.photoFile ? { ...e, photoFile } : e));
+      setNominees(attach);
+      setOwners(attach);
+    });
   };
 
-  const STEP_OF_FIELD: Record<string, number> = {
-    companyNameEn: 1, registrationNo: 1, registrationDate: 1,
-    companyProvince: 1, companyDistrict: 1, companyCommune: 1, companyVillage: 1, companyStreet: 1, companyHouse: 1,
-    companyPhone: 1, companyEmail: 1,
-    shLastNameEn: 2, shFirstNameEn: 2, shDob: 2, shBecameDate: 2, shNationality: 2, shGender: 2,
-    lastNameEn: 3, firstNameEn: 3, dob: 3, becameDate: 3, nationality: 3, gender: 3, shareAmount: 3,
-    agreementDate: 4,
+  const companyFieldError = (key: keyof CompanyData) => {
+    if (!touched[key]) return "";
+    const val = company[key];
+    if (!val) return t("required");
+    if ((key === "companyPhone" || key === "companyOfficePhone") && !isValidPhone(val)) return t("invalidPhone");
+    return "";
   };
+  const companyInputCls = (key: keyof CompanyData) =>
+    cn(
+      "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+      companyFieldError(key)
+        ? "border-red-400"
+        : companyFlaggedFields.includes(key)
+        ? "border-orange-400 ring-2 ring-orange-100"
+        : "border-slate-300",
+    );
 
-  const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = Object.entries(STEP_OF_FIELD).reduce(
-    (acc, [field, step]) => {
-      acc[step] = acc[step] ?? [];
-      acc[step].push(field as keyof FormData);
-      return acc;
-    },
-    {} as Record<number, (keyof FormData)[]>
-  );
+  const isCompanyStepComplete =
+    COMPANY_REQUIRED.every((k) => !!company[k]) && isValidPhone(company.companyPhone) && isValidPhone(company.companyOfficePhone);
 
-  // Extra per-step validation beyond "is this field non-empty": name
-  // character sets, date rules, phone format, and required uploads
-  // (items 30-33). Feeds both the stepper/Next-button gating and the
-  // final submit-time check below.
-  const stepExtraValid = (step: number): boolean => {
-    if (step === 1) {
-      return isValidPhone(form.companyPhone) && isValidPhone(form.companyOfficePhone);
+  const isSectionTwoComplete = () => {
+    if (sectionOnly && sectionOnly !== 1) {
+      const nomineesOk = (visibleGroups.includes("nominee") ? nominees.length > 0 && nominees.every((n) => isPersonEntryValid(n, NOMINEE_REQUIRED, true)) : true);
+      const ownersOk = (visibleGroups.includes("owner") ? owners.length > 0 && owners.every((o) => isPersonEntryValid(o, OWNER_REQUIRED, true)) : true);
+      const agreementsOk = (visibleGroups.includes("agreement") ? agreements.length > 0 && agreements.every((a) => isAgreementEntryValid(a, true)) : true);
+      return nomineesOk && ownersOk && agreementsOk;
     }
-    if (step === 2) {
-      return (
-        isValidKhmerName(form.shLastNameKh) &&
-        isValidKhmerName(form.shFirstNameKh) &&
-        isValidLatinName(form.shLastNameEn) &&
-        isValidLatinName(form.shFirstNameEn) &&
-        !isFutureDate(form.shDob) &&
-        !isUnder18(form.shDob) &&
-        isValidBecameDate(form.shBecameDate, form.shDob) &&
-        isValidIdDateRange(form.shIdIssuedDate, form.shIdExpiredDate) &&
-        isValidPhone(form.shPhone) &&
-        shIdDocs.length > 0
-      );
-    }
-    if (step === 3) {
-      return (
-        isValidKhmerName(form.lastNameKh) &&
-        isValidKhmerName(form.firstNameKh) &&
-        isValidLatinName(form.lastNameEn) &&
-        isValidLatinName(form.firstNameEn) &&
-        !isFutureDate(form.dob) &&
-        !isUnder18(form.dob) &&
-        isValidBecameDate(form.becameDate, form.dob) &&
-        isValidIdDateRange(form.idIssuedDate, form.idExpiredDate) &&
-        isValidPhone(form.phone) &&
-        ownerIdDocs.length > 0
-      );
-    }
-    if (step === 4) {
-      return shareholderContractDocs.length > 0;
-    }
-    return true;
+    return setCount > 0 && Array.from({ length: setCount }, (_, i) => i).every(isSetValid);
   };
-
-  const isStepComplete = (step: number) =>
-    (STEP_REQUIRED_FIELDS[step] ?? []).every((f) => !!form[f]) && stepExtraValid(step);
 
   // In single-section mode a problem in another step can't be shown on this
   // page, so say so instead of silently switching to a hidden step.
   const focusStep = (step: number) => {
-    if (sectionOnly && step !== sectionOnly) {
+    const target = step === 1 ? 1 : 2;
+    if (sectionOnly && target !== (sectionOnly === 1 ? 1 : 2)) {
       toast.error(t("otherSectionIncomplete", { section: t(`step${step}Title` as "step1Title") }));
       return;
     }
-    setActiveStep(step);
+    if (!sectionOnly && target === 2) {
+      const firstInvalid = Array.from({ length: setCount }, (_, i) => i).find((i) => !isSetValid(i));
+      if (firstInvalid !== undefined) setActiveSetIndex(firstInvalid);
+      setActiveStep(2);
+      return;
+    }
+    setActiveStep(target);
   };
 
   const sectionHasChanges = () => {
     if (!sectionOnly || !originalSection) return true;
-    const fieldChanged = SECTION_FIELDS[sectionOnly].some((k) => form[k] !== originalSection.form[k]);
-    const docsKey = sectionDocsKey(sectionOnly, {
-      shPhotoDocId, shPhotoFile, shIdDocs, ownerPhotoDocId, ownerPhotoFile, ownerIdDocs, shareholderContractDocs, supportingDocs,
-    });
-    return fieldChanged || docsKey !== originalSection.docsKey;
+    if (sectionOnly === 1) return JSON.stringify(company) !== JSON.stringify(originalSection.company);
+    if (sectionOnly === 2) {
+      return (
+        JSON.stringify(nominees.map(toApiPerson)) !== JSON.stringify(originalSection.nominees) ||
+        nominees.some((n) => n.photoFile || n.idDocs.some((d) => d.file))
+      );
+    }
+    if (sectionOnly === 3) {
+      return (
+        JSON.stringify(owners.map(toApiOwner)) !== JSON.stringify(originalSection.owners) ||
+        owners.some((o) => o.photoFile || o.idDocs.some((d) => d.file))
+      );
+    }
+    if (sectionOnly === 4) {
+      return (
+        JSON.stringify(agreements.map(toApiAgreement)) !== JSON.stringify(originalSection.agreements) ||
+        agreements.some((a) => a.contractDocs.some((d) => d.file) || a.supportingDocs.some((d) => d.file))
+      );
+    }
+    return true;
   };
+
+  const isApprovedUpdate = !!editId && loadedStatus === "APPROVED";
 
   const validateAndFocusStep = () => {
     if (!sectionHasChanges()) {
       toast.error(t("noChanges", { section: t(`step${sectionOnly}Title` as "step1Title") }));
       return false;
     }
-    const required: (keyof FormData)[] = [
-      "companyNameEn", "registrationNo", "registrationDate",
-      "companyProvince", "companyDistrict", "companyCommune", "companyVillage", "companyStreet", "companyHouse",
-      "companyPhone", "companyEmail",
-      "lastNameEn", "firstNameEn", "dob", "becameDate", "nationality", "gender", "shareAmount",
-      "shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender",
-      "agreementDate",
-    ];
-    const t2: Record<string, boolean> = {};
-    required.forEach((k) => (t2[k] = true));
-    setTouched(t2);
-    setConsentTouched(true);
-    const missing = required.filter((k) => !form[k]);
-    if (missing.length > 0) {
-      const missingSteps = missing.map((k) => STEP_OF_FIELD[k] ?? 1);
-      focusStep(Math.min(...missingSteps));
+    const companyTouch: Record<string, boolean> = {};
+    COMPANY_REQUIRED.forEach((k) => (companyTouch[k] = true));
+    setTouched((p) => ({ ...p, ...companyTouch }));
+    if (!isCompanyStepComplete) {
+      focusStep(1);
       return false;
     }
-    for (const step of [1, 2, 3, 4]) {
-      if (!stepExtraValid(step)) {
-        focusStep(step);
-        return false;
-      }
-    }
-    if (flaggedFields.length > 0) {
-      const stillUnchanged = flaggedFields.filter((f) => form[f as keyof FormData] === originalFlaggedValues[f]);
-      if (stillUnchanged.length > 0) {
-        setUnchangedFields(stillUnchanged);
-        if (returnSteps.length > 0) focusStep(returnSteps[0]);
-        toast.error(t("unchangedFlaggedFieldError"));
-        return false;
-      }
-    }
-    if (!consentAgreed) {
-      focusStep(4);
+    if (!isSectionTwoComplete()) {
+      focusStep(2);
       return false;
     }
     return true;
   };
 
-  // Updating an already-approved request: "Save Drafted" keeps the edit as a
-  // draft (request stays Approved), only "Request To Update" submits it.
-  const isApprovedUpdate = !!editId && loadedStatus === "APPROVED";
-
-  const saveRequest = async (asDraft = false): Promise<string | null> => {
+  const saveRequest = async (asDraft = false): Promise<{ id: string; detail: Record<string, unknown> } | null> => {
     const url = editId ? `/api/portal/beneficiary/requests/${editId}` : "/api/portal/beneficiary/requests";
-    // Document/photo attachments are no longer sent inline here — they're
-    // real uploads (item 39), handled by uploadPendingDocuments() once we
-    // have a requestId (see handleSaveDraft/handleSubmitRequest below).
-    // idType/shIdType (ID Card vs Passport radio) are UI-only — the API's
-    // BeneficiaryRequestFieldsDto has no matching columns yet, and its
-    // ValidationPipe rejects unknown fields outright, so these must not be
-    // sent.
-    const { idType, shIdType, ...formForApi } = form;
-    void idType;
-    void shIdType;
     const payload = {
-      ...formForApi,
-      consentAgreed,
+      ...company,
+      ...(visibleGroups.includes("nominee") && { nomineeShareholders: nominees.map(toApiPerson) }),
+      ...(visibleGroups.includes("owner") && { beneficialOwners: owners.map(toApiOwner) }),
+      ...(visibleGroups.includes("agreement") && { agreements: agreements.map(toApiAgreement) }),
       ...(editId && { action: asDraft && isApprovedUpdate ? "draft" : "edit" }),
       ...(sectionOnly && isApprovedUpdate && { updateType: UPDATE_TYPE_BY_STEP[sectionOnly] }),
     };
@@ -1080,21 +1401,23 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
     }
 
     const saved = await res.json();
-    return editId ?? saved.id;
+    return { id: String(editId ?? saved.id), detail: saved };
   };
 
-  // Item 39: upload any locally-picked-but-not-yet-uploaded files now that
-  // we have a real requestId to attach them to. Already-uploaded entries
-  // (documentId set) are skipped. Best-effort: a failed attachment doesn't
-  // block the save that just succeeded — it just stays pending and retries
-  // on the next save.
-  const uploadPendingDocuments = async (requestId: string) => {
-    const uploadArray = async (docs: UploadedDoc[], category: DocCategory): Promise<UploadedDoc[]> =>
+  // Item 39: upload any locally-picked-but-not-yet-uploaded files now that we
+  // have a real requestId (and, for Section 2, the entity's own real id) to
+  // attach them to. New entries created via a "Save Drafted" on an already
+  // APPROVED request don't get a real id until the draft is actually
+  // applied/submitted (they live inside pendingUpdate JSON until then), so
+  // their documents can't be tagged yet — the user re-attaches after that
+  // point, matching the constraint of the pendingUpdate design.
+  const uploadPendingDocuments = async (requestId: string, detail: Record<string, unknown>) => {
+    const uploadArray = async (docs: UploadedDoc[], category: DocCategory, entity: UploadEntity): Promise<UploadedDoc[]> =>
       Promise.all(
         docs.map(async (d) => {
           if (!d.file || d.documentId) return d;
           try {
-            const { documentId } = await uploadDocument(requestId, category, d.file);
+            const { documentId } = await uploadDocument(requestId, category, d.file, entity);
             return { name: d.name, documentId, url: documentDownloadUrl(documentId) };
           } catch {
             toast.error(t("submitError"));
@@ -1102,37 +1425,79 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
           }
         }),
       );
-
-    const uploadPhoto = async (
-      file: File | null,
-      category: DocCategory,
-      setDocId: (id: number) => void,
-      setPreviewUrl: (url: string) => void,
-      clearFile: () => void,
-    ) => {
-      if (!file) return;
+    const uploadPhoto = async (file: File | null, category: DocCategory, entity: UploadEntity) => {
+      if (!file) return null;
       try {
-        const { documentId } = await uploadDocument(requestId, category, file);
-        setDocId(documentId);
-        setPreviewUrl(documentDownloadUrl(documentId));
-        clearFile();
+        const { documentId } = await uploadDocument(requestId, category, file, entity);
+        return { photoDocId: documentId, photo: documentDownloadUrl(documentId), photoFile: null as File | null };
       } catch {
         toast.error(t("submitError"));
+        return null;
       }
     };
 
-    const [newShIdDocs, newOwnerIdDocs, newContractDocs, newOtherDocs] = await Promise.all([
-      uploadArray(shIdDocs, "SH_ID_DOC"),
-      uploadArray(ownerIdDocs, "OWNER_ID_DOC"),
-      uploadArray(shareholderContractDocs, "SHAREHOLDER_CONTRACT"),
-      uploadArray(supportingDocs, "OTHER"),
-      uploadPhoto(shPhotoFile, "SH_PHOTO", setShPhotoDocId, setShPhoto, () => setShPhotoFile(null)),
-      uploadPhoto(ownerPhotoFile, "OWNER_PHOTO", setOwnerPhotoDocId, setOwnerPhoto, () => setOwnerPhotoFile(null)),
-    ]);
-    setShIdDocs(newShIdDocs);
-    setOwnerIdDocs(newOwnerIdDocs);
-    setShareholderContractDocs(newContractDocs);
-    setSupportingDocs(newOtherDocs);
+    // Everything uploads at once: each file is stored remotely and a single
+    // upload can take many seconds, so one after another the submit crawls.
+    const uploadNominees = async () => {
+      if (!visibleGroups.includes("nominee")) return;
+      const detailNominees = (detail.nomineeShareholders as { id: number }[] | undefined) ?? [];
+      const next = await Promise.all(
+        nominees.map(async (n, i) => {
+          const entityId = n.id ?? detailNominees[i]?.id;
+          if (!entityId) return n;
+          const entity: UploadEntity = { nomineeShareholderId: entityId };
+          const [idDocs, photoPatch] = await Promise.all([
+            uploadArray(n.idDocs, "SH_ID_DOC", entity),
+            uploadPhoto(n.photoFile, "SH_PHOTO", entity),
+          ]);
+          return { ...n, id: entityId, idDocs, ...(photoPatch ?? {}) };
+        }),
+      );
+      setNominees(next);
+    };
+    const uploadOwners = async () => {
+      if (!visibleGroups.includes("owner")) return;
+      const detailOwners = (detail.beneficialOwners as { id: number }[] | undefined) ?? [];
+      const next = await Promise.all(
+        owners.map(async (o, i) => {
+          const entityId = o.id ?? detailOwners[i]?.id;
+          if (!entityId) return o;
+          const entity: UploadEntity = { beneficialOwnerId: entityId };
+          const [idDocs, photoPatch] = await Promise.all([
+            uploadArray(o.idDocs, "OWNER_ID_DOC", entity),
+            uploadPhoto(o.photoFile, "OWNER_PHOTO", entity),
+          ]);
+          return { ...o, id: entityId, idDocs, ...(photoPatch ?? {}) };
+        }),
+      );
+      setOwners(next);
+    };
+    const uploadAgreements = async () => {
+      if (!visibleGroups.includes("agreement")) return;
+      const detailAgreements = (detail.agreements as { id: number }[] | undefined) ?? [];
+      const next = await Promise.all(
+        agreements.map(async (a, i) => {
+          const entityId = a.id ?? detailAgreements[i]?.id;
+          if (!entityId) return a;
+          const entity: UploadEntity = { agreementId: entityId };
+          const [contractDocs, supportingDocs] = await Promise.all([
+            uploadArray(a.contractDocs, "SHAREHOLDER_CONTRACT", entity),
+            uploadArray(a.supportingDocs, "OTHER", entity),
+          ]);
+          return { ...a, id: entityId, contractDocs, supportingDocs };
+        }),
+      );
+      setAgreements(next);
+    };
+    await Promise.all([uploadNominees(), uploadOwners(), uploadAgreements()]);
+  };
+
+  // Step 3 (Preview) is the only place a full request can be submitted from,
+  // and it only opens once every step is complete.
+  const goToPreview = () => {
+    if (!validateAndFocusStep()) return;
+    setActiveStep(3);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSaveDraft = async (e: React.FormEvent) => {
@@ -1142,23 +1507,12 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
     setSubmitError(null);
     setSubmitting(true);
     try {
-      // Editing an already-reviewed (APPROVED/RETURNED) request validates
-      // required documents inline, as part of the same PATCH that saves the
-      // fields (see editApprovedOrReturned server-side) — so any newly
-      // attached files must be uploaded first, or that check still sees the
-      // pre-edit document set and 400s even though the user just attached
-      // what was missing.
-      if (editId && loadedStatus !== "DRAFT") {
-        await uploadPendingDocuments(editId);
-      }
-      const id = await saveRequest(true);
-      if (!id) return;
-      if (!editId || loadedStatus === "DRAFT") {
-        await uploadPendingDocuments(id);
-      }
+      const result = await saveRequest(true);
+      if (!result) return;
+      await uploadPendingDocuments(result.id, result.detail);
       clearPersisted();
       toast.success(editId ? t("draftUpdated") : t("draftSaved"));
-      router.push(editId ? `/${locale}/portal/beneficiary/all-requests/${id}` : `/${locale}/portal/beneficiary/all-requests`);
+      router.push(editId ? `/${locale}/portal/beneficiary/all-requests/${result.id}` : `/${locale}/portal/beneficiary/all-requests`);
     } catch {
       setSubmitError(t("submitError"));
       toast.error(t("submitError"));
@@ -1174,25 +1528,16 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
     setSubmitError(null);
     setSubmitting(true);
     try {
-      // See the matching comment in handleSaveDraft: editing an
-      // already-reviewed request checks required documents inline in the
-      // same PATCH that saves the fields, so new attachments must upload
-      // before that call, not after.
-      if (editId && loadedStatus !== "DRAFT") {
-        await uploadPendingDocuments(editId);
-      }
-      const id = await saveRequest();
-      if (!id) return;
-      if (!editId || loadedStatus === "DRAFT") {
-        await uploadPendingDocuments(id);
-      }
+      const result = await saveRequest();
+      if (!result) return;
+      await uploadPendingDocuments(result.id, result.detail);
 
       // A brand-new request or a continued draft (item 37) both still need
       // the separate "submit" transition (DRAFT -> PENDING). Editing an
       // already-reviewed (APPROVED/RETURNED) request transitions status as
       // part of saveRequest() itself, so no extra submit call there.
       if (!editId || loadedStatus === "DRAFT") {
-        const submitRes = await fetch(`/api/portal/beneficiary/requests/${id}`, {
+        const submitRes = await fetch(`/api/portal/beneficiary/requests/${result.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "submit" }),
@@ -1208,32 +1553,13 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
 
       clearPersisted();
       toast.success(t("requestSubmitted"));
-      router.push(`/${locale}/portal/beneficiary/all-requests/${id}`);
+      router.push(`/${locale}/portal/beneficiary/all-requests/${result.id}`);
     } catch {
       setSubmitError(t("submitError"));
       toast.error(t("submitError"));
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const inputCls = (key: keyof FormData) =>
-    cn("w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
-      unchangedFields.includes(key)
-        ? "border-red-400 ring-2 ring-red-100"
-        : fieldError(key)
-        ? "border-red-400"
-        : flaggedFields.includes(key)
-        ? "border-orange-400 ring-2 ring-orange-100"
-        : "border-slate-300");
-
-  const fieldError = (key: keyof FormData) => {
-    if (unchangedFields.includes(key)) return t("unchangedFieldInline");
-    if (!touched[key]) return "";
-    const val = form[key];
-    if (!val) return t("required");
-    if ((key === "companyPhone" || key === "companyOfficePhone") && !isValidPhone(val)) return t("invalidPhone");
-    return "";
   };
 
   if (editId && loading) {
@@ -1251,6 +1577,8 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
       </div>
     );
   }
+
+  const allConsentAgreed = agreements.length > 0 && agreements.every((a) => a.consentAgreed);
 
   return (
     <div className="space-y-4">
@@ -1307,14 +1635,13 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
         <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden bg-white">
           {!sectionOnly && (
           <StepTabs
-            steps={[1, 2, 3, 4].map((n) => ({
-              number: n,
-              title: t(`step${n}Title` as "step1Title"),
-              disabled: false,
-              flagged: returnSteps.includes(n),
-            }))}
+            steps={[
+              { number: 1, title: t("step1Title"), disabled: false, flagged: returnSteps.includes(1) },
+              { number: 2, title: t("step2CombinedTitle"), disabled: false, flagged: returnSteps.some((s) => s > 1) },
+              { number: 3, title: t("preview"), disabled: false },
+            ]}
             activeStep={activeStep}
-            onChange={setActiveStep}
+            onChange={(step) => (step === 3 ? goToPreview() : setActiveStep(step))}
           />
           )}
 
@@ -1323,22 +1650,22 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t("companyNameKh")}</label>
-              <input type="text" value={form.companyNameKh} onChange={(e) => set({ companyNameKh: e.target.value })} placeholder="ឈ្មោះក្រុមហ៊ុន" className={inputCls("companyNameKh")} />
+              <input type="text" value={company.companyNameKh} onChange={(e) => setCompanyPatch({ companyNameKh: e.target.value })} placeholder="ឈ្មោះក្រុមហ៊ុន" className={companyInputCls("companyNameKh")} />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t("companyNameEn")} <span className="text-red-500">*</span></label>
-              <input type="text" value={form.companyNameEn} onChange={(e) => set({ companyNameEn: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyNameEn: true }))} placeholder="Company Name" className={inputCls("companyNameEn")} />
-              {fieldError("companyNameEn") && <p className="mt-1 text-xs text-red-600">{fieldError("companyNameEn")}</p>}
+              <input type="text" value={company.companyNameEn} onChange={(e) => setCompanyPatch({ companyNameEn: e.target.value })} onBlur={() => setTouchedPatch({ companyNameEn: true })} placeholder="Company Name" className={companyInputCls("companyNameEn")} />
+              {companyFieldError("companyNameEn") && <p className="mt-1 text-xs text-red-600">{companyFieldError("companyNameEn")}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t("registrationNo")} <span className="text-red-500">*</span></label>
-              <input type="text" value={form.registrationNo} onChange={(e) => set({ registrationNo: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, registrationNo: true }))} placeholder="e.g. CO-20001" className={inputCls("registrationNo")} />
-              {fieldError("registrationNo") && <p className="mt-1 text-xs text-red-600">{fieldError("registrationNo")}</p>}
+              <input type="text" value={company.registrationNo} onChange={(e) => setCompanyPatch({ registrationNo: e.target.value })} onBlur={() => setTouchedPatch({ registrationNo: true })} placeholder="e.g. CO-20001" className={companyInputCls("registrationNo")} />
+              {companyFieldError("registrationNo") && <p className="mt-1 text-xs text-red-600">{companyFieldError("registrationNo")}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t("registrationDate")} <span className="text-red-500">*</span></label>
-              <input type="date" value={form.registrationDate} onChange={(e) => set({ registrationDate: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, registrationDate: true }))} className={inputCls("registrationDate")} />
-              {fieldError("registrationDate") && <p className="mt-1 text-xs text-red-600">{fieldError("registrationDate")}</p>}
+              <input type="date" value={company.registrationDate} onChange={(e) => setCompanyPatch({ registrationDate: e.target.value })} onBlur={() => setTouchedPatch({ registrationDate: true })} className={companyInputCls("registrationDate")} />
+              {companyFieldError("registrationDate") && <p className="mt-1 text-xs text-red-600">{companyFieldError("registrationDate")}</p>}
             </div>
           </div>
 
@@ -1346,213 +1673,246 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
             <p className="text-xs font-bold text-blue-700 uppercase tracking-wide mb-3">{t("addressLabel")}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <AddressCascadeSelects
-                values={{ province: form.companyProvince, district: form.companyDistrict, commune: form.companyCommune, village: form.companyVillage }}
-                onChange={(patch) => set(Object.fromEntries(Object.entries(patch).map(([k, v]) => [ADDRESS_FORM_KEYS[k as AddressField], v])))}
-                onBlur={(f) => setTouched((p) => ({ ...p, [ADDRESS_FORM_KEYS[f]]: true }))}
+                values={{ province: company.companyProvince, district: company.companyDistrict, commune: company.companyCommune, village: company.companyVillage }}
+                onChange={(patch) => setCompanyPatch(Object.fromEntries(Object.entries(patch).map(([k, v]) => [ADDRESS_FORM_KEYS[k as AddressField], v])))}
+                onBlur={(f) => setTouchedPatch({ [ADDRESS_FORM_KEYS[f]]: true })}
                 labels={{ province: t("province"), district: t("district"), commune: t("commune"), village: t("village") }}
-                className={(f) => inputCls(ADDRESS_FORM_KEYS[f])}
-                error={(f) => fieldError(ADDRESS_FORM_KEYS[f])}
+                className={(f) => companyInputCls(ADDRESS_FORM_KEYS[f])}
+                error={(f) => companyFieldError(ADDRESS_FORM_KEYS[f])}
               />
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t("street")} <span className="text-red-500">*</span></label>
-                <input type="text" value={form.companyStreet} onChange={(e) => set({ companyStreet: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyStreet: true }))} className={inputCls("companyStreet")} />
-                {fieldError("companyStreet") && <p className="mt-1 text-xs text-red-600">{fieldError("companyStreet")}</p>}
+                <input type="text" value={company.companyStreet} onChange={(e) => setCompanyPatch({ companyStreet: e.target.value })} onBlur={() => setTouchedPatch({ companyStreet: true })} className={companyInputCls("companyStreet")} />
+                {companyFieldError("companyStreet") && <p className="mt-1 text-xs text-red-600">{companyFieldError("companyStreet")}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t("houseNo")} <span className="text-red-500">*</span></label>
-                <input type="text" value={form.companyHouse} onChange={(e) => set({ companyHouse: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyHouse: true }))} className={inputCls("companyHouse")} />
-                {fieldError("companyHouse") && <p className="mt-1 text-xs text-red-600">{fieldError("companyHouse")}</p>}
+                <input type="text" value={company.companyHouse} onChange={(e) => setCompanyPatch({ companyHouse: e.target.value })} onBlur={() => setTouchedPatch({ companyHouse: true })} className={companyInputCls("companyHouse")} />
+                {companyFieldError("companyHouse") && <p className="mt-1 text-xs text-red-600">{companyFieldError("companyHouse")}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t("companyPhone")} <span className="text-red-500">*</span></label>
                 <div className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500">
                   <span className="text-base leading-none">🇰🇭</span>
                   <span className="text-slate-400 text-xs">+855</span>
-                  <input type="tel" value={form.companyPhone} onChange={(e) => set({ companyPhone: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyPhone: true }))} placeholder="23 756 789" className="flex-1 outline-none text-sm bg-transparent" />
+                  <input type="tel" value={company.companyPhone} onChange={(e) => setCompanyPatch({ companyPhone: e.target.value })} onBlur={() => setTouchedPatch({ companyPhone: true })} placeholder="23 756 789" className="flex-1 outline-none text-sm bg-transparent" />
                 </div>
-                {fieldError("companyPhone") && <p className="mt-1 text-xs text-red-600">{fieldError("companyPhone")}</p>}
+                {companyFieldError("companyPhone") && <p className="mt-1 text-xs text-red-600">{companyFieldError("companyPhone")}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t("companyOfficePhone")}</label>
-                <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500", fieldError("companyOfficePhone") ? "border-red-400" : "border-slate-300")}>
+                <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500", companyFieldError("companyOfficePhone") ? "border-red-400" : "border-slate-300")}>
                   <span className="text-base leading-none">🇰🇭</span>
                   <span className="text-slate-400 text-xs">+855</span>
-                  <input type="tel" value={form.companyOfficePhone} onChange={(e) => set({ companyOfficePhone: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyOfficePhone: true }))} placeholder="23 756 789" className="flex-1 outline-none text-sm bg-transparent" />
+                  <input type="tel" value={company.companyOfficePhone} onChange={(e) => setCompanyPatch({ companyOfficePhone: e.target.value })} onBlur={() => setTouchedPatch({ companyOfficePhone: true })} placeholder="23 756 789" className="flex-1 outline-none text-sm bg-transparent" />
                 </div>
-                {fieldError("companyOfficePhone") && <p className="mt-1 text-xs text-red-600">{fieldError("companyOfficePhone")}</p>}
+                {companyFieldError("companyOfficePhone") && <p className="mt-1 text-xs text-red-600">{companyFieldError("companyOfficePhone")}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t("companyEmail")} <span className="text-red-500">*</span></label>
-                <input type="email" value={form.companyEmail} onChange={(e) => set({ companyEmail: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, companyEmail: true }))} placeholder="email@example.com" className={inputCls("companyEmail")} />
-                {fieldError("companyEmail") && <p className="mt-1 text-xs text-red-600">{fieldError("companyEmail")}</p>}
+                <input type="email" value={company.companyEmail} onChange={(e) => setCompanyPatch({ companyEmail: e.target.value })} onBlur={() => setTouchedPatch({ companyEmail: true })} placeholder="email@example.com" className={companyInputCls("companyEmail")} />
+                {companyFieldError("companyEmail") && <p className="mt-1 text-xs text-red-600">{companyFieldError("companyEmail")}</p>}
               </div>
             </div>
           </div>
         </StepPanel>
 
-        {/* Step 2 — Nominee Shareholder Information */}
+        {/* Step 2+ — sectionOnly (per-section update-request page): one repeatable group. */}
+        {sectionOnly && sectionOnly !== 1 && (
         <StepPanel stepNumber={2} activeStep={activeStep}>
-          <PersonFields
-            t={t}
-            prefix="sh"
-            form={form as unknown as Record<string, string>}
-            set={setAny}
-            touched={touched}
-            setTouched={setTouchedPatch}
-            photo={shPhoto}
-            setPhoto={setShPhoto}
-            setPhotoName={setShPhotoName}
-            setPhotoFile={setShPhotoFile}
-            idDocs={shIdDocs}
-            setIdDocs={setShIdDocs}
-            requiredFields={["shLastNameEn", "shFirstNameEn", "shDob", "shBecameDate", "shNationality", "shGender"]}
-            flaggedFields={flaggedFields}
-            unchangedFields={unchangedFields}
-          />
-        </StepPanel>
-
-        {/* Step 3 — Beneficial Owner Information */}
-        <StepPanel stepNumber={3} activeStep={activeStep}>
-          <PersonFields
-            t={t}
-            prefix=""
-            form={form as unknown as Record<string, string>}
-            set={setAny}
-            touched={touched}
-            setTouched={setTouchedPatch}
-            photo={ownerPhoto}
-            setPhoto={setOwnerPhoto}
-            setPhotoName={setOwnerPhotoName}
-            setPhotoFile={setOwnerPhotoFile}
-            idDocs={ownerIdDocs}
-            setIdDocs={setOwnerIdDocs}
-            requiredFields={["lastNameEn", "firstNameEn", "dob", "becameDate", "nationality", "gender"]}
-            flaggedFields={flaggedFields}
-            unchangedFields={unchangedFields}
-            extraContent={
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {t("shareAmount")} <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={form.shareAmount}
-                    onChange={(e) => set({ shareAmount: e.target.value })}
-                    onBlur={() => setTouched((p) => ({ ...p, shareAmount: true }))}
-                    placeholder="e.g. 1000"
-                    className={inputCls("shareAmount")}
-                  />
-                  {fieldError("shareAmount") && <p className="mt-1 text-xs text-red-600">{fieldError("shareAmount")}</p>}
-                </div>
+          <div className="space-y-6">
+            {visibleGroups.includes("nominee") && (
+              <div className="space-y-4">
+                <GroupHeader title={t("nomineeGroupTitle")} onAdd={() => setNominees((p) => [...p, emptyPerson()])} addLabel={t("addNominee")} />
+                {nominees.map((n, idx) => (
+                  <EntryCard key={n.localKey} index={idx} canRemove={nominees.length > 1} removeLabel={t("removeEntry")} onRemove={() => setNominees((p) => p.filter((_, i) => i !== idx))}>
+                    <PersonFields
+                      t={t}
+                      idPrefix={`nominee.${idx}`}
+                      value={n}
+                      onChange={(patch) => patchEntry(setNominees, idx, patch)}
+                      touched={touched}
+                      setTouched={setTouchedPatch}
+                      requiredFields={NOMINEE_REQUIRED}
+                      becameDateLabelKey="shBecameDate"
+                    />
+                  </EntryCard>
+                ))}
               </div>
-            }
-          />
-        </StepPanel>
+            )}
 
-        {/* Step 4 — Agreement of Nominees and Beneficial Owner */}
-        <StepPanel stepNumber={4} activeStep={activeStep}>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm text-slate-700">{t("shareholderContractLabel")} <span className="text-red-500">*</span></p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t("supportingDocHint")}</p>
-                  {shareholderContractDocs.length > 0 ? (
-                    <ul className="mt-1 space-y-0.5">
-                      {shareholderContractDocs.map((d, i) => (
-                        <li key={i} className="flex items-center gap-1 text-xs text-slate-500">
-                          {d.url ? (
-                            <a href={d.url} target="_blank" rel="noreferrer" className="truncate text-blue-500 hover:text-blue-700 hover:underline" title={t("preview")}>
-                              {d.name}
-                            </a>
-                          ) : (
-                            <span className="truncate">{d.name}</span>
-                          )}
-                          {d.url && (
-                            <a href={d.url} target="_blank" rel="noreferrer" className="ml-1 text-blue-500 hover:text-blue-700" title={t("preview")}>
-                              <Eye className="h-3 w-3" />
-                            </a>
-                          )}
-                          <button type="button" onClick={() => setShareholderContractDocs((p) => p.filter((_, idx) => idx !== i))} className="ml-1 text-red-400 hover:text-red-600"><X className="h-3 w-3" /></button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="mt-1 text-xs text-red-600">{t("requiredDoc")}</p>
-                  )}
-                </div>
+            {visibleGroups.includes("owner") && (
+              <div className="space-y-4">
+                <GroupHeader title={t("ownerGroupTitle")} onAdd={() => setOwners((p) => [...p, emptyOwner()])} addLabel={t("addOwner")} />
+                {owners.map((o, idx) => (
+                  <EntryCard key={o.localKey} index={idx} canRemove={owners.length > 1} removeLabel={t("removeEntry")} onRemove={() => setOwners((p) => p.filter((_, i) => i !== idx))}>
+                    <PersonFields
+                      t={t}
+                      idPrefix={`owner.${idx}`}
+                      value={o}
+                      onChange={(patch) => patchEntry(setOwners, idx, patch)}
+                      touched={touched}
+                      setTouched={setTouchedPatch}
+                      requiredFields={OWNER_REQUIRED}
+                      becameDateLabelKey="becameDate"
+                      extraContent={
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                              {t("shareAmount")} <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={o.shareAmount}
+                              onChange={(e) => patchEntry(setOwners, idx, { shareAmount: e.target.value })}
+                              onBlur={() => setTouchedPatch({ [`owner.${idx}.shareAmount`]: true })}
+                              placeholder="e.g. 1000"
+                              className={cn("w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", touched[`owner.${idx}.shareAmount`] && !o.shareAmount ? "border-red-400" : "border-slate-300")}
+                            />
+                            {touched[`owner.${idx}.shareAmount`] && !o.shareAmount && <p className="mt-1 text-xs text-red-600">{t("required")}</p>}
+                          </div>
+                        </div>
+                      }
+                    />
+                  </EntryCard>
+                ))}
               </div>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer flex-shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                <Paperclip className="h-3.5 w-3.5" />
-                {t("attach")}
-                <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) setShareholderContractDocs((p) => [...p, { name: f.name, url: URL.createObjectURL(f), file: f }]); e.target.value = ""; }} className="hidden" />
-              </label>
-            </div>
+            )}
 
-            <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm text-slate-700">{t("otherDocsLabel")}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t("supportingDocHint")}</p>
-                  {supportingDocs.length > 0 && (
-                    <ul className="mt-1 space-y-0.5">
-                      {supportingDocs.map((d, i) => (
-                        <li key={i} className="flex items-center gap-1 text-xs text-slate-500">
-                          {d.url ? (
-                            <a href={d.url} target="_blank" rel="noreferrer" className="truncate text-blue-500 hover:text-blue-700 hover:underline" title={t("preview")}>
-                              {d.name}
-                            </a>
-                          ) : (
-                            <span className="truncate">{d.name}</span>
-                          )}
-                          {d.url && (
-                            <a href={d.url} target="_blank" rel="noreferrer" className="ml-1 text-blue-500 hover:text-blue-700" title={t("preview")}>
-                              <Eye className="h-3 w-3" />
-                            </a>
-                          )}
-                          <button type="button" onClick={() => setSupportingDocs((p) => p.filter((_, idx) => idx !== i))} className="ml-1 text-red-400 hover:text-red-600"><X className="h-3 w-3" /></button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+            {visibleGroups.includes("agreement") && (
+              <div className="space-y-4">
+                <GroupHeader title={t("agreementGroupTitle")} onAdd={() => setAgreements((p) => [...p, emptyAgreement()])} addLabel={t("addAgreement")} />
+                {agreements.map((a, idx) => (
+                  <EntryCard key={a.localKey} index={idx} canRemove={agreements.length > 1} removeLabel={t("removeEntry")} onRemove={() => setAgreements((p) => p.filter((_, i) => i !== idx))}>
+                    <AgreementFields
+                      t={t}
+                      idPrefix={`agreement.${idx}`}
+                      value={a}
+                      onChange={(patch) => patchEntry(setAgreements, idx, patch)}
+                      touched={touched}
+                      setTouched={setTouchedPatch}
+                    />
+                  </EntryCard>
+                ))}
               </div>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer flex-shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                <Paperclip className="h-3.5 w-3.5" />
-                {t("attach")}
-                <input type="file" accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) setSupportingDocs((p) => [...p, { name: f.name, url: URL.createObjectURL(f), file: f }]); e.target.value = ""; }} className="hidden" />
-              </label>
-            </div>
-
-            <div>
-              <div className="inline-flex flex-col w-full sm:w-auto">
-                <label className="block text-sm font-medium text-slate-700 mb-1 whitespace-nowrap">{t("agreementDate")} <span className="text-red-500">*</span></label>
-                <input type="date" value={form.agreementDate ?? ""} onChange={(e) => set({ agreementDate: e.target.value })} onBlur={() => setTouched((p) => ({ ...p, agreementDate: true }))} className={cn(inputCls("agreementDate"), "sm:w-full")} />
-                {fieldError("agreementDate") && <p className="mt-1 text-xs text-red-600">{fieldError("agreementDate")}</p>}
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-200">
-              <label className="flex items-start gap-3 cursor-pointer pt-4">
-                <input
-                  type="checkbox"
-                  checked={consentAgreed}
-                  onChange={(e) => { setConsentAgreed(e.target.checked); setConsentTouched(true); }}
-                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500 accent-blue-600"
-                />
-                <span className="text-sm text-slate-700">{t("consentText")}</span>
-              </label>
-              {consentTouched && !consentAgreed && (
-                <p className="mt-2 text-xs text-red-600">{t("consentRequired")}</p>
-              )}
-            </div>
+            )}
           </div>
         </StepPanel>
+        )}
+
+        {/* Main flow: the single "2. Nominee Shareholder Agreement" tab holds
+            a nested sub-tab bar — "Agreement 1", "Agreement 2", ... — each a
+            full { nominee, owner, agreement } trio. "+" on the sub-tab bar
+            adds a whole new sub-tab, not per-group entries. */}
+        {!sectionOnly && (
+          <StepPanel stepNumber={2} activeStep={activeStep}>
+            <div className="space-y-4">
+              <p className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                <span>{t("addMoreAgreementHintBefore")}</span>
+                <button
+                  type="button"
+                  onClick={addSet}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t("addMoreAgreement")}
+                </button>
+                <span>{t("addMoreAgreementHintAfter")}</span>
+              </p>
+              <StepTabs
+                steps={Array.from({ length: setCount }, (_, i) => ({
+                  number: i + 1,
+                  title: t("agreementTabTitle", { number: i + 1 }),
+                  disabled: false,
+                  flagged: i === 0 && returnSteps.some((s) => s > 1),
+                  ...(setCount > 1 && { onRemove: () => removeSet(i), removeLabel: t("removeSet") }),
+                }))}
+                activeStep={activeSetIndex + 1}
+                onChange={(n) => setActiveSetIndex(n - 1)}
+              />
+
+              {Array.from({ length: setCount }, (_, i) => i).map((i) => (
+                i !== activeSetIndex ? null : (
+                <div key={nominees[i]?.localKey ?? i} className="space-y-6">
+                  <div className="space-y-4">
+                    <GroupHeader title={t("nomineeGroupTitle")} />
+                    <PlainCard>
+                      <PersonFields
+                        t={t}
+                        idPrefix={`nominee.${i}`}
+                        value={nominees[i]}
+                        onChange={(patch) => patchEntry(setNominees, i, patch)}
+                        touched={touched}
+                        setTouched={setTouchedPatch}
+                        requiredFields={NOMINEE_REQUIRED}
+                        becameDateLabelKey="shBecameDate"
+                      />
+                    </PlainCard>
+                  </div>
+
+                  <div className="space-y-4">
+                    <GroupHeader title={t("ownerGroupTitle")} />
+                    <PlainCard>
+                      <PersonFields
+                        t={t}
+                        idPrefix={`owner.${i}`}
+                        value={owners[i]}
+                        onChange={(patch) => patchEntry(setOwners, i, patch)}
+                        touched={touched}
+                        setTouched={setTouchedPatch}
+                        requiredFields={OWNER_REQUIRED}
+                        becameDateLabelKey="becameDate"
+                        extraContent={
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">
+                                {t("shareAmount")} <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={owners[i].shareAmount}
+                                onChange={(e) => patchEntry(setOwners, i, { shareAmount: e.target.value })}
+                                onBlur={() => setTouchedPatch({ [`owner.${i}.shareAmount`]: true })}
+                                placeholder="e.g. 1000"
+                                className={cn("w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", touched[`owner.${i}.shareAmount`] && !owners[i].shareAmount ? "border-red-400" : "border-slate-300")}
+                              />
+                              {touched[`owner.${i}.shareAmount`] && !owners[i].shareAmount && <p className="mt-1 text-xs text-red-600">{t("required")}</p>}
+                            </div>
+                          </div>
+                        }
+                      />
+                    </PlainCard>
+                  </div>
+
+                  <div className="space-y-4">
+                    <GroupHeader title={t("agreementGroupTitle")} />
+                    <PlainCard>
+                      <AgreementFields
+                        t={t}
+                        idPrefix={`agreement.${i}`}
+                        value={agreements[i]}
+                        onChange={(patch) => patchEntry(setAgreements, i, patch)}
+                        touched={touched}
+                        setTouched={setTouchedPatch}
+                      />
+                    </PlainCard>
+                  </div>
+                </div>
+                )
+              ))}
+            </div>
+          </StepPanel>
+        )}
+        {/* Step 3 — Preview */}
+        {!sectionOnly && (
+          <StepPanel stepNumber={3} activeStep={activeStep}>
+            <RequestPreview t={t} company={company} nominees={nominees} owners={owners} agreements={agreements} />
+          </StepPanel>
+        )}
         </div>
 
         {/* Step navigation / Actions */}
@@ -1570,29 +1930,41 @@ export default function BeneficiaryRequestForm({ editId, sectionOnly }: { editId
 
           {submitError && <p className="order-2 sm:order-2 text-sm text-red-600">{submitError}</p>}
 
-          {!sectionOnly && activeStep < 4 ? (
+          {!sectionOnly && activeStep === 1 ? (
             <button
               type="button"
-              onClick={() => setActiveStep((s) => Math.min(4, s + 1))}
-              disabled={!isStepComplete(activeStep)}
+              onClick={() => setActiveStep(2)}
+              disabled={!isCompanyStepComplete}
               className="order-3 sm:order-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {t("next")}
             </button>
           ) : (
             <div className="order-3 sm:order-3 flex flex-col sm:flex-row items-stretch gap-3">
+              {sectionOnly || activeStep === 3 ? (
               <button
                 type="button"
                 onClick={handleSubmitRequest}
-                disabled={submitting || !consentAgreed}
+                disabled={submitting || !allConsentAgreed}
                 className="order-1 sm:order-3 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Send className="h-4 w-4" />
                 {submitting ? t("submittingRequest") : isApprovedUpdate ? t("requestToUpdate") : t("submitRequest")}
               </button>
+              ) : (
+              <button
+                type="button"
+                onClick={goToPreview}
+                disabled={submitting || !allConsentAgreed}
+                className="order-1 sm:order-3 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Eye className="h-4 w-4" />
+                {t("preview")}
+              </button>
+              )}
               <button
                 type="submit"
-                disabled={submitting || !consentAgreed}
+                disabled={submitting || !allConsentAgreed}
                 className="order-2 sm:order-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-600 bg-white px-5 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Save className="h-4 w-4" />

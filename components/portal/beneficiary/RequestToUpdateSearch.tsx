@@ -33,7 +33,7 @@ function formatDate(iso: string): string {
 export default function RequestToUpdateSearch() {
   const t = useTranslations("portal.requestUpdate");
   const tr = useTranslations("beneficiary.allRequests");
-  const tu = useTranslations("updateTypes");
+  const tu = useTranslations("requestTypes");
   const router = useRouter();
 
   const [query, setQuery] = useState("");
@@ -154,9 +154,9 @@ export default function RequestToUpdateSearch() {
                       <div>{r.companyNameEn}</div>
                       {r.companyNameKh && <div className="text-xs text-slate-400">{r.companyNameKh}</div>}
                     </td>
-                    {/* The section of the latest per-section update, else the original request type. */}
+                    {/* The section of the latest per-section update, else the request type. */}
                     <td className="px-4 py-3 text-slate-700">
-                      {r.updateType ? tu(r.updateType as Parameters<typeof tu>[0]) : r.type}
+                      {tu.has(r.updateType || r.type) ? tu((r.updateType || r.type) as Parameters<typeof tu>[0]) : r.type}
                     </td>
                     <td className="px-4 py-3">
                       {/* Here the draft is what matters, so it replaces the Approved badge. */}

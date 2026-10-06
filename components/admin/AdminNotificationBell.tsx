@@ -11,6 +11,7 @@ import {
   requestNotificationPermission,
 } from "@/lib/browser-notifications";
 import { notifyStatusStyle } from "@/lib/notification-status";
+import { sharedEventSource } from "@/lib/shared-event-source";
 
 type PendingRequestRow = {
   kind: "request";
@@ -248,7 +249,7 @@ export default function AdminNotificationBell() {
 
     // Real-time push: the server notifies this stream the instant a shareholder
     // submits/edits a request, and we just re-run the same fetch immediately.
-    const source = new EventSource("/api/secured/admin/notifications/stream");
+    const source = sharedEventSource("/api/secured/admin/notifications/stream");
     source.onmessage = () => fetchAwaitingReview();
 
     return () => {

@@ -11,12 +11,12 @@ export type UpdateSection = keyof typeof UPDATE_SECTION_STEPS;
 
 // Update type sent with a per-section update and stored by the API
 // (BeneficiaryRequest.updateType / RequestRevision.updateType), by step.
-// Labels live under `updateTypes.*` in messages.
+// Labels live under `requestTypes.*` in messages.
 export const UPDATE_TYPE_BY_STEP: Record<number, string> = {
-  1: "COMPANY_INFORMATION",
-  2: "NOMINEE_SHAREHOLDER",
-  3: "BENEFICIAL_OWNER",
-  4: "AGREEMENT",
+  1: "UPDATE_REQUEST_COMPANY_INFO",
+  2: "UPDATE_REQUEST_NOMINEE_SHAREHOLDER_INFO",
+  3: "UPDATE_REQUEST_BENEFICIAL_OWNER",
+  4: "UPDATE_REQUEST_AGREEMENT",
 };
 
 export const STEP_BY_UPDATE_TYPE: Record<string, number> = Object.fromEntries(

@@ -10,6 +10,7 @@ import { useRouter } from "@/lib/navigation";
 import EmptyState from "@/components/ui/EmptyState";
 import TablePagination from "@/components/ui/TablePagination";
 import { cn } from "@/lib/utils";
+import { sharedEventSource } from "@/lib/shared-event-source";
 
 function formatDate(iso: string): string {
   if (!iso) return "-";
@@ -88,7 +89,7 @@ export default function AdminUsersList() {
     fetchUsers();
 
     // Real-time: refetch the instant a registration is approved/rejected/returned.
-    const source = new EventSource("/api/secured/admin/users/stream");
+    const source = sharedEventSource("/api/secured/admin/users/stream");
     source.onmessage = () => fetchUsers();
 
     return () => {

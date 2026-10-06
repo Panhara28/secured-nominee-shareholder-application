@@ -10,6 +10,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import UpdateDraftedTag from "@/components/portal/beneficiary/UpdateDraftedTag";
 import TablePagination from "@/components/ui/TablePagination";
 import { cn } from "@/lib/utils";
+import { sharedEventSource } from "@/lib/shared-event-source";
 
 function formatDate(iso: string): string {
   if (!iso) return "-";
@@ -87,7 +88,7 @@ export default function AllRequestsList() {
 
     // Real-time: refetch the instant this shareholder's own requests change
     // status, instead of waiting for a manual refresh.
-    const source = new EventSource("/api/portal/notifications/stream");
+    const source = sharedEventSource("/api/portal/notifications/stream");
     source.onmessage = () => fetchRequests();
 
     return () => {

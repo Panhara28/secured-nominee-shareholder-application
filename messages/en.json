@@ -179,6 +179,21 @@
       "companyOfficePhone": "Office Phone",
       "companyEmail": "Email",
       "step2Title": "Nominee Shareholder Information",
+      "step2CombinedTitle": "Nominee Shareholder Agreement",
+      "nomineeGroupTitle": "Nominee Shareholder",
+      "ownerGroupTitle": "Beneficial Owner",
+      "agreementGroupTitle": "Agreement",
+      "entryNumber": "#{number}",
+      "addNominee": "Add another nominee shareholder",
+      "addSet": "Add another Nominee Shareholder Agreement",
+      "addMoreAgreement": "Add More Agreement",
+      "agreementTabTitle": "Agreement {number}",
+      "addMoreAgreementHintBefore": "If you have more than one agreement, please click",
+      "addMoreAgreementHintAfter": "to add another.",
+      "addOwner": "Add another beneficial owner",
+      "addAgreement": "Add another agreement",
+      "removeEntry": "Remove",
+      "removeSet": "Remove this Nominee Shareholder Agreement",
       "uploadPhoto": "Upload Photo",
       "lastNameKh": "Last Name (Khmer)",
       "firstNameKh": "First Name (Khmer)",
@@ -230,6 +245,7 @@
       "invalidBecameDate": "This date must be after the date of birth and not in the future.",
       "invalidIdDates": "Issue date must be before the expiry date.",
       "preview": "Preview",
+      "previewHint": "Please review your application carefully. Go back to a previous step to change anything, then submit the request from here.",
       "requiredDoc": "This document is required.",
       "cancel": "Cancel",
       "submit": "Save Drafted",
@@ -725,11 +741,16 @@
       "copyright": "© 2026 Ministry of Commerce. All rights reserved by Ministry of Commerce"
     }
   },
+  "requestTypes": {
+    "NEW_REQUEST": "New Request",
+    "UPDATE_REQUEST": "Update Request",
+    "UPDATE_REQUEST_COMPANY_INFO": "Request Update Company Information",
+    "UPDATE_REQUEST_NOMINEE_SHAREHOLDER_INFO": "Request Update Nominee Shareholder Information",
+    "UPDATE_REQUEST_BENEFICIAL_OWNER": "Request Update Beneficial Owner Information",
+    "UPDATE_REQUEST_AGREEMENT": "Request Update Agreement of Nominees and Beneficial Owner",
+    "DISSOLVE_REQUEST": "Dissolve Request"
+  },
   "updateTypes": {
-    "COMPANY_INFORMATION": "Request Update Company Information",
-    "NOMINEE_SHAREHOLDER": "Request Update Nominee Shareholder Information",
-    "BENEFICIAL_OWNER": "Request Update Beneficial Owner Information",
-    "AGREEMENT": "Request Update Agreement of Nominees and Beneficial Owner",
     "label": "Update Type",
     "reviewSectionOnly": "Only the section this update covers is shown."
   }
